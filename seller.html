@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Panel | Business Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; color: #1e293b; padding-bottom: 50px; }
+        
+        /* Toast Notification */
+        #customToast { visibility: hidden; min-width: 250px; text-align: center; border-radius: 10px; padding: 15px 20px; position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3); opacity: 0; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
+        #customToast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        .toast-error { background: #ef4444; } .toast-success { background: #10b981; } .toast-warning { background: #f59e0b; }
+
+        /* Login Screen */
+        #seller-login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #0f172a); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .login-box h2 { margin: 0 0 5px; color: #0f172a; }
+        .login-box p { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        .login-input-group { margin-bottom: 15px; text-align: left; }
+        .login-input-group label { font-size: 12px; color: #475569; font-weight: 600; margin-bottom: 5px; display: block; }
+        .login-box input { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; font-family: 'Poppins'; transition: 0.3s;}
+        .login-box input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        .btn-login { background: #f59e0b; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s;}
+        .btn-login:hover { background: #d97706; }
+
+        /* Header & Summary */
+        .header { background: #0f172a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dynamic-logo { height: 35px; border-radius: 5px; display: none; object-fit: contain; background: white; padding: 2px;} 
+        .btn-settings { background: transparent; color: white; border: none; font-size: 22px; cursor: pointer; transition: transform 0.3s; padding: 0; }
+        .btn-settings:active { transform: rotate(45deg); }
+
+        .profile-summary { background: white; margin: 15px; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-left: 5px solid #10b981; }
+        .profile-summary img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; }
+        .profile-info { flex: 1; }
+        .profile-summary h3 { margin: 0; font-size: 16px; color: #0f172a; }
+        .profile-summary p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+        .profile-sales { text-align: right; border-left: 1px dashed #cbd5e1; padding-left: 15px; cursor: pointer; transition: 0.3s; }
+        .profile-sales:hover { opacity: 0.8; transform: scale(1.05); }
+        .profile-sales p { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 3px; }
+        .profile-sales h2 { margin: 0; font-size: 20px; color: #0ea5e9; }
+
+        /* Form Inputs */
+        .form-container { background: white; padding: 20px; margin: 0 15px 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-left: 5px solid #f59e0b; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 12px; color: #475569; margin-bottom: 6px; font-weight: 600; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins'; outline: none; font-size: 14px; transition: 0.3s;}
+        .input-group input:focus, .input-group select:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+        .row { display: flex; gap: 10px; }
+        .row .input-group { flex: 1; }
+        .btn-action { background: #f59e0b; color: white; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px; transition: 0.3s; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);}
+        .btn-action:active { transform: scale(0.98); }
+
+        /* Products List */
+        .products-scroll-container { max-height: 450px; overflow-y: auto; padding-right: 5px; padding-bottom: 10px;}
+        .products-scroll-container::-webkit-scrollbar { width: 6px; }
+        .products-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .product-item { background: white; margin: 0 15px 12px; border-radius: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; padding: 15px; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.3s;}
+        .product-item:hover { box-shadow: 0 6px 15px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .product-img { width: 75px; height: 75px; border-radius: 10px; object-fit: cover; background: #f1f5f9; border: 1px solid #e2e8f0;}
+        .product-info { flex: 1; }
+        .product-info h4 { margin: 0 0 6px; font-size: 15px; color: #0f172a; line-height: 1.2; font-weight: 700;}
+        .ecommerce-price { display: flex; align-items: center; gap: 8px; font-family: 'Arial', sans-serif; margin-bottom: 6px; }
+        .price-discount { color: #16a34a; font-size: 12px; font-weight: 700; background:#dcfce7; padding:2px 6px; border-radius:6px;}
+        .price-mrp { color: #94a3b8; font-size: 13px; text-decoration: line-through; }
+        .price-sell { color: #0f172a; font-size: 18px; font-weight: 800; }
+        .stock-badge { display: inline-block; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #e2e8f0; }
+        .admin-comm-badge { display: inline-block; background: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fde047; margin-left: 5px;}
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
+        .edit-card { background: white; width: 90%; max-width: 380px; max-height: 90vh; overflow-y: auto; border-radius: 20px; padding: 25px; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Custom Dropdown */
+        .custom-select-wrapper { position: relative; width: 100%; }
+        .custom-select-input { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Poppins'; outline: none; font-size: 14px; background: #fff; transition: 0.3s; cursor: text;}
+        .custom-select-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+        .custom-dropdown { position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; display: none; margin-top: 5px; }
+        .custom-option { padding: 10px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;}
+        .custom-option:hover { background: #f8fafc; padding-left: 18px;}
+        .dropdown-prod-img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; }
+        .custom-option-details { flex: 1; display: flex; flex-direction: column; }
+        .custom-option-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 2px;}
+        .custom-option-price { font-size: 13px; font-weight: 700; color: #10b981; }
+        .custom-option-stock { font-size: 11px; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; font-weight: 600; white-space: nowrap;}
+        
+        /* History Items */
+        .history-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; }
+        .history-item-left { display: flex; align-items: center; gap: 10px; }
+        .history-item-img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1; }
+        .history-item-text h4 { margin: 0 0 4px; font-size: 14px; color: #0f172a; font-weight: 700; line-height: 1.2;}
+        .history-item-text p { margin: 0; font-size: 11px; color: #64748b; font-weight: 500;}
+        .history-item-right { text-align: right; }
+        .history-item-right h3 { margin: 0; font-size: 18px; color: #10b981; font-weight: 800;}
+        
+        .buyer-contact-btn { display: flex; gap: 5px; margin-top: 10px; }
+        .btn-call, .btn-sms, .btn-wa { flex: 1; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center; transition: 0.3s; }
+        .btn-call { background: #0ea5e9; } .btn-sms { background: #f59e0b; } .btn-wa { background: #10b981; }
+        .btn-call:active, .btn-sms:active, .btn-wa:active { transform: scale(0.95); }
+
+        .btn-del-history { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.3s; position: absolute; right: 15px; top: 15px; display: flex; justify-content: center; align-items: center;}
+        
+        /* Settings Menu Buttons */
+        .settings-menu-btn { width: 100%; padding: 15px; margin-bottom: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Poppins'; transition: 0.3s; box-sizing: border-box; }
+        .btn-menu-backup { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .btn-menu-restore { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        .btn-menu-logout { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; margin-bottom: 0;}
+        
+        /* Image Preview Scroll Container */
+        .img-preview-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-top: 10px; }
+        .img-preview-container::-webkit-scrollbar { height: 4px; }
+        .img-preview-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="customToast"></div>
+
+    <!-- Login -->
+    <div id="seller-login-overlay">
+        <div class="login-box">
+            <h2><i class="fas fa-store" style="color: #f59e0b;"></i> Seller Portal</h2>
+            <p>Login to manage your store</p>
+            <div class="login-input-group"><label>Phone Number</label><input type="tel" id="sellerPhone" placeholder="Enter Phone Number"></div>
+            <div class="login-input-group"><label>Date of Birth (Password)</label><input type="date" id="sellerDob"></div>
+            <button class="btn-login" id="loginBtn" onclick="loginSeller()">Access Dashboard</button>
+            <div id="login-error"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="main-seller-content" style="display: none;">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img class="dynamic-logo" id="headerLogo" src="" alt="Logo">
+            </div>
+            <button class="btn-settings" onclick="openSettingsModal()"><i class="fas fa-cog"></i></button>
+        </div>
+
+        <div class="profile-summary">
+            <img id="dashboardProfilePic" src="https://via.placeholder.com/100" alt="Profile">
+            <div class="profile-info">
+                <h3 id="dashboardStoreName">Store Name</h3>
+                <p id="dashboardSellerName">Seller Name</p>
+            </div>
+            <div class="profile-sales" onclick="openHistoryModal()" title="Click to view Sales History">
+                <p>Total Sales <i class="fas fa-info-circle" style="font-size: 9px; color:#94a3b8;"></i></p>
+                <h2 id="dashboardTotalSales">₹0</h2>
+            </div>
+        </div>
+
+        <!-- Add Product -->
+        <div class="form-container">
+            <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:10px; font-size:16px; color: #0f172a;"><i class="fas fa-box-open" style="color:#f59e0b;"></i> Add New Product</h3>
+            <div class="input-group"><label>Product Name</label><input type="text" id="prodName" placeholder="e.g. Cotton T-Shirt"></div>
+            <div class="row">
+                <div class="input-group"><label>MRP (₹)</label><input type="number" id="prodMrp" placeholder="Maximum Price"></div>
+                <div class="input-group"><label>Selling Price (₹)</label><input type="number" id="prodPrice" placeholder="Final Price"></div>
+            </div>
+            <div style="background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px dashed #cbd5e1; margin-bottom: 15px;">
+                <label style="display: block; font-size: 11px; color: #b45309; margin-bottom: 8px; font-weight: 700; text-transform: uppercase;"><i class="fas fa-handshake"></i> Admin Profit Share</label>
+                <div class="row">
+                    <div class="input-group" style="margin-bottom: 0;"><select id="adminCommType"><option value="percent">Percentage (%)</option><option value="flat">Flat Amount (₹)</option></select></div>
+                    <div class="input-group" style="margin-bottom: 0;"><input type="number" id="adminCommValue" placeholder="Value (e.g. 10)"></div>
+                </div>
+            </div>
+            <div class="row"><div class="input-group"><label>Total Stock</label><input type="number" id="prodStock" placeholder="e.g. 50"></div></div>
+            <div class="input-group">
+                <label>Product Images (Select Multiple)</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; background: #0ea5e9; color: white; padding: 12px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight:600;"><i class="fas fa-camera"></i> Camera<input type="file" accept="image/*" capture="environment" onchange="addProdPicChosen(this)" style="display: none;"></label>
+                    <label style="flex: 1; background: #f59e0b; color: white; padding: 12px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight:600;"><i class="fas fa-images"></i> Gallery<input type="file" accept="image/*" multiple onchange="addProdPicChosen(this)" style="display: none;"></label>
+                </div>
+                <!-- Image Previews Container -->
+                <div id="add-prod-pic-preview" class="img-preview-container"></div>
+            </div>
+            <button class="btn-action" id="addProdBtn" onclick="addProduct()">Publish Product</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 25px 15px 15px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">My Products</h3>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="openHistoryModal()" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);"><i class="fas fa-history"></i> History</button>
+                <button onclick="openRecordSaleModal()" style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);"><i class="fas fa-cash-register"></i> Sale</button>
+            </div>
+        </div>
+        <div id="products-container" class="products-scroll-container"></div>
+    </div>
+
+    <!-- Settings Modal (Backup/Restore/Logout) -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="edit-card" style="max-width: 320px; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 style="margin:0; color:#0f172a;"><i class="fas fa-cog" style="color:#64748b;"></i> Settings</h3>
+                <i class="fas fa-times" onclick="closeSettingsModal()" style="cursor: pointer; color: #64748b; font-size: 20px;"></i>
+            </div>
+            
+            <button id="btnBackupUI" class="settings-menu-btn btn-menu-backup" onclick="requestAdminAction('backup')">
+                <i class="fas fa-cloud-download-alt"></i> Request Backup Data
+            </button>
+            
+            <button id="btnRestoreUI" class="settings-menu-btn btn-menu-restore" onclick="requestAdminAction('restore')">
+                <i class="fas fa-cloud-upload-alt"></i> Request Restore Data
+            </button>
+
+            <input type="hidden" id="restoreReqId">
+            <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
+            
+            <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 20px 0;">
+            <button class="settings-menu-btn btn-menu-logout" onclick="logoutSeller()"><i class="fas fa-sign-out-alt"></i> Secure Logout</button>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="modal-overlay" id="editProdModal">
+        <div class="edit-card">
+            <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:15px; color:#0f172a;"><i class="fas fa-edit" style="color:#0ea5e9;"></i> Edit Product</h3>
+            <input type="hidden" id="editProdId">
+            <div class="input-group"><label>Product Name</label><input type="text" id="editProdName" disabled style="background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1;"></div>
+            <div class="row">
+                <div class="input-group"><label>MRP (₹)</label><input type="number" id="editProdMrp"></div>
+                <div class="input-group"><label>Sell Price (₹)</label><input type="number" id="editProdPrice"></div>
+            </div>
+            <div style="background: #fffbeb; padding: 15px; border-radius: 10px; border: 1px solid #fde68a; margin-bottom: 15px;">
+                <label style="font-size: 11px; color: #d97706; font-weight: bold; margin-bottom: 8px; display: block;"><i class="fas fa-handshake"></i> Admin Share</label>
+                <div class="row">
+                    <div class="input-group" style="margin-bottom: 0;"><select id="editAdminCommType"><option value="percent">Percent (%)</option><option value="flat">Flat (₹)</option></select></div>
+                    <div class="input-group" style="margin-bottom: 0;"><input type="number" id="editAdminCommValue"></div>
+                </div>
+            </div>
+            <div class="input-group"><label>Available Stock</label><input type="number" id="editProdStock"></div>
+            
+            <!-- Edit Multiple Images -->
+            <div class="input-group">
+                <label>Update Product Images</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; background: #0ea5e9; color: white; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight:600;"><i class="fas fa-camera"></i> Camera<input type="file" accept="image/*" capture="environment" onchange="editProdPicChosen(this)" style="display: none;"></label>
+                    <label style="flex: 1; background: #f59e0b; color: white; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight:600;"><i class="fas fa-images"></i> Gallery<input type="file" accept="image/*" multiple onchange="editProdPicChosen(this)" style="display: none;"></label>
+                </div>
+                <div id="edit-prod-pic-preview" class="img-preview-container"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="closeEditModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
+                <button onclick="saveProductEdits()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:700;">Save Updates</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record Sale Modal -->
+    <div class="modal-overlay" id="recordSaleModal">
+        <div class="edit-card">
+            <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:15px; color:#0f172a; text-align:center;"><i class="fas fa-cash-register" style="color:#10b981;"></i> Record Sale</h3>
+            <div class="input-group">
+                <label>Search & Select Product</label>
+                <div class="custom-select-wrapper">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <img id="selectedProdImg" src="" style="width: 30px; height: 30px; border-radius: 5px; object-fit: cover; position: absolute; left: 10px; display: none; z-index: 10; pointer-events: none;">
+                        <input type="text" id="saleProductSearch" class="custom-select-input" placeholder="Type product name to search..." oninput="handleSearchInput()" onclick="toggleSaleDropdown()">
+                    </div>
+                    <input type="hidden" id="saleProductId">
+                    <input type="hidden" id="saleProductPrice">
+                    <input type="hidden" id="saleProductStock">
+                    <input type="hidden" id="saleProductPic">
+                    <div class="custom-dropdown" id="saleProductDropdown"></div>
+                </div>
+            </div>
+            <div class="input-group" style="margin-top: 15px;">
+                <label>Quantity Sold</label>
+                <input type="number" id="saleQty" value="1" min="1" oninput="calculateSaleTotal()" style="font-size: 16px; font-weight: 600; text-align:center;">
+            </div>
+            <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px dashed #cbd5e1;">
+                <p style="font-size: 11px; color: #475569; margin: 0 0 10px; font-weight: 700; text-transform: uppercase;"><i class="fas fa-user-circle"></i> Buyer Details (Optional)</p>
+                <div class="input-group" style="margin-bottom: 10px;"><input type="text" id="buyerName" placeholder="Buyer Name" style="padding: 8px 12px;"></div>
+                <div class="input-group" style="margin-bottom: 10px;"><input type="tel" id="buyerPhone" placeholder="Phone Number" style="padding: 8px 12px;"></div>
+                <div class="input-group" style="margin-bottom: 0;"><input type="text" id="buyerAddress" placeholder="Short Address" style="padding: 8px 12px;"></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0f2fe, #bae6fd); padding: 15px; border-radius: 12px; text-align: center; margin: 15px 0; border: 1px solid #7dd3fc;">
+                <p style="font-size: 12px; color: #0369a1; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Total Sale Amount</p>
+                <h2 id="saleTotalAmount" style="margin: 0; color: #0284c7; font-size: 28px; font-weight: 800;">₹0</h2>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeRecordSaleModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#e2e8f0; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
+                <button id="confirmSaleBtn" onclick="saveRecordSale()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:700;">Confirm Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="edit-card" style="max-width: 380px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;">
+                <h3 style="margin:0; color:#0f172a;"><i class="fas fa-history" style="color:#3b82f6;"></i> Sales History</h3>
+                <i class="fas fa-times close-cart" onclick="closeHistoryModal()" style="cursor: pointer; color: #64748b; font-size: 20px;"></i>
+            </div>
+            <div class="input-group">
+                <label>Select Year</label>
+                <select id="historyYear" onchange="fetchSalesHistory()" style="background:#f8fafc; font-weight:600;">
+                    <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+                </select>
+            </div>
+            <div id="historyListContainer" style="max-height: 400px; overflow-y: auto; padding-right: 5px; margin-top: 15px;"></div>
+        </div>
+    </div>
+    <!-- Custom Confirm Modal for Delete -->
+<div class="modal-overlay" id="customConfirmModal" style="z-index: 9999;">
+    <div class="edit-card" style="max-width: 300px; text-align: center; padding: 30px 20px;">
+        <div style="width: 60px; height: 60px; background: #fee2e2; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 30px; color: #ef4444;"></i>
+        </div>
+        <h3 style="margin: 0 0 10px; color: #0f172a;">Are you sure?</h3>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Do you really want to delete this product? This cannot be undone.</p>
+        
+        <input type="hidden" id="deleteTargetId">
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeConfirmModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
+            <button onclick="executeProductDeletion()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#ef4444; color:white; cursor:pointer; font-weight:700;">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCL4WsaX5utDOWw8V29m4Pyuliqyr81Qoo",
+            authDomain: "a2z-store-58237.firebaseapp.com",
+            projectId: "a2z-store-58237",
+            storageBucket: "a2z-store-58237.firebasestorage.app",
+            messagingSenderId: "489094614330",
+            appId: "1:489094614330:web:adaa177f194b718f001403"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+
+        let currentSellerProducts = []; 
+        let tempAddProdPics = [];
+        let tempEditProdPics = [];
+
+        window.onload = function() {
+            const sid = localStorage.getItem("seller_id");
+            if (sid) { 
+                loadSellerDashboard(sid); 
+                fetchMyProducts(sid); 
+                calculateTotalSalesFromHistory(sid);
+                listenForApprovals(sid);
+            }
+            fetchGlobalLogo();
+        };
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('customToast');
+            let icon = type === 'error' ? '<i class="fas fa-exclamation-triangle"></i>' : (type === 'warning' ? '<i class="fas fa-info-circle"></i>' : '<i class="fas fa-check-circle"></i>');
+            toast.innerHTML = icon + " " + message;
+            toast.className = type === 'error' ? 'toast-error' : (type === 'warning' ? 'toast-warning' : 'toast-success');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.custom-select-wrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+                document.getElementById('saleProductDropdown').style.display = 'none';
+            }
+        });
+
+        function fetchGlobalLogo() {
+            db.collection("Settings").doc("StoreConfig").onSnapshot(doc => {
+                if(doc.exists && doc.data().logoUrl) {
+                    document.getElementById('headerLogo').src = doc.data().logoUrl;
+                    document.getElementById('headerLogo').style.display = 'block';
+                }
+            });
+        }
+
+        async function loginSeller() {
+            const phone = document.getElementById('sellerPhone').value.trim();
+            const dob = document.getElementById('sellerDob').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            if(!phone || !dob) return showToast("Enter Phone & DOB", "error");
+            loginBtn.innerText = "Verifying..."; loginBtn.disabled = true;
+
+            try {
+                const snapshot = await db.collection("Sellers").where("phone", "==", phone).get();
+                if (snapshot.empty) throw new Error("Phone number not found.");
+
+                let loggedInUser = null;
+                snapshot.forEach(doc => { if (doc.data().dob === dob) { loggedInUser = { id: doc.id, ...doc.data() }; } });
+
+                if (loggedInUser) {
+    localStorage.setItem("seller_id", loggedInUser.id);
+    localStorage.setItem("seller_store", loggedInUser.storeName);
+    localStorage.setItem("seller_name", loggedInUser.sellerName);
+    localStorage.setItem("seller_pic", loggedInUser.profilePic);
+    loadSellerDashboard(loggedInUser.id);
+    fetchMyProducts(loggedInUser.id);
+    calculateTotalSalesFromHistory(loggedInUser.id); // <-- এটি যোগ করা হলো
+    listenForApprovals(loggedInUser.id);
+} else { throw new Error("Incorrect Password."); }
+            } catch (error) { showToast(error.message, "error"); }
+            
+            loginBtn.innerText = "Access Dashboard"; loginBtn.disabled = false;
+        }
+
+        function loadSellerDashboard(sellerId) {
+            document.getElementById('seller-login-overlay').style.display = 'none';
+            document.getElementById('main-seller-content').style.display = 'block';
+            document.getElementById('dashboardStoreName').innerText = localStorage.getItem("seller_store");
+            document.getElementById('dashboardSellerName').innerText = localStorage.getItem("seller_name");
+            const pic = localStorage.getItem("seller_pic");
+            if(pic) document.getElementById('dashboardProfilePic').src = pic;
+        }
+
+        async function notifyAdminActivity(activityText) {
+            const sid = localStorage.getItem("seller_id");
+            const sName = localStorage.getItem("seller_name");
+            await db.collection("SellerActivities").add({
+                sellerId: sid, sellerName: sName, activity: activityText, status: "unread", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // --- ADMIN APPROVAL & SETTINGS ---
+        async function requestAdminAction(type, extraData = null) {
+            const sid = localStorage.getItem("seller_id");
+            const sName = localStorage.getItem("seller_name");
+            showToast("Request sent to Admin. Please wait for approval.", "warning");
+            await db.collection("AdminRequests").add({ sellerId: sid, sellerName: sName, actionType: type, status: "pending", extraData: extraData, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+        }
+
+        function listenForApprovals(sid) {
+            db.collection("AdminRequests").where("sellerId", "==", sid).onSnapshot(snap => {
+                let hasBackupApp = null; let hasRestoreApp = null;
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.status === "approved") {
+                        if(d.actionType === 'backup') hasBackupApp = doc.id;
+                        if(d.actionType === 'restore') hasRestoreApp = doc.id;
+                        if(d.actionType === 'delete_history') executeDeleteHistory(d.extraData.historyId, doc.id);
+                    }
+                });
+
+                const btnBackup = document.getElementById('btnBackupUI');
+                if(btnBackup) {
+                    if(hasBackupApp) {
+                        btnBackup.innerHTML = `<i class="fas fa-check-circle"></i> Download Backup Now`;
+                        btnBackup.style.background = "#10b981"; btnBackup.style.color = "white"; btnBackup.style.borderColor = "#059669";
+                        btnBackup.onclick = () => performBackup(hasBackupApp);
+                    } else {
+                        btnBackup.innerHTML = `<i class="fas fa-cloud-download-alt"></i> Request Backup Data`;
+                        btnBackup.style.background = "#e0f2fe"; btnBackup.style.color = "#0369a1"; btnBackup.style.borderColor = "#bae6fd";
+                        btnBackup.onclick = () => requestAdminAction('backup');
+                    }
+                }
+
+                const btnRestore = document.getElementById('btnRestoreUI');
+                if(btnRestore) {
+                    if(hasRestoreApp) {
+                        btnRestore.innerHTML = `<i class="fas fa-check-circle"></i> Upload & Restore Now`;
+                        btnRestore.style.background = "#10b981"; btnRestore.style.color = "white"; btnRestore.style.borderColor = "#059669";
+                        btnRestore.onclick = () => { document.getElementById('restoreReqId').value = hasRestoreApp; document.getElementById('restoreFileInput').click(); };
+                    } else {
+                        btnRestore.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Request Restore Data`;
+                        btnRestore.style.background = "#dcfce7"; btnRestore.style.color = "#15803d"; btnRestore.style.borderColor = "#bbf7d0";
+                        btnRestore.onclick = () => requestAdminAction('restore');
+                    }
+                }
+            });
+        }
+
+        async function performBackup(reqId) {
+            const sid = localStorage.getItem("seller_id");
+            showToast("Preparing backup...", "warning");
+            try {
+                const pSnap = await db.collection("Products").where("sellerId", "==", sid).get();
+                const hSnap = await db.collection("SalesHistory").where("sellerId", "==", sid).get();
+                const data = { products: [], salesHistory: [] };
+                pSnap.forEach(doc => data.products.push(doc.data()));
+                hSnap.forEach(doc => data.salesHistory.push(doc.data()));
+                
+                const jsonStr = JSON.stringify(data);
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: `A2Z_Backup_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.json`,
+                        types: [{ description: 'JSON File', accept: {'application/json': ['.json']} }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(jsonStr); await writable.close();
+                    showToast("Backup saved successfully to chosen folder!", "success");
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        const blob = new Blob([jsonStr], { type: "application/json" });
+                        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+                        a.href = url; a.download = `A2Z_Backup_${sid}.json`; a.click();
+                        showToast("Backup Downloaded Successfully!", "success");
+                    }
+                }
+                await db.collection("AdminRequests").doc(reqId).delete();
+                closeSettingsModal();
+            } catch(e) { showToast("Backup failed: " + e.message, "error"); }
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const sid = localStorage.getItem("seller_id");
+            const sName = localStorage.getItem("seller_name");
+            const storeName = localStorage.getItem("seller_store");
+            showToast("Extracting data... Please wait.", "warning");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // HANDLE OLD MUSICCLASS FORMAT
+                    if (data.records && Array.isArray(data.records)) {
+                        const uniqueProducts = new Map();
+                        data.records.forEach(record => {
+                            if (record.cart && Array.isArray(record.cart)) {
+                                record.cart.forEach(item => {
+                                    if (item.name && !uniqueProducts.has(item.name)) {
+                                        const dummyImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random&color=fff&size=300`;
+                                        uniqueProducts.set(item.name, {
+                                            sellerId: sid, storeName: storeName, sellerName: sName,
+                                            productName: item.name, mrp: Number(item.price) || 0, price: Number(item.price) || 0,
+                                            adminCommType: "percent", adminCommValue: 10, stockCount: 50, soldCount: 0,
+                                            productPics: [dummyImageUrl], productPic: dummyImageUrl,
+                                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                        const productsToAdd = Array.from(uniqueProducts.values());
+                        if (productsToAdd.length > 0) {
+                            const addPromises = productsToAdd.map(p => db.collection("Products").add(p));
+                            await Promise.all(addPromises);
+                            showToast(`${productsToAdd.length} Products Extracted & Added!`, "success");
+                        } else { showToast("No valid products found in old backup.", "error"); }
+                    } 
+                    // HANDLE NEW FORMAT
+                    else if (data.products && data.salesHistory) {
+                        const pSnap = await db.collection("Products").where("sellerId", "==", sid).get();
+                        for(let doc of pSnap.docs) await doc.ref.delete();
+                        const hSnap = await db.collection("SalesHistory").where("sellerId", "==", sid).get();
+                        for(let doc of hSnap.docs) await doc.ref.delete();
+
+                        for(let p of data.products) { 
+                            p.sellerId = sid; 
+                            p.productPics = p.productPics || (p.productPic ? [p.productPic] : []);
+                            p.productPic = p.productPic || (p.productPics.length > 0 ? p.productPics[0] : "");
+                            p.timestamp = firebase.firestore.FieldValue.serverTimestamp(); 
+                            await db.collection("Products").add(p); 
+                        }
+                        for(let h of data.salesHistory) { 
+                            h.sellerId = sid; 
+                            h.productPic = h.productPic || "";
+                            h.timestamp = firebase.firestore.FieldValue.serverTimestamp(); 
+                            await db.collection("SalesHistory").add(h); 
+                        }
+                        showToast("Data Restored Successfully!", "success");
+                    } else { throw new Error("Invalid backup format."); }
+
+                    const reqId = document.getElementById('restoreReqId').value;
+                    if(reqId) await db.collection("AdminRequests").doc(reqId).delete();
+                    
+                    closeSettingsModal(); event.target.value = ''; 
+                } catch (err) { showToast("Restore failed: " + err.message, "error"); event.target.value = ''; }
+            };
+            reader.readAsText(file);
+        }
+
+async function executeDeleteHistory(historyId, reqId) {
+    try {
+        // ১. আগে হিস্টরি ডাটা তুলে আনুন যাতে বোঝা যায় কত Quantity সেল হয়েছিল
+        const historyRef = db.collection("SalesHistory").doc(historyId);
+        const historyDoc = await historyRef.get();
+        
+        if(historyDoc.exists) {
+            const data = historyDoc.data();
+            const prodId = data.productId;
+            const qty = data.qty;
+            
+            // ২. মেইন প্রোডাক্ট এর stock আবার বাড়িয়ে দিন এবং soldCount কমিয়ে দিন
+            if(prodId) {
+                await db.collection("Products").doc(prodId).update({ 
+                    stockCount: firebase.firestore.FieldValue.increment(qty), 
+                    soldCount: firebase.firestore.FieldValue.increment(-qty) 
+                });
+            }
+        }
+        
+        // ৩. এরপর হিস্টরি এবং রিকোয়েস্ট ডিলিট করুন
+        await historyRef.delete();
+        if(reqId) {
+            await db.collection("AdminRequests").doc(reqId).delete();
+        }
+        
+        showToast("Sale Record Deleted & Stocks Updated!", "success");
+        fetchSalesHistory(); 
+    } catch(e) { 
+        console.error("Delete failed: ", e); 
+        showToast("Error: " + e.message, "error");
+    }
+}
+
+        function openSettingsModal() { document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
+        function logoutSeller() { localStorage.clear(); location.reload(); }
+
+        // --- MULTIPLE IMAGES HANDLING ---
+        function processImage(file, width = 300) {
+            return new Promise((resolve) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = e => { const img = new Image(); img.src = e.target.result; img.onload = () => {
+                    const canvas = document.createElement('canvas'); const scale = width / img.width; canvas.width = width; canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.5));
+                };};
+            });
+        }
+
+        // Add Product Images
+        async function addProdPicChosen(input) {
+            if(input.files && input.files.length > 0) {
+                showToast("Compressing Images...", "warning");
+                for(let file of input.files) {
+                    const base64 = await processImage(file, 400);
+                    tempAddProdPics.push(base64);
+                }
+                renderAddProdPicPreview();
+                showToast("Images Ready!", "success");
+            }
+            input.value = ""; 
+        }
+        function renderAddProdPicPreview() {
+            const cont = document.getElementById('add-prod-pic-preview');
+            cont.innerHTML = "";
+            tempAddProdPics.forEach((pic, i) => {
+                cont.innerHTML += `<div style="position:relative; min-width:55px; height:55px;"><img src="${pic}" style="width:100%; height:100%; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;"><div onclick="removeAddPic(${i})" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:flex; justify-content:center; align-items:center; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2);">✕</div></div>`;
+            });
+        }
+        function removeAddPic(i) { tempAddProdPics.splice(i, 1); renderAddProdPicPreview(); }
+
+        // Edit Product Images
+        async function editProdPicChosen(input) {
+            if(input.files && input.files.length > 0) {
+                showToast("Compressing Images...", "warning");
+                for(let file of input.files) {
+                    const base64 = await processImage(file, 400);
+                    tempEditProdPics.push(base64);
+                }
+                renderEditProdPicPreview();
+                showToast("Images Ready!", "success");
+            }
+            input.value = ""; 
+        }
+        function renderEditProdPicPreview() {
+            const cont = document.getElementById('edit-prod-pic-preview');
+            cont.innerHTML = "";
+            tempEditProdPics.forEach((pic, i) => {
+                cont.innerHTML += `<div style="position:relative; min-width:55px; height:55px;"><img src="${pic}" style="width:100%; height:100%; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;"><div onclick="removeEditPic(${i})" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:flex; justify-content:center; align-items:center; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2);">✕</div></div>`;
+            });
+        }
+        function removeEditPic(i) { tempEditProdPics.splice(i, 1); renderEditProdPicPreview(); }
+
+// --- NEW: CUSTOM DELETE PRODUCT FEATURE ---
+function deleteProduct(prodId) {
+    document.getElementById('deleteTargetId').value = prodId;
+    document.getElementById('customConfirmModal').style.display = 'flex';
+}
+
+function closeConfirmModal() {
+    document.getElementById('customConfirmModal').style.display = 'none';
+    document.getElementById('deleteTargetId').value = '';
+}
+
+async function executeProductDeletion() {
+    const prodId = document.getElementById('deleteTargetId').value;
+    if(!prodId) return;
+    
+    try {
+        await db.collection("Products").doc(prodId).delete();
+        notifyAdminActivity("Deleted a product from the store.");
+        showToast("Product Deleted Successfully!", "success");
+        closeConfirmModal(); // Close the beautiful modal
+    } catch(e) {
+        showToast("Error deleting product: " + e.message, "error");
+    }
+}
+
+
+        // --- PRODUCT PUBLISH ---
+        async function addProduct() {
+            const sid = localStorage.getItem("seller_id"); const store = localStorage.getItem("seller_store"); const name = localStorage.getItem("seller_name");
+            const pName = document.getElementById('prodName').value; const pMrp = Number(document.getElementById('prodMrp').value); const pPrice = Number(document.getElementById('prodPrice').value); const cType = document.getElementById('adminCommType').value; const cValue = Number(document.getElementById('adminCommValue').value); const pStock = Number(document.getElementById('prodStock').value);
+            
+            if(!pName || !pPrice || !pStock || !cValue || tempAddProdPics.length === 0) return showToast("Please fill all fields and select at least one image.", "error");
+            if(pMrp > 0 && pPrice > pMrp) return showToast("Selling Price cannot be greater than MRP!", "error");
+            
+            document.getElementById('addProdBtn').innerText = "Publishing..."; document.getElementById('addProdBtn').disabled = true;
+
+            try {
+                await db.collection("Products").add({ 
+                    sellerId: sid, storeName: store, sellerName: name, 
+                    productName: pName, mrp: pMrp, price: pPrice, adminCommType: cType, adminCommValue: cValue, 
+                    stockCount: pStock, soldCount: 0, 
+                    productPics: tempAddProdPics, 
+                    productPic: tempAddProdPics[0], 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                notifyAdminActivity(`Added a new product: ${pName}`);
+                showToast("Product Published Successfully!", "success");
+                
+                document.getElementById('prodName').value = ""; document.getElementById('prodMrp').value = ""; document.getElementById('prodPrice').value = ""; document.getElementById('adminCommValue').value = ""; document.getElementById('prodStock').value = ""; 
+                tempAddProdPics = []; renderAddProdPicPreview();
+            } catch(e) { showToast("Error: " + e.message, "error"); }
+            document.getElementById('addProdBtn').innerText = "Publish Product"; document.getElementById('addProdBtn').disabled = false;
+        }
+// --- CALCULATE TOTAL SALES FROM HISTORY ---
+function calculateTotalSalesFromHistory(sellerId) {
+    db.collection("SalesHistory").where("sellerId", "==", sellerId).onSnapshot(snap => {
+        let totalAmt = 0;
+        snap.forEach(doc => {
+            const d = doc.data();
+            if(d.totalAmount) {
+                totalAmt += Number(d.totalAmount);
+            }
+        });
+        document.getElementById('dashboardTotalSales').innerText = "₹" + totalAmt;
+    });
+}
+function fetchMyProducts(sellerId) {
+    db.collection("Products").where("sellerId", "==", sellerId).onSnapshot(snap => {
+        const cont = document.getElementById('products-container'); cont.innerHTML = "";
+        currentSellerProducts = []; 
+        if(snap.empty) { 
+            cont.innerHTML = `<div style="text-align:center; padding:30px 20px; color:#64748b; background:white; border-radius:15px; border:1px dashed #cbd5e1;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px; color:#cbd5e1;"></i><br>No products added yet.</div>`; 
+            return; 
+        }
+
+        snap.forEach(doc => {
+            const d = doc.data(); d.id = doc.id; currentSellerProducts.push(d); 
+            
+            let discountHtml = ``; if(d.mrp && d.mrp > d.price) { let discountPercent = Math.round(((d.mrp - d.price) / d.mrp) * 100); discountHtml = `<span class="price-discount">↓${discountPercent}%</span> <span class="price-mrp">₹${d.mrp}</span>`; }
+            let commText = d.adminCommType === 'percent' ? `${d.adminCommValue}%` : `₹${d.adminCommValue}`;
+            const imgSource = (d.productPics && d.productPics.length > 0) ? d.productPics[0] : (d.productPic || 'https://via.placeholder.com/100');
+
+            const item = document.createElement('div'); item.className = 'product-item';
+            item.innerHTML = `
+                <img src="${imgSource}" class="product-img">
+                <div class="product-info">
+                    <h4>${d.productName}</h4>
+                    <div class="ecommerce-price">${discountHtml}<span class="price-sell">₹${d.price}</span></div>
+                    <div>
+                        <span class="stock-badge">Stock: ${d.stockCount} | Sold: ${d.soldCount}</span>
+                        <span class="admin-comm-badge" title="Admin Share">Admin: ${commText}</span>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button onclick="openEditModal('${doc.id}')" style="background:#f1f5f9; border:none; color:#0ea5e9; font-size:14px; padding:10px; border-radius:8px; cursor:pointer; transition:0.3s;"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteProduct('${doc.id}')" style="background:#fee2e2; border:none; color:#ef4444; font-size:14px; padding:10px; border-radius:8px; cursor:pointer; transition:0.3s;"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            cont.appendChild(item);
+        });
+    });
+}
+
+        function openEditModal(id) {
+            const p = currentSellerProducts.find(item => item.id === id);
+            if(!p) return;
+            document.getElementById('editProdId').value = p.id;
+            document.getElementById('editProdName').value = p.productName;
+            document.getElementById('editProdMrp').value = p.mrp > 0 ? p.mrp : "";
+            document.getElementById('editProdPrice').value = p.price;
+            document.getElementById('editAdminCommType').value = p.adminCommType || "percent";
+            document.getElementById('editAdminCommValue').value = p.adminCommValue;
+            document.getElementById('editProdStock').value = p.stockCount;
+            
+            tempEditProdPics = p.productPics ? [...p.productPics] : (p.productPic ? [p.productPic] : []);
+            renderEditProdPicPreview();
+            document.getElementById('editProdModal').style.display = 'flex';
+        }
+
+        function closeEditModal() { document.getElementById('editProdModal').style.display = 'none'; }
+        
+        async function saveProductEdits() {
+            const id = document.getElementById('editProdId').value; const mrp = Number(document.getElementById('editProdMrp').value); const price = Number(document.getElementById('editProdPrice').value); const cType = document.getElementById('editAdminCommType').value; const cValue = Number(document.getElementById('editAdminCommValue').value); const stock = Number(document.getElementById('editProdStock').value);
+            if(mrp > 0 && price > mrp) return showToast("Selling Price cannot be greater than MRP!", "error");
+            
+            try { 
+                await db.collection("Products").doc(id).update({ 
+                    mrp: mrp, price: price, adminCommType: cType, adminCommValue: cValue, stockCount: stock,
+                    productPics: tempEditProdPics,
+                    productPic: tempEditProdPics.length > 0 ? tempEditProdPics[0] : ""
+                }); 
+                closeEditModal(); showToast("Product Details Updated!", "success"); 
+            } catch(e) { showToast("Update Error: " + e.message, "error"); }
+        }
+
+        // --- OFFLINE SALE ---
+        function openRecordSaleModal() {
+            document.getElementById('saleProductSearch').value = ''; document.getElementById('saleProductId').value = ''; document.getElementById('saleProductPrice').value = ''; document.getElementById('saleProductStock').value = ''; document.getElementById('saleProductPic').value = ''; document.getElementById('saleQty').value = 1; document.getElementById('saleTotalAmount').innerText = "₹0";
+            document.getElementById('buyerName').value = ''; document.getElementById('buyerPhone').value = ''; document.getElementById('buyerAddress').value = '';
+            document.getElementById('selectedProdImg').style.display = 'none'; document.getElementById('saleProductSearch').style.paddingLeft = '15px';
+            const dropdown = document.getElementById('saleProductDropdown'); dropdown.innerHTML = '';
+            currentSellerProducts.forEach(p => { 
+                const pPic = (p.productPics && p.productPics.length > 0) ? p.productPics[0] : (p.productPic || 'https://via.placeholder.com/50');
+                dropdown.innerHTML += `<div class="custom-option" onclick="selectSaleProduct('${p.id}')"><img src="${pPic}" class="dropdown-prod-img"><div class="custom-option-details"><span class="custom-option-title">${p.productName}</span><span class="custom-option-price">₹${p.price}</span></div><span class="custom-option-stock">Stock: ${p.stockCount}</span></div>`; 
+            });
+            document.getElementById('recordSaleModal').style.display = 'flex';
+        }
+
+        function toggleSaleDropdown() { document.getElementById('saleProductDropdown').style.display = 'block'; }
+        function handleSearchInput() {
+            document.getElementById('selectedProdImg').style.display = 'none'; document.getElementById('saleProductSearch').style.paddingLeft = '15px';
+            const input = document.getElementById('saleProductSearch').value.toLowerCase(); const dropdown = document.getElementById('saleProductDropdown'); const options = dropdown.getElementsByClassName('custom-option'); let hasVisible = false;
+            for (let i = 0; i < options.length; i++) { const text = options[i].innerText.toLowerCase(); if (text.includes(input)) { options[i].style.display = "flex"; hasVisible = true; } else { options[i].style.display = "none"; } }
+            dropdown.style.display = hasVisible ? 'block' : 'none';
+        }
+
+        function selectSaleProduct(id) {
+            const p = currentSellerProducts.find(item => item.id === id); if(!p) return;
+            const pPic = (p.productPics && p.productPics.length > 0) ? p.productPics[0] : (p.productPic || 'https://via.placeholder.com/50');
+            document.getElementById('saleProductId').value = p.id; document.getElementById('saleProductSearch').value = p.productName; document.getElementById('saleProductPrice').value = p.price; document.getElementById('saleProductStock').value = p.stockCount; document.getElementById('saleProductPic').value = pPic; 
+            const imgEl = document.getElementById('selectedProdImg'); imgEl.src = pPic; imgEl.style.display = 'block'; document.getElementById('saleProductSearch').style.paddingLeft = '48px'; 
+            document.getElementById('saleProductDropdown').style.display = 'none'; calculateSaleTotal();
+        }
+
+        function calculateSaleTotal() { const id = document.getElementById('saleProductId').value; const qty = Number(document.getElementById('saleQty').value); if(id && qty > 0) { const price = Number(document.getElementById('saleProductPrice').value); document.getElementById('saleTotalAmount').innerText = "₹" + (price * qty); } else { document.getElementById('saleTotalAmount').innerText = "₹0"; } }
+
+        async function saveRecordSale() {
+            const prodId = document.getElementById('saleProductId').value; const qty = Number(document.getElementById('saleQty').value); const stock = Number(document.getElementById('saleProductStock').value); const prodName = document.getElementById('saleProductSearch').value; const price = Number(document.getElementById('saleProductPrice').value); const pic = document.getElementById('saleProductPic').value;
+            const bName = document.getElementById('buyerName').value.trim(); const bPhone = document.getElementById('buyerPhone').value.trim(); const bAddress = document.getElementById('buyerAddress').value.trim();
+            if(!prodId) return showToast("Please search and select a product.", "error"); if(qty <= 0) return showToast("Enter a valid quantity.", "error"); if(qty > stock) return showToast(`Not enough stock! Left: ${stock}`, "error");
+
+            document.getElementById('confirmSaleBtn').innerText = "Recording..."; document.getElementById('confirmSaleBtn').disabled = true;
+            try {
+                await db.collection("Products").doc(prodId).update({ stockCount: firebase.firestore.FieldValue.increment(-qty), soldCount: firebase.firestore.FieldValue.increment(qty) });
+                const currentYear = new Date().getFullYear().toString(); const totalAmt = price * qty;
+                await db.collection("SalesHistory").add({ sellerId: localStorage.getItem("seller_id"), productId: prodId, productName: prodName, productPic: pic, qty: qty, price: price, totalAmount: totalAmt, year: currentYear, buyerName: bName, buyerPhone: bPhone, buyerAddress: bAddress, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                
+                notifyAdminActivity(`Recorded a sale of ₹${totalAmt} for ${prodName}`);
+                showToast("Sale Recorded Successfully!", "success"); closeRecordSaleModal();
+            } catch(e) { showToast("Error: " + e.message, "error"); }
+            document.getElementById('confirmSaleBtn').innerText = "Confirm Sale"; document.getElementById('confirmSaleBtn').disabled = false;
+        }
+        function closeRecordSaleModal() { document.getElementById('recordSaleModal').style.display = 'none'; }
+
+        // --- SALES HISTORY ---
+        function openHistoryModal() { document.getElementById('historyModal').style.display = 'flex'; document.getElementById('historyYear').value = new Date().getFullYear().toString(); fetchSalesHistory(); }
+        function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+        function fetchSalesHistory() {
+            const sid = localStorage.getItem("seller_id"); const year = document.getElementById('historyYear').value; const container = document.getElementById('historyListContainer');
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#3b82f6;"><i class="fas fa-spinner fa-spin"></i> Loading History...</div>`;
+            db.collection("SalesHistory").where("sellerId", "==", sid).get().then(snap => {
+                container.innerHTML = ""; let historyData = [];
+                snap.forEach(doc => { const d = doc.data(); d.id = doc.id; if(d.year === year) historyData.push(d); });
+                historyData.sort((a, b) => { const timeA = a.timestamp ? a.timestamp.toMillis() : 0; const timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; });
+                if(historyData.length === 0) { container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b; font-size:13px; background:#f1f5f9; border-radius:10px;">No sales recorded in ${year}.</div>`; return; }
+
+                historyData.forEach(d => {
+                    const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "Just now"; const imgSource = d.productPic || 'https://via.placeholder.com/50';
+                    let buyerInfoHtml = ''; let contactBtnsHtml = '';
+                    if(d.buyerName || d.buyerPhone) {
+                        let nameDisp = d.buyerName || 'Customer'; let phoneDisp = d.buyerPhone ? ` | ${d.buyerPhone}` : ''; let addrDisp = d.buyerAddress ? `<br><i class="fas fa-map-marker-alt" style="color:#94a3b8;"></i> ${d.buyerAddress}` : '';
+                        buyerInfoHtml = `<div style="background:#f1f5f9; padding:8px 10px; border-radius:8px; margin-top:10px; font-size:11px; color:#475569; border:1px solid #e2e8f0;"><i class="fas fa-user-circle" style="color:#0ea5e9;"></i> <strong style="color:#1e293b;">${nameDisp}</strong>${phoneDisp}${addrDisp}</div>`;
+                        if(d.buyerPhone) {
+                            let rawPhone = d.buyerPhone.replace(/\D/g, ''); let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
+                            contactBtnsHtml = `<div class="buyer-contact-btn"><a href="tel:${rawPhone}" class="btn-call"><i class="fas fa-phone"></i> Call</a><a href="sms:${rawPhone}" class="btn-sms"><i class="fas fa-comment-sms"></i> SMS</a><a href="https://wa.me/${waPhone}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i> WA</a></div>`;
+                        }
+                    }
+                    container.innerHTML += `<div class="history-item" style="display:block;"><button class="btn-del-history" onclick="requestAdminAction('delete_history', {historyId: '${d.id}'})" title="Request Admin to Delete"><i class="fas fa-trash"></i></button><div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 35px;"><div class="history-item-left"><img src="${imgSource}" class="history-item-img"><div class="history-item-text"><h4>${d.productName}</h4><p><i class="far fa-calendar-alt"></i> ${date} &nbsp;|&nbsp; Qty: ${d.qty}</p></div></div><div class="history-item-right"><h3>₹${d.totalAmount}</h3></div></div>${buyerInfoHtml}${contactBtnsHtml}</div>`;
+                });
+            }).catch(err => { container.innerHTML = `<div style="color:red; text-align:center; font-size:12px; padding:10px;">Error: ${err.message}</div>`; });
+        }
+    </script>
+</body>
+</html>
