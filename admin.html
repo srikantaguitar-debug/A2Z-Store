@@ -118,15 +118,32 @@
 
         <div class="form-container admin-card-blue">
             <h3 class="form-title" style="color: #1d4ed8;"><i class="fas fa-bullhorn"></i> Announcement & Info</h3>
+            
             <div class="input-group">
                 <label>Scrolling Notification Text</label>
                 <input type="text" id="adminNotice" placeholder="Enter scrolling news/offers...">
             </div>
+            
             <div class="input-group">
                 <label>Store Information (Appears on Info Button)</label>
                 <textarea id="adminStoreInfo" placeholder="Enter store details or help text..." rows="2"></textarea>
             </div>
+            
             <button class="btn-save-settings" onclick="saveStoreSettings()">Update App Info</button>
+        </div>
+
+        <div class="form-container admin-card-blue" style="border-left-color: #10b981 !important;">
+            <h3 class="form-title" style="color: #059669;"><i class="fas fa-tags"></i> Manage Categories</h3>
+            
+            <div class="row">
+                <div class="input-group" style="flex: 3; margin-bottom: 0;">
+                    <input type="text" id="newCategoryName" placeholder="Enter new category name...">
+                </div>
+                <button class="btn-save-settings" style="flex: 1; background: #10b981; margin-top: 0;" onclick="addCategory()">Add</button>
+            </div>
+            
+            <div id="adminCategoryList" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
+                </div>
         </div>
 
         <div class="form-container" style="border-left: 4px solid #ef4444;">
@@ -425,7 +442,95 @@
         function processImage(file, width = 300) { return new Promise((resolve) => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); const s = width / i.width; c.width = width; c.height = i.height * s; const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.5)); }; }; }); }
         
         async function uploadLogoDB(input) { if(!input.files[0]) return; document.getElementById('logo-db-msg').innerText = "Processing..."; const b = await processImage(input.files[0], 200); await db.collection("Settings").doc("StoreConfig").set({ logoUrl: b }, { merge: true }); document.getElementById('logo-db-msg').innerText = "✅ Logo Saved!"; showToast("Logo Updated", "success"); }
-        function fetchLogoDB() { db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { if(doc.exists && doc.data().logoUrl) { const l = doc.data().logoUrl; document.getElementById('headerLogo').src = l; document.getElementById('headerLogo').style.display = 'block'; document.getElementById('settingsLogoPreview').src = l; } }); }
+        let globalCategories = [];
+        
+        function fetchLogoDB() { 
+            db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { 
+                if(doc.exists) { 
+                    const data = doc.data();
+                    if(data.logoUrl) {
+                        document.getElementById('headerLogo').src = data.logoUrl; 
+                        document.getElementById('headerLogo').style.display = 'block'; 
+                        document.getElementById('settingsLogoPreview').src = data.logoUrl; 
+                    }
+                    globalCategories = data.categories || [];
+                    renderAdminCategories();
+                } 
+            }); 
+        }
+
+        function renderAdminCategories() {
+            const cont = document.getElementById('adminCategoryList');
+            cont.innerHTML = "";
+            if(globalCategories.length === 0) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No categories added yet.</p>"; return; }
+            globalCategories.forEach((cat, index) => {
+                cont.innerHTML += `
+                    <span style="background: #e2e8f0; color: #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                        ${cat} 
+                        <div style="display: flex; gap: 8px;">
+                            <i class="fas fa-edit" style="color: #3b82f6; cursor: pointer;" onclick="editCategory(${index})" title="Edit"></i>
+                            <i class="fas fa-times" style="color: #ef4444; cursor: pointer;" onclick="deleteCategory(${index})" title="Delete"></i>
+                        </div>
+                    </span>`;
+            });
+        }
+
+        async function addCategory() {
+            const catName = document.getElementById('newCategoryName').value.trim();
+            if(!catName) return showToast("Enter category name", "error");
+            if(globalCategories.includes(catName)) return showToast("Category already exists", "error");
+            globalCategories.push(catName);
+            try {
+                await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
+                document.getElementById('newCategoryName').value = "";
+                showToast("Category Added!", "success");
+            } catch(e) { showToast(e.message, "error"); }
+        }
+
+        async function deleteCategory(index) {
+            globalCategories.splice(index, 1);
+            try {
+                await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
+                showToast("Category Deleted!", "success");
+            } catch(e) { showToast(e.message, "error"); }
+        }
+        async function editCategory(index) {
+    const oldName = globalCategories[index];
+    const newName = prompt("Edit Category Name:", oldName);
+    
+    if (newName === null || newName.trim() === "" || newName.trim() === oldName) return;
+    
+    const finalName = newName.trim();
+    
+    if(globalCategories.includes(finalName)) {
+        return showToast("Category name already exists!", "error");
+    }
+
+    // ইউজারকে মেসেজ দেখানো যে আপডেট হচ্ছে
+    showToast("Updating category and all linked products...", "warning");
+
+    try {
+        // ১. ক্যাটাগরি লিস্ট আপডেট করা
+        globalCategories[index] = finalName;
+        await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
+
+        // ২. এই ক্যাটাগরিতে থাকা সব প্রোডাক্ট খুঁজে বের করা
+        const productsSnap = await db.collection("Products").where("category", "==", oldName).get();
+        
+        // ৩. যদি প্রোডাক্ট পাওয়া যায়, তবে সবগুলোর ক্যাটাগরি নাম নতুন নামে আপডেট করা
+        if (!productsSnap.empty) {
+            const batch = db.batch();
+            productsSnap.forEach(doc => {
+                batch.update(doc.ref, { category: finalName });
+            });
+            await batch.commit();
+        }
+
+        showToast("Category & Products Updated Successfully!", "success");
+    } catch(e) { 
+        showToast("Error: " + e.message, "error"); 
+    }
+}
         
         let tempPic = null;
         async function fileChosen(input) { if(input.files[0]) { showToast("Processing Image...", "warning"); tempPic = await processImage(input.files[0], 300); document.getElementById('pic-status').innerText = "✅ Image Ready"; showToast("Image Ready!", "success"); } }
@@ -447,34 +552,41 @@
 
         let currentEditingSellerId = null; let tempEditPic = null;
         function openProfileModal(id, d) {
-    currentEditingSellerId = id; tempEditPic = d.profilePic;
+    currentEditingSellerId = id; 
+    tempEditPic = d.profilePic;
+    
+    // ভিউ মোডের জন্য ডেটা শো করানো
     document.getElementById('profStore').innerText = d.storeName || "N/A"; 
     document.getElementById('profName').innerText = d.sellerName || "N/A"; 
     document.getElementById('profDob').innerText = d.dob || "N/A"; 
     document.getElementById('profPhone').innerText = d.phone || "N/A"; 
-    document.getElementById('profPass').innerText = d.password || "Not Set"; 
-    document.getElementById('profAddress').innerText = d.address || "N/A"; 
+    document.getElementById('profPass').innerText = d.password || "Not Set"; // পাসওয়ার্ড শো করার লাইন যোগ করা হলো
+    document.getElementById('profAddress').innerText = d.address || "No Address Found"; 
     document.getElementById('profImg').src = d.profilePic || "https://via.placeholder.com/100";
     
+    // সেলস এবং প্রফিট শো করানো
     const stats = globalSellerStats[id] || { sales: 0, profit: 0 }; 
-    document.getElementById('profTotalSales').innerText = "₹" + stats.sales.toFixed(2); 
-    document.getElementById('profAdminProfit').innerText = "₹" + stats.profit.toFixed(2);
+    if(document.getElementById('profTotalSales')) document.getElementById('profTotalSales').innerText = "₹" + stats.sales.toFixed(2); 
+    if(document.getElementById('profAdminProfit')) document.getElementById('profAdminProfit').innerText = "₹" + stats.profit.toFixed(2);
 
+    // এডিট মোডের জন্য ইনপুট বক্সে ডেটা সেট করা
     document.getElementById('editStore').value = d.storeName || ""; 
     document.getElementById('editName').value = d.sellerName || ""; 
-    document.getElementById('editDob').value = d.dob || ""; 
     document.getElementById('editPhone').value = d.phone || ""; 
-    document.getElementById('editPass').value = d.password || "";
-    document.getElementById('editAddress').value = d.address || "";
+    document.getElementById('editPass').value = d.password || ""; // পাসওয়ার্ড এডিট করার লাইন যোগ করা হলো
+    document.getElementById('editAddress').value = d.address || ""; 
+    document.getElementById('editDob').value = d.dob || "";
     
+    // Call, WhatsApp বাটন কাজ করার জন্য
     if (d.phone && d.phone !== "N/A") {
-        document.getElementById('btnCall').href = "tel:" + d.phone;
+        if(document.getElementById('btnCall')) document.getElementById('btnCall').href = "tel:" + d.phone;
         let waPhone = d.phone.startsWith('+') ? d.phone.replace('+', '') : "91" + d.phone;
-        document.getElementById('btnWhatsApp').href = "https://wa.me/" + waPhone;
-        document.getElementById('btnSMS').href = "sms:" + d.phone;
+        if(document.getElementById('btnWhatsApp')) document.getElementById('btnWhatsApp').href = "https://wa.me/" + waPhone;
+        if(document.getElementById('btnSMS')) document.getElementById('btnSMS').href = "sms:" + d.phone;
     }
 
-    toggleEditMode(false); document.getElementById('sellerProfileModal').style.display = 'flex';
+    toggleEditMode(false); 
+    document.getElementById('sellerProfileModal').style.display = 'flex';
 }
 
         function closeProfileModal() { document.getElementById('sellerProfileModal').style.display = 'none'; }
