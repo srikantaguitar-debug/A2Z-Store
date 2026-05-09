@@ -39,7 +39,7 @@
     100% { transform: translateX(-100%); } 
 }
 
-        .search-container { padding: 15px 15px 10px; }
+        .search-container { padding: 10px 15px 5px; }
         .search-box { display: flex; align-items: center; background: white; padding: 12px 15px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .search-box i { color: #8b5cf6; margin-right: 10px; font-size: 16px; }
         .search-box input { border: none; background: transparent; width: 100%; outline: none; font-family: 'Poppins'; font-size: 14px; }
@@ -127,6 +127,11 @@
         .info-card p { font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap;}
         .btn-close-info { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px 30px; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); transition: 0.3s; width: 100%; }
         .btn-close-info:active { transform: scale(0.95); }
+        /* Category Slider Styles */
+.category-slider { display: flex; overflow-x: auto; gap: 8px; padding: 0px 15px 10px; scrollbar-width: none; border-bottom: none; background: transparent; margin-bottom: 0px; }
+.category-slider::-webkit-scrollbar { display: none; }
+.cat-btn { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+.cat-btn.active { background: #3b82f6; color: white; border-color: #2563eb; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
     </style>
 </head>
 <body>
@@ -153,8 +158,10 @@
             <input type="text" id="searchInput" placeholder="Search amazing products..." onkeyup="filterProducts()">
         </div>
     </div>
+    <div class="category-slider" id="categorySlider" style="display: none;">
+        </div>
 
-    <div style="background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; padding-top: 10px; margin-top: 10px;">
+    <div style="background: white; border-top-left-radius: 24px; border-top-right-radius: 24px; padding-top: 15px; margin-top: 0px; box-shadow: 0 -4px 15px rgba(0,0,0,0.03);">
         <h3 class="section-title"><i class="fas fa-fire" style="color: #ef4444;"></i> Hot Deals</h3>
         <div class="hot-deals-container" id="hotDealsList"></div>
 
@@ -174,6 +181,7 @@
         <div class="fs-details">
             <div class="store-badge" id="fsStoreBadge"></div>
             <h2 id="fsProductTitle"></h2>
+            <div id="fsProductShortNote" style="font-size: 13px; color: #64748b; font-weight: 600; margin-top: -8px; margin-bottom: 12px;"></div>
             <div id="fsProductPrice"></div>
             <div id="fsStockInfo" class="fs-stock-info"></div>
 
@@ -242,6 +250,9 @@
             
             // 2. Info Button Text Update (Blue Circle)
             window.infoText = data.storeInfo || "Welcome to A2Z Store! Stay tuned for more updates."; 
+            // Category render logic
+            const categories = data.categories || [];
+            renderCategoryButtons(categories);
             
             // 3. Marquee Sliding Notification Update (Red Circle)
             const marqueeText = data.notification; // Admin panel saves it as 'notification'
@@ -295,11 +306,13 @@
             container.innerHTML = ""; let count = 0;
             allProducts.forEach(prod => {
                 if (searchQuery && !prod.productName.toLowerCase().includes(searchQuery)) return; count++;
+                if (selectedCategory !== "All" && prod.category !== selectedCategory) return;
                 let priceHtml = `<div class="price-row"><span class="sell-price">₹${prod.price}</span></div>`;
                 if(prod.mrp && prod.mrp > prod.price) {
                     let discountPercent = Math.round(((prod.mrp - prod.price) / prod.mrp) * 100);
                     priceHtml = `<div class="price-row"><span class="sell-price">₹${prod.price}</span><span class="mrp-price">₹${prod.mrp}</span><span class="discount-tag">↓${discountPercent}%</span></div>`;
                 }
+                let shortNoteHtml = prod.shortNote ? `<div style="font-size: 12px; color: #64748b; font-weight: 600; margin-top: -5px; margin-bottom: 8px;">${prod.shortNote}</div>` : '';
                 let isOutOfStock = prod.stockCount <= 0;
                 let overlayHtml = isOutOfStock ? `<div class="out-of-stock-overlay">Sold Out</div>` : '';
                 const imgSource = (prod.productPics && prod.productPics.length > 0) ? prod.productPics[0] : (prod.productPic || 'https://via.placeholder.com/150');
@@ -307,7 +320,7 @@
                 let btnHtml = isOutOfStock ? `<div class="btn-group"><button class="btn-add-cart btn-disabled" disabled>Out of Stock</button></div>` : `<div class="btn-group"><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${prod.id}', '${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${imgSource}', '${prod.sellerId}')"><i class="fas fa-cart-plus"></i> Add</button><button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${prod.sellerId}')"><i class="fab fa-whatsapp"></i> Buy</button></div>`;
 
                 const card = document.createElement('div'); card.className = 'product-card';
-                card.innerHTML = `<div class="product-img-wrapper" onclick="openProductModal('${prod.id}')">${overlayHtml}<img src="${imgSource}" class="product-img" loading="lazy"></div><div class="product-details" onclick="openProductModal('${prod.id}')"><div class="store-badge"><i class="fas fa-store"></i> ${prod.storeName}</div><h4 class="product-title">${prod.productName}</h4>${priceHtml}</div><div style="padding: 0 12px 12px;">${btnHtml}</div>`;
+                card.innerHTML = `<div class="product-img-wrapper" onclick="openProductModal('${prod.id}')">${overlayHtml}<img src="${imgSource}" class="product-img" loading="lazy"></div><div class="product-details" onclick="openProductModal('${prod.id}')"><div class="store-badge"><i class="fas fa-store"></i> ${prod.storeName}</div><h4 class="product-title">${prod.productName}</h4>${priceHtml}${shortNoteHtml}</div><div style="padding: 0 12px 12px;">${btnHtml}</div>`;
                 container.appendChild(card);
             });
             if(count === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; padding: 40px 20px; color: #8b5cf6; font-weight:600;">No products found.</div>`; }
@@ -344,6 +357,7 @@
 
     document.getElementById('fsStoreBadge').innerHTML = `<i class="fas fa-store"></i> ${prod.storeName}`;
     document.getElementById('fsProductTitle').innerText = prod.productName;
+    document.getElementById('fsProductShortNote').innerText = prod.shortNote || "";
     document.getElementById('fsProductDesc').innerText = prod.description || "No description available for this product.";
     
     let priceHtml = `<div class="price-row" style="margin-bottom:0;"><span class="sell-price" style="font-size:24px;">₹${prod.price}</span></div>`;
@@ -426,6 +440,29 @@
                     checkoutSection.innerHTML += `<button class="checkout-btn" onclick="window.open('https://wa.me/${waPhone}?text=${encodedMsg}', '_blank')"><i class="fab fa-whatsapp" style="font-size: 20px;"></i> Order from ${storeName} (₹${sellerTotal})</button>`;
                 }
             }
+        }
+        let selectedCategory = "All";
+
+        function renderCategoryButtons(categories) {
+            const container = document.getElementById('categorySlider');
+            if(!categories || categories.length === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'flex';
+            
+            let html = `<button class="cat-btn ${selectedCategory === 'All' ? 'active' : ''}" onclick="selectCategory('All')">All</button>`;
+            categories.forEach(cat => {
+                html += `<button class="cat-btn ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            const btns = document.querySelectorAll('.cat-btn');
+            btns.forEach(btn => {
+                if(btn.innerText === cat) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            renderProducts(); // Refresh products based on category
         }
     </script>
 </body>
