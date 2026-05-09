@@ -161,6 +161,8 @@
         <div class="form-container">
             <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:10px; font-size:16px; color: #0f172a;"><i class="fas fa-box-open" style="color:#f59e0b;"></i> Add New Product</h3>
             <div class="input-group"><label>Product Name</label><input type="text" id="prodName" placeholder="e.g. Cotton T-Shirt"></div>
+            <div class="input-group"><label>Product Category (Optional)</label><select id="prodCategory"><option value="">-- Select Category --</option></select></div>
+            <div class="input-group"><label>Short Note (যেমন: Per Piece, 1 Kg)</label><input type="text" id="prodShortNote" placeholder="e.g. Per piece"></div>
             <div class="row">
                 <div class="input-group"><label>MRP (₹)</label><input type="number" id="prodMrp" placeholder="Maximum Price"></div>
                 <div class="input-group"><label>Selling Price (₹)</label><input type="number" id="prodPrice" placeholder="Final Price"></div>
@@ -225,7 +227,9 @@
         <div class="edit-card">
             <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:15px; color:#0f172a;"><i class="fas fa-edit" style="color:#0ea5e9;"></i> Edit Product</h3>
             <input type="hidden" id="editProdId">
-            <div class="input-group"><label>Product Name</label><input type="text" id="editProdName" disabled style="background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1;"></div>
+            <div class="input-group"><label>Product Name</label><input type="text" id="editProdName" placeholder="Edit product name"></div>
+            <div class="input-group"><label>Product Category</label><select id="editProdCategory"><option value="">-- Select Category --</option></select></div>
+            <div class="input-group"><label>Short Note</label><input type="text" id="editProdShortNote"></div>
             <div class="row">
                 <div class="input-group"><label>MRP (₹)</label><input type="number" id="editProdMrp"></div>
                 <div class="input-group"><label>Sell Price (₹)</label><input type="number" id="editProdPrice"></div>
@@ -385,7 +389,22 @@
 
         document.addEventListener('click', function(event) { const wrapper = document.querySelector('.custom-select-wrapper'); if (wrapper && !wrapper.contains(event.target)) { document.getElementById('saleProductDropdown').style.display = 'none'; } });
 
-        function fetchGlobalLogo() { db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { if(doc.exists && doc.data().logoUrl) { document.getElementById('headerLogo').src = doc.data().logoUrl; document.getElementById('headerLogo').style.display = 'block'; } }); }
+        function fetchGlobalLogo() { 
+            db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { 
+                if(doc.exists) { 
+                    const data = doc.data();
+                    if(data.logoUrl) {
+                        document.getElementById('headerLogo').src = data.logoUrl; 
+                        document.getElementById('headerLogo').style.display = 'block'; 
+                    }
+                    const categories = data.categories || [];
+                    let catOptions = `<option value="">-- Select Category --</option>`;
+                    categories.forEach(cat => { catOptions += `<option value="${cat}">${cat}</option>`; });
+                    if(document.getElementById('prodCategory')) document.getElementById('prodCategory').innerHTML = catOptions;
+                    if(document.getElementById('editProdCategory')) document.getElementById('editProdCategory').innerHTML = catOptions;
+                } 
+            }); 
+        }
 
         async function loginSeller() {
             const phone = document.getElementById('sellerPhone').value.trim(); const dob = document.getElementById('sellerDob').value; const pass = document.getElementById('sellerPass').value.trim();
@@ -507,11 +526,14 @@ function askDeleteHistory(historyId) {
 
         async function addProduct() {
             const sid = localStorage.getItem("seller_id"); const store = localStorage.getItem("seller_store"); const name = localStorage.getItem("seller_name");
-            const pName = document.getElementById('prodName').value; const pDesc = document.getElementById('prodDesc').value; const pMrp = Number(document.getElementById('prodMrp').value); const pPrice = Number(document.getElementById('prodPrice').value); const cType = document.getElementById('adminCommType').value; const cValue = Number(document.getElementById('adminCommValue').value); const pStock = Number(document.getElementById('prodStock').value);
+            const pName = document.getElementById('prodName').value;
+            document.getElementById('prodShortNote').value = "";
+            const pShortNote = document.getElementById('prodShortNote').value;const pDesc = document.getElementById('prodDesc').value;
+            const pCategory = document.getElementById('prodCategory').value;const pMrp = Number(document.getElementById('prodMrp').value); const pPrice = Number(document.getElementById('prodPrice').value); const cType = document.getElementById('adminCommType').value; const cValue = Number(document.getElementById('adminCommValue').value); const pStock = Number(document.getElementById('prodStock').value);
             if(!pName || !pPrice || !pStock || !cValue || tempAddProdPics.length === 0) return showToast("Please fill all fields and select at least one image.", "error");
             if(pMrp > 0 && pPrice > pMrp) return showToast("Selling Price cannot be greater than MRP!", "error");
             document.getElementById('addProdBtn').innerText = "Publishing..."; document.getElementById('addProdBtn').disabled = true;
-            try { await db.collection("Products").add({ sellerId: sid, storeName: store, sellerName: name, productName: pName, description: pDesc, mrp: pMrp, price: pPrice, adminCommType: cType, adminCommValue: cValue, stockCount: pStock, soldCount: 0, productPics: tempAddProdPics, productPic: tempAddProdPics[0], timestamp: firebase.firestore.FieldValue.serverTimestamp() }); notifyAdminActivity(`Added a new product: ${pName}`); showToast("Product Published Successfully!", "success"); document.getElementById('prodName').value = ""; document.getElementById('prodDesc').value = ""; document.getElementById('prodMrp').value = ""; document.getElementById('prodPrice').value = ""; document.getElementById('adminCommValue').value = ""; document.getElementById('prodStock').value = ""; tempAddProdPics = []; renderAddProdPicPreview(); } catch(e) { showToast("Error: " + e.message, "error"); }
+            try { await db.collection("Products").add({ sellerId: sid, storeName: store, sellerName: name, productName: pName,shortNote: pShortNote,category: pCategory, description: pDesc, mrp: pMrp, price: pPrice, adminCommType: cType, adminCommValue: cValue, stockCount: pStock, soldCount: 0, productPics: tempAddProdPics, productPic: tempAddProdPics[0], timestamp: firebase.firestore.FieldValue.serverTimestamp() }); notifyAdminActivity(`Added a new product: ${pName}`); showToast("Product Published Successfully!", "success"); document.getElementById('prodName').value = ""; document.getElementById('prodDesc').value = ""; document.getElementById('prodMrp').value = ""; document.getElementById('prodPrice').value = ""; document.getElementById('adminCommValue').value = ""; document.getElementById('prodStock').value = ""; tempAddProdPics = []; renderAddProdPicPreview(); } catch(e) { showToast("Error: " + e.message, "error"); }
             document.getElementById('addProdBtn').innerText = "Publish Product"; document.getElementById('addProdBtn').disabled = false;
         }
 
@@ -547,9 +569,47 @@ function askDeleteHistory(historyId) {
         });
     });
 }
-        function openEditModal(id) { const p = currentSellerProducts.find(item => item.id === id); if(!p) return; document.getElementById('editProdId').value = p.id; document.getElementById('editProdName').value = p.productName; document.getElementById('editProdMrp').value = p.mrp > 0 ? p.mrp : ""; document.getElementById('editProdPrice').value = p.price; document.getElementById('editAdminCommType').value = p.adminCommType || "percent"; document.getElementById('editAdminCommValue').value = p.adminCommValue; document.getElementById('editProdStock').value = p.stockCount; document.getElementById('editProdDesc').value = p.description || ""; tempEditProdPics = p.productPics ? [...p.productPics] : (p.productPic ? [p.productPic] : []); renderEditProdPicPreview(); document.getElementById('editProdModal').style.display = 'flex'; }
+        function openEditModal(id) { const p = currentSellerProducts.find(item => item.id === id); if(!p) return; document.getElementById('editProdId').value = p.id; document.getElementById('editProdCategory').value = p.category || "";document.getElementById('editProdName').value = p.productName;
+        document.getElementById('editProdShortNote').value = p.shortNote || "";document.getElementById('editProdMrp').value = p.mrp > 0 ? p.mrp : ""; document.getElementById('editProdPrice').value = p.price; document.getElementById('editAdminCommType').value = p.adminCommType || "percent"; document.getElementById('editAdminCommValue').value = p.adminCommValue; document.getElementById('editProdStock').value = p.stockCount; document.getElementById('editProdDesc').value = p.description || ""; tempEditProdPics = p.productPics ? [...p.productPics] : (p.productPic ? [p.productPic] : []); renderEditProdPicPreview(); document.getElementById('editProdModal').style.display = 'flex'; }
         function closeEditModal() { document.getElementById('editProdModal').style.display = 'none'; }
-        async function saveProductEdits() { const id = document.getElementById('editProdId').value; const mrp = Number(document.getElementById('editProdMrp').value); const price = Number(document.getElementById('editProdPrice').value); const cType = document.getElementById('editAdminCommType').value; const cValue = Number(document.getElementById('editAdminCommValue').value); const stock = Number(document.getElementById('editProdStock').value); const desc = document.getElementById('editProdDesc').value; if(mrp > 0 && price > mrp) return showToast("Selling Price cannot be greater than MRP!", "error"); try { const docRef = db.collection("Products").doc(id); const docSnap = await docRef.get(); if(!docSnap.exists) { closeEditModal(); return showToast("This product has been deleted!", "error"); } await docRef.update({ mrp: mrp, price: price, adminCommType: cType, adminCommValue: cValue, stockCount: stock, description: desc, productPics: tempEditProdPics, productPic: tempEditProdPics.length > 0 ? tempEditProdPics[0] : "" }); closeEditModal(); showToast("Product Details Updated!", "success"); } catch(e) { closeEditModal(); showToast("Product might be deleted already!", "error"); } }
+        async function saveProductEdits() {
+    const id = document.getElementById('editProdId').value; 
+    const pName = document.getElementById('editProdName').value; // নাম নেওয়ার জন্য নতুন লাইন
+    const pShortNote = document.getElementById('editProdShortNote').value;
+    const pCategory = document.getElementById('editProdCategory').value;
+    const mrp = Number(document.getElementById('editProdMrp').value); 
+    const price = Number(document.getElementById('editProdPrice').value); 
+    const cType = document.getElementById('editAdminCommType').value; 
+    const cValue = Number(document.getElementById('editAdminCommValue').value); 
+    const stock = Number(document.getElementById('editProdStock').value);
+    const desc = document.getElementById('editProdDesc').value; 
+    
+    if(!pName) return showToast("Product Name cannot be empty!", "error");
+    if(mrp > 0 && price > mrp) return showToast("Selling Price cannot be greater than MRP!", "error");
+    
+    try { 
+        const docRef = db.collection("Products").doc(id);
+        const docSnap = await docRef.get();
+        if(!docSnap.exists) {
+            closeEditModal();
+            return showToast("This product has been deleted!", "error");
+        }
+        
+        await docRef.update({ 
+            productName: pName, // ডেটাবেসে নাম আপডেট করার লাইন
+            shortNote: pShortNote,
+            category: pCategory,
+            mrp: mrp, price: price, adminCommType: cType, adminCommValue: cValue, stockCount: stock,
+            description: desc, 
+            productPics: tempEditProdPics,
+            productPic: tempEditProdPics.length > 0 ? tempEditProdPics[0] : ""
+        }); 
+        closeEditModal(); showToast("Product Details Updated!", "success"); 
+    } catch(e) { 
+        closeEditModal();
+        showToast("Product might be deleted already!", "error"); 
+    }
+}
 
         function openRecordSaleModal() { document.getElementById('saleProductSearch').value = ''; document.getElementById('saleProductId').value = ''; document.getElementById('saleProductPrice').value = ''; document.getElementById('saleProductStock').value = ''; document.getElementById('saleProductPic').value = ''; document.getElementById('saleQty').value = 1; document.getElementById('saleTotalAmount').innerText = "₹0"; document.getElementById('buyerName').value = ''; document.getElementById('buyerPhone').value = ''; document.getElementById('buyerAddress').value = ''; document.getElementById('selectedProdImg').style.display = 'none'; document.getElementById('saleProductSearch').style.paddingLeft = '15px'; const dropdown = document.getElementById('saleProductDropdown'); dropdown.innerHTML = ''; currentSellerProducts.forEach(p => { const pPic = (p.productPics && p.productPics.length > 0) ? p.productPics[0] : (p.productPic || 'https://via.placeholder.com/50'); dropdown.innerHTML += `<div class="custom-option" onclick="selectSaleProduct('${p.id}')"><img src="${pPic}" class="dropdown-prod-img"><div class="custom-option-details"><span class="custom-option-title">${p.productName}</span><span class="custom-option-price">₹${p.price}</span></div><span class="custom-option-stock">Stock: ${p.stockCount}</span></div>`; }); document.getElementById('recordSaleModal').style.display = 'flex'; }
         function toggleSaleDropdown() { document.getElementById('saleProductDropdown').style.display = 'block'; }
