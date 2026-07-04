@@ -20,14 +20,23 @@
         .toast-success { background: rgba(16, 185, 129, 0.95); border: 1px solid #34d399; } 
         .toast-warning { background: rgba(245, 158, 11, 0.95); border: 1px solid #fbbf24; }
 
-        #admin-login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a, #1e293b); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .login-box h2 { margin: 0 0 10px; color: #0f172a; }
+        /* Login & Lock Screens */
+        .full-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a, #1e293b); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .auth-box { background: white; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .auth-box h2 { margin: 0 0 5px; color: #0f172a; font-size: 20px;}
+        .auth-box p { font-size: 13px; color: #64748b; margin-bottom: 20px; }
         .login-input-group { margin-bottom: 15px; text-align: left; }
         .login-input-group label { font-size: 12px; color: #475569; font-weight: 600; margin-bottom: 5px; display: block; }
-        .login-box input { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; font-family: 'Poppins'; }
-        .btn-login { background: #0ea5e9; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .auth-box input.std-input { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; font-family: 'Poppins'; }
+        
+        /* 4-Digit PIN specific input */
+        .pin-input { text-align: center; font-size: 24px; letter-spacing: 15px; font-weight: bold; width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; outline: none; font-family: 'Poppins'; color: #0ea5e9;}
+        .pin-input:focus { border-color: #0ea5e9; }
 
+        .btn-auth { background: #0ea5e9; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-pin { background: #10b981; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s;}
+
+        /* Admin App UI */
         .header { background: #0f172a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .dynamic-logo { height: 35px; border-radius: 5px; display: none; object-fit: contain; background: white; padding: 2px;} 
         .settings-btn { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; transition: transform 0.3s; }
@@ -59,12 +68,6 @@
         
         .profile-header { background: linear-gradient(135deg, #f59e0b, #d97706); height: 80px; }
         .profile-img-large { width: 100px; height: 100px; border-radius: 50%; border: 5px solid white; object-fit: cover; margin-top: -50px; background: white; position: relative;}
-        
-        .seller-stats-box { background: #f8fafc; margin: 15px 20px; padding: 15px 0; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; align-items: center; }
-        .seller-stats-box div { flex: 1; text-align: center; }
-        .seller-stats-box div:first-child { border-right: 1px solid #cbd5e1; }
-        .seller-stats-box p { font-size: 11px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase; }
-        .seller-stats-box h4 { margin: 0; font-size: 18px; }
 
         .detail-row { padding: 10px 20px; text-align: left; border-bottom: 1px solid #f1f5f9; }
         .detail-row label { font-size: 11px; color: #64748b; display: block; font-weight: 600; text-transform: uppercase; }
@@ -81,18 +84,54 @@
         
         .admin-card-blue { border-left: 4px solid #3b82f6 !important; }
         .btn-save-settings { background: #0ea5e9; color: white; padding: 10px; border: none; border-radius: 8px; width: 100%; cursor: pointer; font-weight: 600; margin-top: 10px; transition: 0.3s; }
+        
+        .checkbox-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; background: #ecfdf5; padding: 12px; border-radius: 8px; border: 1px solid #10b981; }
+        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-container label { font-size: 13px; color: #065f46; font-weight: 600; margin: 0; cursor: pointer; }
+
+        /* Direct Login Button */
+        .btn-direct-login { margin-top: 10px; width: 90%; padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; font-weight: 700; font-size: 14px; cursor: pointer; margin-left: auto; margin-right: auto; display: block; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); transition: 0.3s; }
+        .btn-direct-login:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.4); }
     </style>
 </head>
 <body>
 
     <div id="customToast"></div>
 
-    <div id="admin-login-overlay">
-        <div class="login-box">
+    <div id="admin-login-overlay" class="full-overlay">
+        <div class="auth-box">
             <h2>Admin Login</h2>
-            <div class="login-input-group"><label>Admin Email</label><input type="email" id="adminEmail"></div>
-            <div class="login-input-group"><label>Password</label><input type="password" id="adminPassword"></div>
-            <button class="btn-login" onclick="loginAdmin()">Secure Login</button>
+            <p>Login with your master credentials</p>
+            <div class="login-input-group">
+                <label>Admin Email</label>
+                <input type="email" id="adminEmail" class="std-input" placeholder="admin@example.com">
+            </div>
+            <div class="login-input-group">
+                <label>Password</label>
+                <input type="password" id="adminPassword" class="std-input" placeholder="Enter full password">
+            </div>
+            <button class="btn-auth" onclick="loginAdmin()">Login</button>
+        </div>
+    </div>
+
+    <div id="pin-setup-overlay" class="full-overlay" style="display: none;">
+        <div class="auth-box">
+            <h2><i class="fas fa-lock" style="color: #0ea5e9;"></i> Set App PIN</h2>
+            <p>Create a 4-digit PIN for quick access</p>
+            <input type="password" id="setupPinInput" class="pin-input" maxlength="4" pattern="\d{4}" placeholder="****">
+            <button class="btn-pin" onclick="saveAdminPin()">Save & Enter Dashboard</button>
+        </div>
+    </div>
+
+    <div id="pin-lock-overlay" class="full-overlay" style="display: none;">
+        <div class="auth-box">
+            <h2><i class="fas fa-shield-alt" style="color: #10b981;"></i> App Locked</h2>
+            <p>Enter your 4-digit PIN to unlock</p>
+            <input type="password" id="unlockPinInput" class="pin-input" maxlength="4" pattern="\d{4}" placeholder="****">
+            <button class="btn-pin" onclick="unlockAdminApp()">Unlock</button>
+            <p style="margin-top: 15px; font-size: 12px;">
+                <a href="#" onclick="logoutAdmin()" style="color: #ef4444; text-decoration: none;"><i class="fas fa-sign-out-alt"></i> Forgot PIN? Logout</a>
+            </p>
         </div>
     </div>
 
@@ -118,32 +157,26 @@
 
         <div class="form-container admin-card-blue">
             <h3 class="form-title" style="color: #1d4ed8;"><i class="fas fa-bullhorn"></i> Announcement & Info</h3>
-            
             <div class="input-group">
                 <label>Scrolling Notification Text</label>
                 <input type="text" id="adminNotice" placeholder="Enter scrolling news/offers...">
             </div>
-            
             <div class="input-group">
                 <label>Store Information (Appears on Info Button)</label>
                 <textarea id="adminStoreInfo" placeholder="Enter store details or help text..." rows="2"></textarea>
             </div>
-            
             <button class="btn-save-settings" onclick="saveStoreSettings()">Update App Info</button>
         </div>
 
         <div class="form-container admin-card-blue" style="border-left-color: #10b981 !important;">
             <h3 class="form-title" style="color: #059669;"><i class="fas fa-tags"></i> Manage Categories</h3>
-            
             <div class="row">
                 <div class="input-group" style="flex: 3; margin-bottom: 0;">
                     <input type="text" id="newCategoryName" placeholder="Enter new category name...">
                 </div>
                 <button class="btn-save-settings" style="flex: 1; background: #10b981; margin-top: 0;" onclick="addCategory()">Add</button>
             </div>
-            
-            <div id="adminCategoryList" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
-                </div>
+            <div id="adminCategoryList" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
         </div>
 
         <div class="form-container" style="border-left: 4px solid #ef4444;">
@@ -168,12 +201,17 @@
             <h3 class="form-title"><i class="fas fa-user-plus"></i> Register Seller</h3>
             <div class="input-group"><input type="text" id="regStoreName" placeholder="Store Name"></div>
             <div class="input-group"><input type="text" id="regSellerName" placeholder="Seller Name"></div>
+            <div class="input-group"><textarea id="regShopDetails" placeholder="Shop Details / Address / Tagline" rows="2"></textarea></div>
             <div class="input-group"><input type="date" id="regDob"></div>
             <div class="input-group"><input type="tel" id="regPhone" placeholder="Phone Number"></div>
             <div class="input-group"><input type="password" id="regPass" maxlength="4" placeholder="Set 4-Digit Login Password"></div>
-            <div class="input-group"><textarea id="regAddress" placeholder="Full Address" rows="2"></textarea></div>
             
-            <div class="input-group">
+            <div class="checkbox-container">
+                <input type="checkbox" id="regAutoApprove">
+                <label for="regAutoApprove">Auto-Approve Seller Requests</label>
+            </div>
+            
+            <div class="input-group" style="margin-top: 15px;">
                 <label style="color: #64748b; font-size: 12px; margin-bottom: 5px; display: block;">Profile Picture</label>
                 <div style="display: flex; gap: 10px;">
                     <label style="flex: 1; background: #0ea5e9; color: white; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px;">
@@ -253,22 +291,36 @@
                 <a id="btnSMS" href="#" style="background: #f59e0b; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><i class="fas fa-comment-dots"></i></a>
             </div>
 
-            <div class="seller-stats-box" id="profStatsBox">
-                <div><p>Total Sales</p><h4 id="profTotalSales" style="color: #0ea5e9;">₹0</h4></div>
-                <div><p>Admin Profit</p><h4 id="profAdminProfit" style="color: #10b981;">₹0</h4></div>
+            <button id="directLoginBtn" class="btn-direct-login" onclick="loginAsSellerApp()">
+                <i class="fas fa-external-link-alt"></i> Open Seller App Directly
+            </button>
+
+            <div id="profStatsBox" style="background: #f8fafc; margin: 15px 20px; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="text-align: center; border-right: 1px solid #cbd5e1;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Total Sales</p><h4 id="profTotalSales" style="margin: 0; font-size: 16px; color: #0ea5e9;">₹0</h4></div>
+                <div style="text-align: center;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Admin Profit</p><h4 id="profAdminProfit" style="margin: 0; font-size: 16px; color: #10b981;">₹0</h4></div>
+                <div style="text-align: center; border-right: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; padding-top:10px;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Total Paid</p><h4 id="profTotalPaid" style="margin: 0; font-size: 16px; color: #10b981;">₹0</h4></div>
+                <div style="text-align: center; border-top: 1px solid #cbd5e1; padding-top:10px;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Total Due</p><h4 id="profTotalDue" style="margin: 0; font-size: 16px; color: #ef4444;">₹0</h4></div>
+                <div style="text-align: center; border-right: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; padding-top:10px;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Discount</p><h4 id="profTotalDiscount" style="margin: 0; font-size: 16px; color: #f59e0b;">₹0</h4></div>
+                <div style="text-align: center; border-top: 1px solid #cbd5e1; padding-top:10px;"><p style="font-size: 10px; color: #64748b; margin: 0 0 5px; font-weight: 700; text-transform: uppercase;">Seller Net Profit</p><h4 id="profSellerNetProfit" style="margin: 0; font-size: 16px; color: #8b5cf6;">₹0</h4></div>
             </div>
 
             <div class="detail-row"><label>Seller Name</label><span id="profName"></span><input type="text" id="editName" class="edit-input"></div>
             <div class="detail-row"><label>Phone Number</label><span id="profPhone"></span><input type="tel" id="editPhone" class="edit-input"></div>
-            
+            <div class="detail-row"><label>Shop Details / Address</label><span id="profShopDetails"></span><textarea id="editShopDetails" class="edit-input" rows="2"></textarea></div>
             <div class="detail-row">
-                <label>4-Digit Password</label>
+                <label>4-Digit PIN / Password</label>
                 <span id="profPass" style="font-weight:bold; letter-spacing:2px; font-size:16px;">****</span>
-                <input type="text" id="editPass" class="edit-input" maxlength="4" placeholder="Enter new 4-digit password">
+                <input type="text" id="editPass" class="edit-input" maxlength="4" placeholder="Enter new 4-Digit PIN">
             </div>
-            
-            <div class="detail-row"><label>Address</label><span id="profAddress"></span><input type="text" id="editAddress" class="edit-input"></div>
             <div class="detail-row"><label>Date of Birth</label><span id="profDob"></span><input type="date" id="editDob" class="edit-input"></div>
+            
+            <div class="detail-row" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <label>Auto-Approve Requests</label>
+                    <span id="profAutoApprove" style="font-size:13px; color:#10b981; font-weight:600;">Disabled</span>
+                </div>
+                <input type="checkbox" id="editAutoApprove" style="width:20px; height:20px; display:none; accent-color: #10b981;">
+            </div>
             
             <div class="btn-action-group">
                 <button class="btn-close-profile" onclick="closeProfileModal()">Close</button>
@@ -301,11 +353,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA Registered')).catch(err => console.log('PWA Failed', err));
-            });
-        }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
     </script>
 
     <script>
@@ -325,28 +373,75 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
+        // --- AUTH & LOCK SCREEN LOGIC ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                document.getElementById('admin-login-overlay').style.display = 'none'; document.getElementById('main-admin-content').style.display = 'block'; document.getElementById('admin-email-display').innerText = user.email;
+                document.getElementById('admin-login-overlay').style.display = 'none'; 
+                document.getElementById('admin-email-display').innerText = user.email;
+                
+                const savedPin = localStorage.getItem("admin_app_pin");
+                if(savedPin) {
+                    // PIN exist, show Lock Screen
+                    document.getElementById('pin-lock-overlay').style.display = 'flex';
+                    document.getElementById('pin-setup-overlay').style.display = 'none';
+                    document.getElementById('main-admin-content').style.display = 'none';
+                } else {
+                    // Ask to set PIN
+                    document.getElementById('pin-setup-overlay').style.display = 'flex';
+                    document.getElementById('pin-lock-overlay').style.display = 'none';
+                    document.getElementById('main-admin-content').style.display = 'none';
+                }
+
                 fetchLogoDB(); calculateStats(); fetchSellersDB(); listenForPermissionRequests(); listenForSellerActivities();
             } else {
-                document.getElementById('admin-login-overlay').style.display = 'flex'; document.getElementById('main-admin-content').style.display = 'none';
+                document.getElementById('admin-login-overlay').style.display = 'flex'; 
+                document.getElementById('pin-setup-overlay').style.display = 'none';
+                document.getElementById('pin-lock-overlay').style.display = 'none';
+                document.getElementById('main-admin-content').style.display = 'none';
             }
         });
 
         async function loginAdmin() {
-            const e = document.getElementById('adminEmail').value; const p = document.getElementById('adminPassword').value;
-            try { await auth.signInWithEmailAndPassword(e, p); showToast("Welcome Admin!", "success"); } catch (er) { showToast(er.message, "error"); }
+            const e = document.getElementById('adminEmail').value.trim(); 
+            const p = document.getElementById('adminPassword').value.trim();
+            if(!e || !p) return showToast("Enter Admin Email and Password", "error");
+            try { await auth.signInWithEmailAndPassword(e, p); showToast("Welcome Admin!", "success"); } catch (er) { showToast("Invalid Email or Password", "error"); }
         }
 
-        // Announcement Settings
+        function saveAdminPin() {
+            const pin = document.getElementById('setupPinInput').value;
+            if(pin.length !== 4) return showToast("Enter exactly 4 digits", "error");
+            localStorage.setItem("admin_app_pin", pin);
+            showToast("PIN Saved Successfully!", "success");
+            document.getElementById('pin-setup-overlay').style.display = 'none';
+            document.getElementById('main-admin-content').style.display = 'block';
+        }
+
+        function unlockAdminApp() {
+            const pin = document.getElementById('unlockPinInput').value;
+            const savedPin = localStorage.getItem("admin_app_pin");
+            if(pin === savedPin) {
+                document.getElementById('pin-lock-overlay').style.display = 'none';
+                document.getElementById('main-admin-content').style.display = 'block';
+                document.getElementById('unlockPinInput').value = ""; // clear it
+            } else {
+                showToast("Incorrect PIN!", "error");
+            }
+        }
+        
+        async function logoutAdmin() { 
+            await auth.signOut(); 
+            localStorage.removeItem("admin_app_pin"); // Remove PIN on logout
+            closeSettingsModal(); 
+            document.getElementById('pin-lock-overlay').style.display = 'none';
+            document.getElementById('admin-login-overlay').style.display = 'flex';
+            showToast("Logged Out Successfully", "success");
+        }
+        // --------------------------------
+
         async function saveStoreSettings() {
-            const notice = document.getElementById('adminNotice').value;
-            const info = document.getElementById('adminStoreInfo').value;
-            try {
-                await db.collection("Settings").doc("StoreConfig").set({ notification: notice, storeInfo: info }, { merge: true });
-                showToast("App Settings Updated Successfully!", "success");
-            } catch(e) { showToast("Error: " + e.message, "error"); }
+            const notice = document.getElementById('adminNotice').value; const info = document.getElementById('adminStoreInfo').value;
+            try { await db.collection("Settings").doc("StoreConfig").set({ notification: notice, storeInfo: info }, { merge: true }); showToast("App Settings Updated Successfully!", "success"); } catch(e) { showToast("Error: " + e.message, "error"); }
         }
 
         db.collection("Settings").doc("StoreConfig").onSnapshot(doc => {
@@ -357,11 +452,14 @@
         });
 
         async function registerSeller() {
-            const sn = document.getElementById('regStoreName').value; const sln = document.getElementById('regSellerName').value; const dob = document.getElementById('regDob').value; const phone = document.getElementById('regPhone').value; const pass = document.getElementById('regPass').value; const address = document.getElementById('regAddress').value;
+            const sn = document.getElementById('regStoreName').value; const sln = document.getElementById('regSellerName').value; const dob = document.getElementById('regDob').value; const phone = document.getElementById('regPhone').value; const pass = document.getElementById('regPass').value; 
+            const shopDetails = document.getElementById('regShopDetails').value;
+            const autoApprove = document.getElementById('regAutoApprove').checked;
+
             if(!sn || !sln || !dob || !pass || pass.length !== 4) return showToast("Please fill all fields. Password must be 4 digits.", "error");
             document.getElementById('regBtn').disabled = true;
             try { 
-                await db.collection("Sellers").add({ storeName: sn, sellerName: sln, dob: dob, phone: phone, password: pass, address: address, profilePic: tempPic || "", timestamp: firebase.firestore.FieldValue.serverTimestamp() }); 
+                await db.collection("Sellers").add({ storeName: sn, sellerName: sln, dob: dob, phone: phone, password: pass, address: shopDetails, autoApprove: autoApprove, profilePic: tempPic || "", timestamp: firebase.firestore.FieldValue.serverTimestamp() }); 
                 showToast("Seller Registered Successfully!", "success"); setTimeout(()=>location.reload(), 1500); 
             } catch(e) { showToast("Error: " + e.message, "error"); document.getElementById('regBtn').disabled = false; }
         }
@@ -374,16 +472,227 @@
         function recalculateFromHistory() {
             let totalS = 0, totalP = 0; let statsMap = {}; 
             globalHistoryList.forEach(h => {
-                const sid = h.sellerId; const pid = h.productId; const salesAmt = h.totalAmount || (h.price * h.qty) || 0; let profitAmt = 0;
-                if (h.adminProfit !== undefined) { profitAmt = h.adminProfit; } else { const prod = globalProductsMap[pid]; if (prod && prod.adminCommType && prod.adminCommValue !== undefined) { if(prod.adminCommType === 'percent') profitAmt = (salesAmt * prod.adminCommValue) / 100; else profitAmt = (prod.adminCommValue * h.qty) || 0; } else { profitAmt = salesAmt; } }
-                totalS += salesAmt; totalP += profitAmt;
-                if(sid) { if(!statsMap[sid]) statsMap[sid] = { sales: 0, profit: 0 }; statsMap[sid].sales += salesAmt; statsMap[sid].profit += profitAmt; }
+                const sid = h.sellerId; const pid = h.productId; 
+                const salesAmt = h.totalAmount || (h.price * h.qty) || 0; 
+                
+                const paidAmt = Number(h.paid) || 0;
+                const discountAmt = Number(h.discount) || 0;
+                const dueAmt = Number(h.due) || 0;
+                let totalProfit = Number(h.profit) || 0; 
+                let adminProfit = 0;
+
+                const prod = globalProductsMap[pid];
+                let hasAdminComm = false;
+                
+                if (prod && prod.adminCommValue) {
+                    hasAdminComm = true;
+                    if(prod.adminCommType === 'percent') {
+                        adminProfit = (salesAmt * prod.adminCommValue) / 100;
+                    } else {
+                        adminProfit = (prod.adminCommValue * h.qty) || 0;
+                    }
+                }
+
+                if (!hasAdminComm || adminProfit === 0) {
+                    adminProfit = totalProfit;
+                }
+
+                totalS += salesAmt; totalP += adminProfit;
+
+                if(sid) { 
+                    if(!statsMap[sid]) statsMap[sid] = { sales: 0, profit: 0, paid: 0, due: 0, discount: 0, totalProfit: 0 }; 
+                    statsMap[sid].sales += salesAmt; 
+                    statsMap[sid].profit += adminProfit; 
+                    statsMap[sid].paid += paidAmt;
+                    statsMap[sid].due += dueAmt;
+                    statsMap[sid].discount += discountAmt;
+                    statsMap[sid].totalProfit += totalProfit; 
+                }
             });
+
             document.getElementById('total-sales').innerText = "₹" + totalS.toFixed(0); document.getElementById('total-profit').innerText = "₹" + totalP.toFixed(0); globalSellerStats = statsMap;
             document.querySelectorAll('[id^="list_sales_"]').forEach(el => el.innerText = "0"); document.querySelectorAll('[id^="list_profit_"]').forEach(el => el.innerText = "0");
             for(let sid in statsMap) { const salesEl = document.getElementById('list_sales_' + sid); const profitEl = document.getElementById('list_profit_' + sid); if(salesEl) salesEl.innerText = statsMap[sid].sales.toFixed(0); if(profitEl) profitEl.innerText = statsMap[sid].profit.toFixed(0); }
-            if(currentEditingSellerId && document.getElementById('sellerProfileModal').style.display === 'flex') { const st = statsMap[currentEditingSellerId] || { sales: 0, profit: 0 }; document.getElementById('profTotalSales').innerText = "₹" + st.sales.toFixed(0); document.getElementById('profAdminProfit').innerText = "₹" + st.profit.toFixed(0); }
+            
+            if(currentEditingSellerId && document.getElementById('sellerProfileModal').style.display === 'flex') { updateProfileStats(currentEditingSellerId); }
         }
+
+        function updateProfileStats(id) {
+            const stats = globalSellerStats[id] || { sales: 0, profit: 0, paid: 0, due: 0, discount: 0, totalProfit: 0 }; 
+            if(document.getElementById('profTotalSales')) document.getElementById('profTotalSales').innerText = "₹" + stats.sales.toFixed(0); 
+            if(document.getElementById('profAdminProfit')) document.getElementById('profAdminProfit').innerText = "₹" + stats.profit.toFixed(0);
+            if(document.getElementById('profTotalPaid')) document.getElementById('profTotalPaid').innerText = "₹" + stats.paid.toFixed(0);
+            if(document.getElementById('profTotalDue')) document.getElementById('profTotalDue').innerText = "₹" + stats.due.toFixed(0);
+            if(document.getElementById('profTotalDiscount')) document.getElementById('profTotalDiscount').innerText = "₹" + stats.discount.toFixed(0);
+            if(document.getElementById('profSellerNetProfit')) document.getElementById('profSellerNetProfit').innerText = "₹" + stats.totalProfit.toFixed(0);
+        }
+
+        function listenForPermissionRequests() {
+            db.collection("AdminRequests").where("status", "==", "pending").onSnapshot(snap => {
+                const cont = document.getElementById('admin-requests-list'); const badge = document.getElementById('reqBadge'); cont.innerHTML = "";
+                let visibleCount = 0;
+                
+                snap.forEach(doc => {
+                    const d = doc.data(); 
+                    const sellerData = globalSellerDataMap[d.sellerId];
+                    if (sellerData && sellerData.autoApprove === true) {
+                        db.collection("AdminRequests").doc(doc.id).update({ status: "approved" });
+                        return; 
+                    }
+
+                    visibleCount++;
+                    let actionText = ""; let iconColor = "";
+                    if(d.actionType === 'backup') { actionText = 'Request: Download Backup'; iconColor = '#0ea5e9'; } else if(d.actionType === 'restore') { actionText = 'Request: Restore Data'; iconColor = '#10b981'; } else if(d.actionType === 'delete_history') { actionText = 'Request: Delete History Record'; iconColor = '#ef4444'; }
+                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString() : '';
+                    cont.innerHTML += `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div style="flex:1;"><h4 style="margin:0; font-size:13px; color:#0f172a;">${d.sellerName}</h4><p style="margin:2px 0 0; font-size:11px; font-weight:600; color:${iconColor};">${actionText}</p><span style="font-size:9px; color:#94a3b8;">${time}</span></div><div style="display:flex; flex-direction:column; gap:5px;"><button onclick="approveRequest('${doc.id}')" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:11px; cursor:pointer;">Approve</button><button onclick="rejectRequest('${doc.id}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:5px 10px; border-radius:5px; font-size:11px; cursor:pointer;">Reject</button></div></div>`;
+                });
+
+                if(visibleCount === 0) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No pending requests.</p>"; badge.style.display = 'none'; }
+                else { badge.style.display = 'inline-block'; badge.innerText = visibleCount + " New"; }
+            });
+        }
+
+        async function approveRequest(id) { await db.collection("AdminRequests").doc(id).update({ status: "approved" }); showToast("Approved Request", "success"); }
+        async function rejectRequest(id) { await db.collection("AdminRequests").doc(id).delete(); showToast("Request Rejected", "success"); }
+
+        function listenForSellerActivities() {
+            db.collection("SellerActivities").where("status", "==", "unread").orderBy("timestamp", "desc").onSnapshot(snap => {
+                const cont = document.getElementById('seller-activities-list'); const badge = document.getElementById('actBadge'); cont.innerHTML = "";
+                if(snap.empty) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No new activities.</p>"; badge.style.display = 'none'; return; }
+                badge.style.display = 'inline-block'; badge.innerText = snap.size + " New";
+                snap.forEach(doc => {
+                    const d = doc.data(); const time = d.timestamp ? d.timestamp.toDate().toLocaleString() : '';
+                    cont.innerHTML += `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div style="flex:1;"><h4 style="margin:0; font-size:13px; color:#1d4ed8;">${d.sellerName}</h4><p style="margin:2px 0 0; font-size:11px; color:#475569;">${d.activity}</p><span style="font-size:9px; color:#94a3b8;">${time}</span></div><button onclick="db.collection('SellerActivities').doc('${doc.id}').update({status:'read'})" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fas fa-check"></i> Ok</button></div>`;
+                });
+            });
+        }
+
+        function fetchSellersDB() {
+            db.collection("Sellers").orderBy("timestamp", "desc").onSnapshot(snap => {
+                const cont = document.getElementById('sellers-list-container'); cont.innerHTML = "";
+                globalSellerDataMap = {}; 
+                snap.forEach(doc => {
+                    const d = doc.data(); const sid = doc.id; const stats = globalSellerStats[sid] || { sales: 0, profit: 0 };
+                    globalSellerDataMap[sid] = d; 
+                    const item = document.createElement('div'); item.className = 'seller-list-item';
+                    item.innerHTML = `<div class="seller-list-left"><img src="${d.profilePic || 'https://via.placeholder.com/50'}" class="seller-avatar"><div><h4 style="margin:0; color:#0f172a;">${d.storeName}</h4><p style="margin:0; font-size:12px; color:#64748b;">${d.sellerName}</p></div></div><div class="seller-list-right"><div style="font-size:13px; font-weight:700; color:#0ea5e9;">₹<span id="list_sales_${sid}">${stats.sales.toFixed(0)}</span></div><div style="font-size:11px; font-weight:600; color:#10b981;">₹<span id="list_profit_${sid}">${stats.profit.toFixed(0)}</span></div></div>`;
+                    item.onclick = () => openProfileModal(sid, d); 
+                    cont.appendChild(item);
+                });
+            });
+        }
+
+        let currentEditingSellerId = null; let tempEditPic = null;
+        function openProfileModal(id, d) {
+            currentEditingSellerId = id; 
+            tempEditPic = d.profilePic;
+            
+            document.getElementById('profStore').innerText = d.storeName || "N/A"; 
+            document.getElementById('profName').innerText = d.sellerName || "N/A"; 
+            document.getElementById('profDob').innerText = d.dob || "N/A"; 
+            document.getElementById('profPhone').innerText = d.phone || "N/A"; 
+            document.getElementById('profPass').innerText = d.password || "Not Set"; 
+            document.getElementById('profShopDetails').innerText = d.address || "No Shop Details"; 
+            document.getElementById('profImg').src = d.profilePic || "https://via.placeholder.com/100";
+            
+            if(d.autoApprove) {
+                document.getElementById('profAutoApprove').innerText = "Enabled";
+                document.getElementById('profAutoApprove').style.color = "#10b981";
+                document.getElementById('editAutoApprove').checked = true;
+            } else {
+                document.getElementById('profAutoApprove').innerText = "Disabled";
+                document.getElementById('profAutoApprove').style.color = "#ef4444";
+                document.getElementById('editAutoApprove').checked = false;
+            }
+            
+            updateProfileStats(id);
+
+            document.getElementById('editStore').value = d.storeName || ""; 
+            document.getElementById('editName').value = d.sellerName || ""; 
+            document.getElementById('editPhone').value = d.phone || ""; 
+            document.getElementById('editPass').value = d.password || ""; 
+            document.getElementById('editShopDetails').value = d.address || ""; 
+            document.getElementById('editDob').value = d.dob || "";
+            
+            if (d.phone && d.phone !== "N/A") {
+                if(document.getElementById('btnCall')) document.getElementById('btnCall').href = "tel:" + d.phone;
+                let waPhone = d.phone.startsWith('+') ? d.phone.replace('+', '') : "91" + d.phone;
+                if(document.getElementById('btnWhatsApp')) document.getElementById('btnWhatsApp').href = "https://wa.me/" + waPhone;
+                if(document.getElementById('btnSMS')) document.getElementById('btnSMS').href = "sms:" + d.phone;
+            }
+
+            toggleEditMode(false); 
+            document.getElementById('sellerProfileModal').style.display = 'flex';
+        }
+
+        function loginAsSellerApp() {
+            if(!currentEditingSellerId) return;
+            const d = globalSellerDataMap[currentEditingSellerId];
+            if(d) {
+                localStorage.setItem("seller_id", currentEditingSellerId);
+                localStorage.setItem("seller_store", d.storeName);
+                localStorage.setItem("seller_name", d.sellerName);
+                localStorage.setItem("seller_pic", d.profilePic || "");
+                localStorage.setItem("seller_pass", d.password);
+                
+                showToast("Opening Seller App...", "success");
+                window.open("seller.html", "_blank");
+            }
+        }
+
+        function closeProfileModal() { document.getElementById('sellerProfileModal').style.display = 'none'; }
+        
+        function toggleEditMode(isEditing) {
+            const d = isEditing ? 'none' : 'block'; const i = isEditing ? 'block' : 'none';
+            document.getElementById('profStore').style.display = d; document.getElementById('editStore').style.display = i;
+            document.getElementById('profName').style.display = d; document.getElementById('editName').style.display = i;
+            document.getElementById('profPhone').style.display = d; document.getElementById('editPhone').style.display = i;
+            document.getElementById('profPass').style.display = d; document.getElementById('editPass').style.display = i;
+            document.getElementById('profShopDetails').style.display = d; document.getElementById('editShopDetails').style.display = i;
+            document.getElementById('profAutoApprove').style.display = d; document.getElementById('editAutoApprove').style.display = isEditing ? 'inline-block' : 'none';
+            document.getElementById('profDob').style.display = d; document.getElementById('editDob').style.display = i;
+            
+            document.getElementById('profStatsBox').style.display = d; 
+            document.getElementById('directLoginBtn').style.display = d; 
+            document.getElementById('enableEditBtn').style.display = d; 
+            document.getElementById('saveEditBtn').style.display = i; 
+            document.getElementById('editPicBtn').style.display = isEditing ? 'inline-block' : 'none'; 
+            document.getElementById('edit-pic-status').innerText = "";
+            
+            let rawPhone = document.getElementById('profPhone').innerText;
+            document.getElementById('contactActions').style.display = (isEditing || !rawPhone || rawPhone === "N/A") ? 'none' : 'flex';
+            document.getElementById('deleteSellerBtn').style.display = isEditing ? 'block' : 'none';
+        }
+        
+        async function saveSellerEdits() {
+            if(!currentEditingSellerId) return;
+            const sn = document.getElementById('editStore').value; const sln = document.getElementById('editName').value;
+            const dob = document.getElementById('editDob').value; const ph = document.getElementById('editPhone').value; 
+            const ps = document.getElementById('editPass').value; const details = document.getElementById('editShopDetails').value;
+            const isAutoApprove = document.getElementById('editAutoApprove').checked;
+            
+            document.getElementById('saveEditBtn').innerText = "Saving..."; document.getElementById('saveEditBtn').disabled = true;
+            try { 
+                await db.collection("Sellers").doc(currentEditingSellerId).update({ 
+                    storeName: sn, sellerName: sln, dob: dob, phone: ph, password: ps, address: details, autoApprove: isAutoApprove, profilePic: tempEditPic 
+                }); 
+                showToast("Seller Info & Permissions Updated!", "success"); 
+                setTimeout(() => { closeProfileModal(); document.getElementById('saveEditBtn').innerText = "Save Updates"; document.getElementById('saveEditBtn').disabled = false; }, 1000); 
+            } catch(e) { showToast(e.message, "error"); document.getElementById('saveEditBtn').innerText = "Save Updates"; document.getElementById('saveEditBtn').disabled = false;}
+        }
+
+        function processImage(file, width = 300) { return new Promise((resolve) => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); const s = width / i.width; c.width = width; c.height = i.height * s; const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.5)); }; }; }); }
+        let tempPic = null;
+        async function fileChosen(input) { if(input.files[0]) { showToast("Processing Image...", "warning"); tempPic = await processImage(input.files[0], 300); document.getElementById('pic-status').innerText = "✅ Image Ready"; showToast("Image Ready!", "success"); } }
+        async function editProfilePicChosen(input) { if(input.files[0]) { showToast("Compressing Image...", "warning"); tempEditPic = await processImage(input.files[0], 300); document.getElementById('profImg').src = tempEditPic; document.getElementById('edit-pic-status').innerText = "✅ Ready"; showToast("Image Ready!", "success"); } }
+        async function uploadLogoDB(input) { if(!input.files[0]) return; document.getElementById('logo-db-msg').innerText = "Processing..."; const b = await processImage(input.files[0], 200); await db.collection("Settings").doc("StoreConfig").set({ logoUrl: b }, { merge: true }); document.getElementById('logo-db-msg').innerText = "✅ Logo Saved!"; showToast("Logo Updated", "success"); }
+        
+        let globalCategories = [];
+        function fetchLogoDB() { db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { if(doc.exists) { const data = doc.data(); if(data.logoUrl) { document.getElementById('headerLogo').src = data.logoUrl; document.getElementById('headerLogo').style.display = 'block'; document.getElementById('settingsLogoPreview').src = data.logoUrl; } globalCategories = data.categories || []; renderAdminCategories(); } }); }
+        function renderAdminCategories() { const cont = document.getElementById('adminCategoryList'); cont.innerHTML = ""; if(globalCategories.length === 0) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No categories added yet.</p>"; return; } globalCategories.forEach((cat, index) => { cont.innerHTML += `<span style="background: #e2e8f0; color: #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;">${cat} <div style="display: flex; gap: 8px;"><i class="fas fa-edit" style="color: #3b82f6; cursor: pointer;" onclick="editCategory(${index})"></i><i class="fas fa-times" style="color: #ef4444; cursor: pointer;" onclick="deleteCategory(${index})"></i></div></span>`; }); }
+        async function addCategory() { const catName = document.getElementById('newCategoryName').value.trim(); if(!catName) return showToast("Enter category name", "error"); if(globalCategories.includes(catName)) return showToast("Category already exists", "error"); globalCategories.push(catName); try { await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true }); document.getElementById('newCategoryName').value = ""; showToast("Category Added!", "success"); } catch(e) {} }
+        async function deleteCategory(index) { globalCategories.splice(index, 1); try { await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true }); showToast("Category Deleted!", "success"); } catch(e) {} }
+        async function editCategory(index) { const oldName = globalCategories[index]; const newName = prompt("Edit Category Name:", oldName); if (newName === null || newName.trim() === "" || newName.trim() === oldName) return; const finalName = newName.trim(); if(globalCategories.includes(finalName)) { return showToast("Category name already exists!", "error"); } showToast("Updating category...", "warning"); try { globalCategories[index] = finalName; await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true }); const productsSnap = await db.collection("Products").where("category", "==", oldName).get(); if (!productsSnap.empty) { const batch = db.batch(); productsSnap.forEach(doc => { batch.update(doc.ref, { category: finalName }); }); await batch.commit(); } showToast("Category Updated Successfully!", "success"); } catch(e) { showToast("Error: " + e.message, "error"); } }
 
         function openGlobalHistoryModal() { document.getElementById('globalHistoryModal').style.display = 'flex'; document.getElementById('globalHistoryYear').value = new Date().getFullYear().toString(); fetchGlobalSalesHistory(); }
         function closeGlobalHistoryModal() { document.getElementById('globalHistoryModal').style.display = 'none'; }
@@ -399,234 +708,15 @@
                 historyData.forEach(d => {
                     const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "Just now"; const storeName = sellerMap[d.sellerId] || "Unknown Store"; const imgSource = d.productPic || 'https://via.placeholder.com/50';
                     let buyerInfoHtml = ''; if(d.buyerName || d.buyerPhone) { let nameDisp = d.buyerName || 'Customer'; let phoneDisp = d.buyerPhone ? ` | ${d.buyerPhone}` : ''; buyerInfoHtml = `<div style="background:#f8fafc; padding:8px 12px; border-radius:8px; margin-top:10px; font-size:11px; color:#475569; border:1px dashed #cbd5e1;"><i class="fas fa-user-circle" style="color:#0ea5e9;"></i> <strong>${nameDisp}</strong>${phoneDisp}</div>`; }
-                    container.innerHTML += `<div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.02);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:8px;"><span onclick="openSellerProfileById('${d.sellerId}')" style="cursor:pointer; font-size:12px; font-weight:700; color:#b45309; background:#fffbeb; padding:4px 8px; border-radius:6px; transition:0.3s;"><i class="fas fa-store"></i> ${storeName}</span><span style="font-size:11px; color:#64748b; font-weight:600;"><i class="far fa-calendar-alt"></i> ${date}</span></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:12px;"><img src="${imgSource}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #cbd5e1;"><div><h4 style="margin:0 0 2px; font-size:14px; color:#0f172a;">${d.productName}</h4><p style="margin:0; font-size:12px; color:#64748b; font-weight:600;">Qty: ${d.qty}</p></div></div><div style="text-align:right;"><p style="margin:0; font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Amount</p><h3 style="margin:0; font-size:18px; color:#10b981; font-weight:800;">₹${d.totalAmount}</h3></div></div>${buyerInfoHtml}</div>`;
+                    container.innerHTML += `<div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.02);"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:8px;"><span onclick="window.openSellerProfileById('${d.sellerId}')" style="cursor:pointer; font-size:12px; font-weight:700; color:#b45309; background:#fffbeb; padding:4px 8px; border-radius:6px; transition:0.3s;"><i class="fas fa-store"></i> ${storeName}</span><span style="font-size:11px; color:#64748b; font-weight:600;"><i class="far fa-calendar-alt"></i> ${date}</span></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:12px;"><img src="${imgSource}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #cbd5e1;"><div><h4 style="margin:0 0 2px; font-size:14px; color:#0f172a;">${d.productName}</h4><p style="margin:0; font-size:12px; color:#64748b; font-weight:600;">Qty: ${d.qty}</p></div></div><div style="text-align:right;"><p style="margin:0; font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Amount</p><h3 style="margin:0; font-size:18px; color:#10b981; font-weight:800;">₹${d.totalAmount}</h3></div></div>${buyerInfoHtml}</div>`;
                 });
-            } catch (err) { container.innerHTML = `<div style="color:red; text-align:center; font-size:12px; padding:10px;">Error: ${err.message}</div>`; }
+            } catch (err) {}
         }
-
-        window.openSellerProfileById = function(sid) { const d = globalSellerDataMap[sid]; if(d) { openProfileModal(sid, d.storeName, d.sellerName, d.dob, d.profilePic, d.phone, d.address); } else { showToast("Seller details not found!", "error"); } }
-
-        function listenForPermissionRequests() {
-            db.collection("AdminRequests").where("status", "==", "pending").onSnapshot(snap => {
-                const cont = document.getElementById('admin-requests-list'); const badge = document.getElementById('reqBadge'); cont.innerHTML = "";
-                if(snap.empty) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No pending requests.</p>"; badge.style.display = 'none'; return; }
-                badge.style.display = 'inline-block'; badge.innerText = snap.size + " New";
-                snap.forEach(doc => {
-                    const d = doc.data(); let actionText = ""; let iconColor = "";
-                    if(d.actionType === 'backup') { actionText = 'Request: Download Backup'; iconColor = '#0ea5e9'; } else if(d.actionType === 'restore') { actionText = 'Request: Restore Data'; iconColor = '#10b981'; } else if(d.actionType === 'delete_history') { actionText = 'Request: Delete History Record'; iconColor = '#ef4444'; }
-                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString() : '';
-                    cont.innerHTML += `<div class="req-card"><div style="flex:1;"><h4>${d.sellerName}</h4><p style="color:${iconColor};">${actionText}</p><span style="font-size:9px; color:#94a3b8;">${time}</span></div><div style="display:flex; flex-direction:column; gap:5px;"><button onclick="approveRequest('${doc.id}')" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:11px; cursor:pointer;">Approve</button><button onclick="rejectRequest('${doc.id}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; padding:5px 10px; border-radius:5px; font-size:11px; cursor:pointer;">Reject</button></div></div>`;
-                });
-            });
-        }
-
-        async function approveRequest(id) { await db.collection("AdminRequests").doc(id).update({ status: "approved" }); showToast("Approved Request", "success"); }
-        async function rejectRequest(id) { await db.collection("AdminRequests").doc(id).delete(); showToast("Request Rejected", "success"); }
-
-        function listenForSellerActivities() {
-            db.collection("SellerActivities").where("status", "==", "unread").orderBy("timestamp", "desc").onSnapshot(snap => {
-                const cont = document.getElementById('seller-activities-list'); const badge = document.getElementById('actBadge'); cont.innerHTML = "";
-                if(snap.empty) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No new activities.</p>"; badge.style.display = 'none'; return; }
-                badge.style.display = 'inline-block'; badge.innerText = snap.size + " New";
-                snap.forEach(doc => {
-                    const d = doc.data(); const time = d.timestamp ? d.timestamp.toDate().toLocaleString() : '';
-                    cont.innerHTML += `<div class="req-card"><div style="flex:1;"><h4 style="color:#1d4ed8;">${d.sellerName}</h4><p style="color:#475569;">${d.activity}</p><span style="font-size:9px; color:#94a3b8;">${time}</span></div><button onclick="markActivityDone('${doc.id}')" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer;"><i class="fas fa-check"></i> Mark Complete</button></div>`;
-                });
-            });
-        }
+        window.openSellerProfileById = function(sid) { const d = globalSellerDataMap[sid]; if(d) { closeGlobalHistoryModal(); openProfileModal(sid, d); } else { showToast("Seller details not found!", "error"); } }
 
         function openSettingsModal() { document.getElementById('settingsModal').style.display = 'flex'; }
         function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
-        async function logoutAdmin() { auth.signOut(); closeSettingsModal(); }
-        
-        function processImage(file, width = 300) { return new Promise((resolve) => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); const s = width / i.width; c.width = width; c.height = i.height * s; const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.5)); }; }; }); }
-        
-        async function uploadLogoDB(input) { if(!input.files[0]) return; document.getElementById('logo-db-msg').innerText = "Processing..."; const b = await processImage(input.files[0], 200); await db.collection("Settings").doc("StoreConfig").set({ logoUrl: b }, { merge: true }); document.getElementById('logo-db-msg').innerText = "✅ Logo Saved!"; showToast("Logo Updated", "success"); }
-        let globalCategories = [];
-        
-        function fetchLogoDB() { 
-            db.collection("Settings").doc("StoreConfig").onSnapshot(doc => { 
-                if(doc.exists) { 
-                    const data = doc.data();
-                    if(data.logoUrl) {
-                        document.getElementById('headerLogo').src = data.logoUrl; 
-                        document.getElementById('headerLogo').style.display = 'block'; 
-                        document.getElementById('settingsLogoPreview').src = data.logoUrl; 
-                    }
-                    globalCategories = data.categories || [];
-                    renderAdminCategories();
-                } 
-            }); 
-        }
 
-        function renderAdminCategories() {
-            const cont = document.getElementById('adminCategoryList');
-            cont.innerHTML = "";
-            if(globalCategories.length === 0) { cont.innerHTML = "<p style='font-size:12px; color:#64748b;'>No categories added yet.</p>"; return; }
-            globalCategories.forEach((cat, index) => {
-                cont.innerHTML += `
-                    <span style="background: #e2e8f0; color: #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                        ${cat} 
-                        <div style="display: flex; gap: 8px;">
-                            <i class="fas fa-edit" style="color: #3b82f6; cursor: pointer;" onclick="editCategory(${index})" title="Edit"></i>
-                            <i class="fas fa-times" style="color: #ef4444; cursor: pointer;" onclick="deleteCategory(${index})" title="Delete"></i>
-                        </div>
-                    </span>`;
-            });
-        }
-
-        async function addCategory() {
-            const catName = document.getElementById('newCategoryName').value.trim();
-            if(!catName) return showToast("Enter category name", "error");
-            if(globalCategories.includes(catName)) return showToast("Category already exists", "error");
-            globalCategories.push(catName);
-            try {
-                await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
-                document.getElementById('newCategoryName').value = "";
-                showToast("Category Added!", "success");
-            } catch(e) { showToast(e.message, "error"); }
-        }
-
-        async function deleteCategory(index) {
-            globalCategories.splice(index, 1);
-            try {
-                await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
-                showToast("Category Deleted!", "success");
-            } catch(e) { showToast(e.message, "error"); }
-        }
-        async function editCategory(index) {
-    const oldName = globalCategories[index];
-    const newName = prompt("Edit Category Name:", oldName);
-    
-    if (newName === null || newName.trim() === "" || newName.trim() === oldName) return;
-    
-    const finalName = newName.trim();
-    
-    if(globalCategories.includes(finalName)) {
-        return showToast("Category name already exists!", "error");
-    }
-
-    // ইউজারকে মেসেজ দেখানো যে আপডেট হচ্ছে
-    showToast("Updating category and all linked products...", "warning");
-
-    try {
-        // ১. ক্যাটাগরি লিস্ট আপডেট করা
-        globalCategories[index] = finalName;
-        await db.collection("Settings").doc("StoreConfig").set({ categories: globalCategories }, { merge: true });
-
-        // ২. এই ক্যাটাগরিতে থাকা সব প্রোডাক্ট খুঁজে বের করা
-        const productsSnap = await db.collection("Products").where("category", "==", oldName).get();
-        
-        // ৩. যদি প্রোডাক্ট পাওয়া যায়, তবে সবগুলোর ক্যাটাগরি নাম নতুন নামে আপডেট করা
-        if (!productsSnap.empty) {
-            const batch = db.batch();
-            productsSnap.forEach(doc => {
-                batch.update(doc.ref, { category: finalName });
-            });
-            await batch.commit();
-        }
-
-        showToast("Category & Products Updated Successfully!", "success");
-    } catch(e) { 
-        showToast("Error: " + e.message, "error"); 
-    }
-}
-        
-        let tempPic = null;
-        async function fileChosen(input) { if(input.files[0]) { showToast("Processing Image...", "warning"); tempPic = await processImage(input.files[0], 300); document.getElementById('pic-status').innerText = "✅ Image Ready"; showToast("Image Ready!", "success"); } }
-        
-        function fetchSellersDB() {
-    db.collection("Sellers").orderBy("timestamp", "desc").onSnapshot(snap => {
-        const cont = document.getElementById('sellers-list-container'); cont.innerHTML = "";
-        globalSellerDataMap = {}; 
-        snap.forEach(doc => {
-            const d = doc.data(); const sid = doc.id; const stats = globalSellerStats[sid] || { sales: 0, profit: 0 };
-            globalSellerDataMap[sid] = d; 
-            const item = document.createElement('div'); item.className = 'seller-list-item';
-            item.innerHTML = `<div class="seller-list-left"><img src="${d.profilePic || 'https://via.placeholder.com/50'}" class="seller-avatar"><div><h4 style="margin:0; color:#0f172a;">${d.storeName}</h4><p style="margin:0; font-size:12px; color:#64748b;">${d.sellerName}</p></div></div><div class="seller-list-right"><div style="font-size:13px; font-weight:700; color:#0ea5e9;">₹<span id="list_sales_${sid}">${stats.sales.toFixed(0)}</span></div><div style="font-size:11px; font-weight:600; color:#10b981;">₹<span id="list_profit_${sid}">${stats.profit.toFixed(0)}</span></div></div>`;
-            item.onclick = () => openProfileModal(sid, d); // <--- Fixed this line
-            cont.appendChild(item);
-        });
-    });
-}
-
-        let currentEditingSellerId = null; let tempEditPic = null;
-        function openProfileModal(id, d) {
-    currentEditingSellerId = id; 
-    tempEditPic = d.profilePic;
-    
-    // ভিউ মোডের জন্য ডেটা শো করানো
-    document.getElementById('profStore').innerText = d.storeName || "N/A"; 
-    document.getElementById('profName').innerText = d.sellerName || "N/A"; 
-    document.getElementById('profDob').innerText = d.dob || "N/A"; 
-    document.getElementById('profPhone').innerText = d.phone || "N/A"; 
-    document.getElementById('profPass').innerText = d.password || "Not Set"; // পাসওয়ার্ড শো করার লাইন যোগ করা হলো
-    document.getElementById('profAddress').innerText = d.address || "No Address Found"; 
-    document.getElementById('profImg').src = d.profilePic || "https://via.placeholder.com/100";
-    
-    // সেলস এবং প্রফিট শো করানো
-    const stats = globalSellerStats[id] || { sales: 0, profit: 0 }; 
-    if(document.getElementById('profTotalSales')) document.getElementById('profTotalSales').innerText = "₹" + stats.sales.toFixed(2); 
-    if(document.getElementById('profAdminProfit')) document.getElementById('profAdminProfit').innerText = "₹" + stats.profit.toFixed(2);
-
-    // এডিট মোডের জন্য ইনপুট বক্সে ডেটা সেট করা
-    document.getElementById('editStore').value = d.storeName || ""; 
-    document.getElementById('editName').value = d.sellerName || ""; 
-    document.getElementById('editPhone').value = d.phone || ""; 
-    document.getElementById('editPass').value = d.password || ""; // পাসওয়ার্ড এডিট করার লাইন যোগ করা হলো
-    document.getElementById('editAddress').value = d.address || ""; 
-    document.getElementById('editDob').value = d.dob || "";
-    
-    // Call, WhatsApp বাটন কাজ করার জন্য
-    if (d.phone && d.phone !== "N/A") {
-        if(document.getElementById('btnCall')) document.getElementById('btnCall').href = "tel:" + d.phone;
-        let waPhone = d.phone.startsWith('+') ? d.phone.replace('+', '') : "91" + d.phone;
-        if(document.getElementById('btnWhatsApp')) document.getElementById('btnWhatsApp').href = "https://wa.me/" + waPhone;
-        if(document.getElementById('btnSMS')) document.getElementById('btnSMS').href = "sms:" + d.phone;
-    }
-
-    toggleEditMode(false); 
-    document.getElementById('sellerProfileModal').style.display = 'flex';
-}
-
-        function closeProfileModal() { document.getElementById('sellerProfileModal').style.display = 'none'; }
-        
-       function toggleEditMode(isEditing) {
-    const d = isEditing ? 'none' : 'block'; const i = isEditing ? 'block' : 'none';
-    document.getElementById('profStore').style.display = d; document.getElementById('editStore').style.display = i;
-    document.getElementById('profName').style.display = d; document.getElementById('editName').style.display = i;
-    document.getElementById('profPhone').style.display = d; document.getElementById('editPhone').style.display = i;
-    document.getElementById('profPass').style.display = d; document.getElementById('editPass').style.display = i;
-    document.getElementById('profAddress').style.display = d; document.getElementById('editAddress').style.display = i;
-    document.getElementById('profDob').style.display = d; document.getElementById('editDob').style.display = i;
-    document.getElementById('profStatsBox').style.display = d; document.getElementById('enableEditBtn').style.display = d; 
-    document.getElementById('saveEditBtn').style.display = i; document.getElementById('editPicBtn').style.display = isEditing ? 'inline-block' : 'none'; 
-    document.getElementById('edit-pic-status').innerText = "";
-    
-    let rawPhone = document.getElementById('profPhone').innerText;
-    document.getElementById('contactActions').style.display = (isEditing || !rawPhone || rawPhone === "N/A") ? 'none' : 'flex';
-    document.getElementById('deleteSellerBtn').style.display = isEditing ? 'block' : 'none';
-}
-        
-        async function editProfilePicChosen(input) { if(input.files[0]) { showToast("Compressing Image...", "warning"); tempEditPic = await processImage(input.files[0], 300); document.getElementById('profImg').src = tempEditPic; document.getElementById('edit-pic-status').innerText = "✅ Ready"; showToast("Image Ready!", "success"); } }
-
-       async function saveSellerEdits() {
-    if(!currentEditingSellerId) return;
-    const sn = document.getElementById('editStore').value; const sln = document.getElementById('editName').value;
-    const dob = document.getElementById('editDob').value; const ph = document.getElementById('editPhone').value; 
-    const ps = document.getElementById('editPass').value; const addr = document.getElementById('editAddress').value;
-    
-    document.getElementById('saveEditBtn').innerText = "Saving..."; document.getElementById('saveEditBtn').disabled = true;
-    try { 
-        await db.collection("Sellers").doc(currentEditingSellerId).update({ 
-            storeName: sn, sellerName: sln, dob: dob, phone: ph, password: ps, address: addr, profilePic: tempEditPic 
-        }); 
-        showToast("Seller Updated! They will need to re-login.", "success"); 
-        setTimeout(() => { closeProfileModal(); document.getElementById('saveEditBtn').innerText = "Save Updates"; document.getElementById('saveEditBtn').disabled = false; }, 1000); 
-    } catch(e) { showToast(e.message, "error"); document.getElementById('saveEditBtn').innerText = "Save Updates"; document.getElementById('saveEditBtn').disabled = false;}
-}
-
-        // Custom Delete Seller Confirmation
         function deleteSeller() {
             if(!currentEditingSellerId) return;
             document.getElementById('adminConfirmModal').style.display = 'flex';
