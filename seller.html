@@ -29,10 +29,24 @@
         .header { background: #0f172a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-settings { background: transparent; color: white; border: none; font-size: 22px; cursor: pointer; padding: 0; }
         
-        .tab-bar { display: flex; background: white; position: fixed; bottom: 0; left: 0; width: 100%; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; border-top: 1px solid #e2e8f0; }
-        .tab-btn { flex: 1; padding: 10px 0; border: none; background: transparent; font-size: 10px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: 'Poppins'; transition: 0.3s;}
-        .tab-btn.active { color: #10b981; }
-        .tab-btn i { font-size: 18px; }
+/* Bottom Tab Navigation (Slideable) */
+.tab-bar { 
+    display: flex; background: white; position: fixed; bottom: 0; left: 0; width: 100%; 
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; border-top: 1px solid #e2e8f0; 
+    overflow-x: auto; white-space: nowrap; scroll-behavior: smooth;
+}
+.tab-bar::-webkit-scrollbar { display: none; /* Hide scrollbar for clean look */ }
+.tab-btn { 
+    flex: 0 0 auto; min-width: 72px; /* Prevents tabs from squeezing */
+    padding: 10px 5px; border: none; background: transparent; font-size: 10px; 
+    font-weight: 600; color: #64748b; cursor: pointer; display: flex; flex-direction: column; 
+    align-items: center; gap: 4px; font-family: 'Poppins'; transition: 0.3s;
+}
+.tab-btn.active { color: #10b981; }
+.tab-btn i { font-size: 18px; }
+
+/* Order Item Style */
+.order-item { background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
         
         .tab-content { display: none; animation: fadeIn 0.3s ease-out;}
         .tab-content.active { display: block; }
@@ -65,13 +79,11 @@
         .suggest-name { font-weight: 600; color: #0f172a; }
         .suggest-phone { font-size: 11px; color: #64748b; }
 
-        .product-item { background: white; margin: 0 15px 12px; border-radius: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; padding: 15px; gap: 15px;}
-        .product-img { width: 75px; height: 75px; border-radius: 10px; object-fit: cover; background: #f1f5f9; border: 1px solid #e2e8f0;}
-        .product-info { flex: 1; }
-        .product-info h4 { margin: 0 0 6px; font-size: 15px; color: #0f172a; font-weight: 700;}
-        .price-sell { color: #0f172a; font-size: 18px; font-weight: 800; }
-        .stock-badge { display: inline-block; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #e2e8f0; }
-
+        .product-item { background: white; margin: 0 10px 10px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; align-items: center; padding: 10px; gap: 10px;}
+        .product-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; background: #f1f5f9; border: 1px solid #e2e8f0;}
+        .product-info h4 { margin: 0 0 4px; font-size: 14px; color: #0f172a; font-weight: 700;}
+        .price-sell { color: #0f172a; font-size: 16px; font-weight: 800; }
+        .stock-badge { display: inline-block; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: 1px solid #e2e8f0; }
         .custom-select-wrapper { position: relative; width: 100%; }
         .custom-dropdown { position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 10px; z-index: 100; display: none; margin-top: 5px; }
         .custom-option { padding: 10px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 12px;}
@@ -85,7 +97,7 @@
         .btn-call { background: #0ea5e9; } .btn-sms { background: #f59e0b; } .btn-wa { background: #10b981; } .btn-pdf { background: #6366f1; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px);}
-        .edit-card { background: white; width: 95%; max-width: 450px; max-height: 90vh; overflow-y: auto; border-radius: 20px; padding: 25px; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+        .edit-card { background: white; width: 95%; max-width: 450px; max-height: 85vh; overflow-y: auto; border-radius: 20px; padding: 25px; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
         
         .settings-menu-btn { width: 100%; padding: 15px; margin-bottom: 15px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;}
         .btn-menu-backup { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
@@ -97,21 +109,41 @@
         .img-preview-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         #printTemplate { display: none; background: white; padding: 20px; font-family: Arial, sans-serif; color: #000; width: 300px; }
-        /* PIN Input Styles for Seller App */
-.pin-input { 
-    text-align: center; font-size: 24px; letter-spacing: 15px; 
-    font-weight: bold; width: 100%; padding: 12px; 
-    border: 2px solid #cbd5e1; border-radius: 8px; 
-    box-sizing: border-box; outline: none; 
-    font-family: 'Poppins'; color: #0ea5e9;
+        /* Custom PIN Screen Styles */
+#seller-lock-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: #e0f7fa; /* Light cyan background from the image */
+    z-index: 2500; flex-direction: column; justify-content: center; align-items: center;
 }
-.pin-input:focus { border-color: #0ea5e9; }
-.btn-pin { 
-    background: #10b981; color: white; width: 100%; 
-    padding: 12px; border: none; border-radius: 8px; 
-    font-size: 16px; font-weight: bold; cursor: pointer; 
-    margin-top: 15px; transition: 0.3s;
+.pin-title { color: #334155; font-weight: 500; letter-spacing: 2px; font-size: 18px; margin-bottom: 25px; text-transform: uppercase; }
+.pin-dots-container { display: flex; gap: 15px; margin-bottom: 40px; }
+.pin-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid #4f46e5; /* Blue/purple border */
+    background: transparent; transition: all 0.2s;
 }
+.pin-dot.filled { background: #4f46e5; }
+
+.keypad-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 300px; margin: 0 auto; }
+.key-btn {
+    width: 70px; height: 70px; border-radius: 50%; background: #ffffff;
+    border: none; font-size: 24px; font-weight: 400; color: #1e293b;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06); cursor: pointer; display: flex;
+    justify-content: center; align-items: center; font-family: 'Poppins', sans-serif; transition: 0.1s;
+}
+.key-btn:active { transform: scale(0.95); background: #f8fafc; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); }
+.key-btn.icon-btn { font-size: 22px; font-weight: bold; }
+.text-red { color: #ef4444; }
+.text-green { color: #10b981; }
+/* Stock Filter Pills */
+.stock-filters { display: flex; gap: 8px; margin: 10px 15px 5px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.stock-filters::-webkit-scrollbar { display: none; }
+.filter-pill { padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.3s; display: flex; align-items: center; gap: 6px; font-family: 'Poppins'; }
+.filter-pill.active { background: #0f172a; color: white; border-color: #0f172a; }
+.filter-pill .fa-exclamation-triangle { color: #d97706; }
+.filter-pill .fa-ban { color: #ef4444; }
+.filter-pill .fa-check-circle { color: #10b981; }
+.filter-pill.active i { color: white; }
     </style>
 </head>
 <body>
@@ -128,17 +160,37 @@
             <button class="btn-login" onclick="loginSeller()">Access Dashboard</button>
         </div>
     </div>
-    <!-- Lock Screen Overlay -->
-<div id="seller-lock-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #0f172a); z-index: 2500; justify-content: center; align-items: center;">
-    <div class="login-box">
-        <h2><i class="fas fa-lock" style="color: #10b981;"></i> App Locked</h2>
-        <p>Enter your 4-digit PIN to unlock</p>
-        <input type="password" id="unlockPinInput" class="pin-input" maxlength="4" pattern="\d{4}" placeholder="****">
-        <button class="btn-pin" onclick="unlockSellerApp()">Unlock App</button>
-        <p style="margin-top: 15px; font-size: 13px;">
-            <a href="#" onclick="logoutSeller()" style="color: #ef4444; text-decoration: none;"><i class="fas fa-sign-out-alt"></i> Forgot PIN? Logout</a>
-        </p>
+    <!-- Custom Lock Screen Overlay -->
+<div id="seller-lock-overlay">
+    <h2 class="pin-title">Enter PIN</h2>
+    
+    <!-- PIN Dots -->
+    <div class="pin-dots-container">
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+        <div class="pin-dot" id="dot-4"></div>
     </div>
+
+    <!-- Number Keypad -->
+    <div class="keypad-container">
+        <button class="key-btn" onclick="pressPin('1')">1</button>
+        <button class="key-btn" onclick="pressPin('2')">2</button>
+        <button class="key-btn" onclick="pressPin('3')">3</button>
+        <button class="key-btn" onclick="pressPin('4')">4</button>
+        <button class="key-btn" onclick="pressPin('5')">5</button>
+        <button class="key-btn" onclick="pressPin('6')">6</button>
+        <button class="key-btn" onclick="pressPin('7')">7</button>
+        <button class="key-btn" onclick="pressPin('8')">8</button>
+        <button class="key-btn" onclick="pressPin('9')">9</button>
+        <button class="key-btn icon-btn text-red" onclick="deletePin()"><i class="fas fa-times"></i></button>
+        <button class="key-btn" onclick="pressPin('0')">0</button>
+        <button class="key-btn icon-btn text-green" onclick="submitPin()"><i class="fas fa-check"></i></button>
+    </div>
+    
+    <p style="margin-top: 40px; font-size: 13px;">
+        <a href="#" onclick="logoutSeller()" style="color: #64748b; text-decoration: none;"><i class="fas fa-sign-out-alt"></i> Forgot PIN? Logout</a>
+    </p>
 </div>
 
     <div id="main-seller-content" style="display: none;">
@@ -287,16 +339,25 @@
         </div>
 
         <!-- TAB 4: My Products -->
-        <div id="tab-products" class="tab-content">
-            <div style="margin: 15px 15px 5px;">
-                <h3 style="margin: 0; font-size: 16px; color: #0f172a;">My Products</h3>
-                <!-- Item Tab Search -->
-                <div class="input-group" style="margin-top: 10px;">
-                    <input type="text" id="searchMyProducts" class="custom-select-input" placeholder="Search your items by name..." oninput="filterItemsTab()">
-                </div>
-            </div>
-            <div id="products-container" style="padding-bottom: 20px;"></div>
+<div id="tab-products" class="tab-content">
+    <div style="margin: 15px 15px 5px;">
+        <h3 style="margin: 0; font-size: 16px; color: #0f172a;">My Products</h3>
+        <!-- Item Tab Search -->
+        <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
+            <input type="text" id="searchMyProducts" class="custom-select-input" placeholder="Search your items by name..." oninput="filterItemsTab()">
         </div>
+    </div>
+    
+    <!-- Stock Filter Pills -->
+    <div class="stock-filters">
+        <button class="filter-pill active" id="filter-btn-all" onclick="setStockFilter('all')">All</button>
+        <button class="filter-pill" id="filter-btn-available" onclick="setStockFilter('available')"><i class="fas fa-check-circle"></i> Available</button>
+        <button class="filter-pill" id="filter-btn-low" onclick="setStockFilter('low')"><i class="fas fa-exclamation-triangle"></i> Low Stock</button>
+        <button class="filter-pill" id="filter-btn-out" onclick="setStockFilter('out')"><i class="fas fa-ban"></i> Out of Stock</button>
+    </div>
+
+    <div id="products-container" style="padding-bottom: 20px;"></div>
+</div>
 
         <!-- TAB 5: History -->
         <div id="tab-history" class="tab-content">
@@ -323,6 +384,62 @@
                 <div id="historyListContainer"></div>
             </div>
         </div>
+        <!-- TAB 6: Orders -->
+<div id="tab-order" class="tab-content">
+    <div class="form-container" style="border-left: 5px solid #3b82f6;">
+        <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:10px;"><i class="fas fa-clipboard-list" style="color:#3b82f6;"></i> Add New Order</h3>
+        
+        <!-- Only Order Details is Required -->
+        <div class="input-group"><label>Order Details (Required)*</label><textarea id="orderItemDetails" rows="2" placeholder="e.g. 1x Guitar, Red Color..."></textarea></div>
+        <div class="input-group"><label>Customer Name (Optional)</label><input type="text" id="orderCustomerName" placeholder="e.g. Rahul Das"></div>
+        
+        <div class="row">
+            <div class="input-group"><label>Advance Paid (₹)</label><input type="number" id="orderAdvance" value="0"></div>
+        </div>
+        
+        <div class="row">
+            <div class="input-group"><label>Order Date</label><input type="date" id="orderCreateDate"></div>
+            <div class="input-group"><label>Delivery Date</label><input type="date" id="orderDate"></div>
+        </div>
+        
+        <button class="btn-action" style="background:#3b82f6;" onclick="addOrder()">Save Order</button>
+    </div>
+
+    <div style="margin: 20px 15px 15px;">
+        <h3 style="margin: 0; font-size: 16px; color: #0f172a;">Pending Orders</h3>
+    </div>
+    <div id="orders-container" style="padding-bottom: 20px;"></div>
+</div>
+
+<!-- Edit Order Modal -->
+<div class="modal-overlay" id="editOrderModal">
+    <div class="edit-card">
+        <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:15px;"><i class="fas fa-edit" style="color:#0ea5e9;"></i> Edit Order</h3>
+        <input type="hidden" id="editOrderId">
+        
+        <div class="input-group"><label>Order Details (Required)*</label><textarea id="editOrderItemDetails" rows="2"></textarea></div>
+        <div class="input-group"><label>Customer Name</label><input type="text" id="editOrderCustomerName"></div>
+        
+        <div class="row">
+            <div class="input-group"><label>Advance (₹)</label><input type="number" id="editOrderAdvance"></div>
+        </div>
+        <div class="row">
+            <div class="input-group"><label>Order Date</label><input type="date" id="editOrderCreateDate"></div>
+            <div class="input-group"><label>Delivery Date</label><input type="date" id="editOrderDate"></div>
+        </div>
+        <div class="input-group">
+            <label>Order Status</label>
+            <select id="editOrderStatus">
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: -25px; background: white; padding: 15px 0 25px; border-top: 1px dashed #cbd5e1; box-shadow: 0 -15px 15px -15px rgba(0,0,0,0.08); z-index: 10;">
+    <button onclick="document.getElementById('editOrderModal').style.display='none'" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
+    <button onclick="saveOrderEdits()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#3b82f6; color:white; cursor:pointer; font-weight:700;">Update</button>
+</div>
+    </div>
+</div>
 
         <!-- 5 Tabs Bottom Navigation -->
         <div class="tab-bar">
@@ -333,6 +450,18 @@
             <button class="tab-btn" id="btn-tab-history" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> History</button>
         </div>
     </div>
+    <!-- 6 Tabs Bottom Navigation (Slideable) -->
+<div class="tab-bar">
+    <button class="tab-btn active" id="btn-tab-dashboard" onclick="switchTab('tab-dashboard', this)"><i class="fas fa-home"></i> Home</button>
+    <button class="tab-btn" id="btn-tab-record-sale" onclick="setupRecordSaleTab(); switchTab('tab-record-sale', this)"><i class="fas fa-cash-register"></i> Sell</button>
+    <button class="tab-btn" id="btn-tab-add-product" onclick="switchTab('tab-add-product', this)"><i class="fas fa-plus-circle"></i> Add</button>
+    <button class="tab-btn" id="btn-tab-products" onclick="switchTab('tab-products', this)"><i class="fas fa-box"></i> Items</button>
+    
+    <!-- New Order Tab Button -->
+    <button class="tab-btn" id="btn-tab-order" onclick="switchTab('tab-order', this)"><i class="fas fa-clipboard-list"></i> Orders</button>
+    
+    <button class="tab-btn" id="btn-tab-history" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> History</button>
+</div>
 
     <!-- Edit Product Modal -->
     <div class="modal-overlay" id="editProdModal">
@@ -362,13 +491,51 @@
                 </div>
                 <div id="edit-prod-pic-preview" class="img-preview-container"></div>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="closeEditModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
-                <button onclick="saveProductEdits()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:700;">Save Updates</button>
-            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px; position: sticky; bottom: -25px; background: white; padding: 15px 0 25px; border-top: 1px dashed #cbd5e1; box-shadow: 0 -15px 15px -15px rgba(0,0,0,0.08); z-index: 10;">
+    <button onclick="closeEditModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
+    <button onclick="saveProductEdits()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:700;">Save Updates</button>
+</div>
         </div>
     </div>
 
+<!-- View Product Details Modal -->
+<div class="modal-overlay" id="viewProductModal">
+    <div class="edit-card" style="text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-box" style="color: #3b82f6;"></i> Product Details</h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('viewProductModal').style.display='none'"></i>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 15px;">
+            <img id="viewProdImg" src="" style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover; border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        </div>
+        
+        <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 13px; color: #475569;">
+            <p style="margin: 0 0 8px; font-size: 16px;"><strong>Name:</strong> <span id="viewProdName" style="color: #0f172a; font-weight: bold;"></span></p>
+            <p style="margin: 0 0 8px;"><strong>Category:</strong> <span id="viewProdCategory"></span></p>
+            <p style="margin: 0 0 8px;"><strong>Short Note:</strong> <span id="viewProdNote"></span></p>
+            
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+                <p style="margin: 0;"><strong>Buy Price:</strong> ₹<span id="viewProdBuyPrice" style="color: #ef4444; font-weight: bold;"></span></p>
+                <p style="margin: 0;"><strong>Sell Price:</strong> ₹<span id="viewProdPrice" style="color: #10b981; font-weight: bold;"></span></p>
+            </div>
+            
+            <!-- নতুন Profit/Loss সেকশন -->
+            <div id="viewProdProfitContainer" style="text-align: center; margin-top: 8px; padding: 6px; border-radius: 6px; background: #f1f5f9;">
+                <p style="margin: 0; font-weight: bold; font-size: 14px;" id="viewProdProfitText"></p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                <p style="margin: 0;"><strong>MRP:</strong> ₹<span id="viewProdMrp"></span></p>
+                <p style="margin: 0;"><strong>Total Stock:</strong> <span id="viewProdStock" style="font-weight: bold; color: #3b82f6;"></span></p>
+            </div>
+            
+            <p style="margin: 10px 0 0; border-top: 1px dashed #cbd5e1; padding-top: 10px;"><strong>Description:</strong> <br><span id="viewProdDesc" style="color: #64748b;"></span></p>
+        </div>
+        
+        <button onclick="document.getElementById('viewProductModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);">Close</button>
+        </div>
+  </div>
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
         <div class="edit-card" style="max-width: 320px; text-align: center;">
@@ -388,15 +555,15 @@
     <!-- Confirm Modal -->
     <div class="modal-overlay" id="customConfirmModal" style="z-index: 9999;">
         <div class="edit-card" style="max-width: 300px; text-align: center; padding: 30px 20px;">
-            <div style="width: 60px; height: 60px; background: #fee2e2; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 30px; color: #ef4444;"></i>
+            <div style="width: 60px; height: 60px; background: #fef3c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 30px; color: #f59e0b;"></i>
             </div>
-            <h3 style="margin: 0 0 10px; color: #0f172a;">Are you sure?</h3>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Do you really want to delete this product?</p>
+            <h3 style="margin: 0 0 10px; color: #0f172a;">Request Deletion?</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">An approval request will be sent to the Admin to delete this product.</p>
             <input type="hidden" id="deleteTargetId">
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeConfirmModal()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:700; color:#475569;">Cancel</button>
-                <button onclick="executeProductDeletion()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#ef4444; color:white; cursor:pointer; font-weight:700;">Delete</button>
+                <button onclick="executeProductDeletion()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f59e0b; color:white; cursor:pointer; font-weight:700;">Request Delete</button>
             </div>
         </div>
     </div>
@@ -477,21 +644,22 @@
         let activeHistoryFilter = 'all';
 
         window.onload = function() {
-    const sid = localStorage.getItem("seller_id");
-    if (sid) { 
-        // লগিন করা থাকলে মেইন স্ক্রিন না দেখিয়ে লক স্ক্রিন দেখাবে
-        document.getElementById('seller-login-overlay').style.display = 'none';
-        document.getElementById('seller-lock-overlay').style.display = 'flex';
-        
-        // ব্যাকগ্রাউন্ডে ডেটা লোড হতে থাকবে
-        fetchMyProducts(sid); 
-        calculateTotalSalesFromHistory(sid);
-        listenForApprovals(sid); 
-        listenForAccountChanges(sid); 
-    }
-    fetchGlobalLogo();
-};
-
+            const sid = localStorage.getItem("seller_id");
+            if (sid) { 
+                // লগিন করা থাকলে মেইন স্ক্রিন না দেখিয়ে লক স্ক্রিন দেখাবে
+                document.getElementById('seller-login-overlay').style.display = 'none';
+                document.getElementById('seller-lock-overlay').style.display = 'flex';
+                
+                // ব্যাকগ্রাউন্ডে সমস্ত ডেটা লোড হতে থাকবে
+                fetchMyProducts(sid); 
+                listenToSalesHistory(sid); 
+                listenForApprovals(sid); 
+                fetchMyOrders();
+                
+                // অটো-সাজেস্ট (Auto-Suggest) চালু করার জন্য কাস্টমার ডেটা লোড করা হচ্ছে
+                fetchMyCustomers(sid); 
+            }
+        };
 // আনলক করার নতুন ফাংশন
 function unlockSellerApp() {
     const enteredPin = document.getElementById('unlockPinInput').value;
@@ -517,28 +685,54 @@ function unlockSellerApp() {
         }
 
         function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btnElement.classList.add('active');
-            
-            // Auto refresh product list search when changing to tab
-            if(tabId === 'tab-products') filterItemsTab();
-        }
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btnElement.classList.add('active');
+    
+    // Auto refresh product list search when changing to tab
+    if(tabId === 'tab-products') filterItemsTab();
+    
+    // নতুন লাইন: Order ট্যাবে ক্লিক করলে অর্ডারগুলো লোড হবে
+    if(tabId === 'tab-order') fetchMyOrders();
+}
 
         async function loginSeller() {
-            const phone = document.getElementById('sellerPhone').value.trim(); const dob = document.getElementById('sellerDob').value; const pass = document.getElementById('sellerPass').value.trim();
+            const phone = document.getElementById('sellerPhone').value.trim(); 
+            const dob = document.getElementById('sellerDob').value; 
+            const pass = document.getElementById('sellerPass').value.trim();
+            
             if(!phone || !dob || !pass) return showToast("Please fill all details.", "error");
+            
             try {
                 const snapshot = await db.collection("Sellers").where("phone", "==", phone).get();
                 if (snapshot.empty) throw new Error("Not found.");
+                
                 let loggedInUser = null;
-                snapshot.forEach(doc => { const d = doc.data(); if (d.dob === dob && d.password === pass) { loggedInUser = { id: doc.id, ...d }; } });
+                snapshot.forEach(doc => { 
+                    const d = doc.data(); 
+                    if (d.dob === dob && d.password === pass) { 
+                        loggedInUser = { id: doc.id, ...d }; 
+                    } 
+                });
+                
                 if (loggedInUser) {
-                    localStorage.setItem("seller_id", loggedInUser.id); localStorage.setItem("seller_store", loggedInUser.storeName); localStorage.setItem("seller_name", loggedInUser.sellerName); localStorage.setItem("seller_pic", loggedInUser.profilePic);
+                    localStorage.setItem("seller_id", loggedInUser.id); 
+                    localStorage.setItem("seller_store", loggedInUser.storeName); 
+                    localStorage.setItem("seller_name", loggedInUser.sellerName); 
+                    localStorage.setItem("seller_pic", loggedInUser.profilePic);
+                    localStorage.setItem("seller_pass", loggedInUser.password);
+                    
+                    // এই নতুন লাইনটি যোগ করা হলো (ফোন নম্বর সেভ করার জন্য)
+                    localStorage.setItem("seller_phone", loggedInUser.phone || phone);
+                    
                     location.reload();
-                } else { throw new Error("Incorrect Details."); }
-            } catch (error) { showToast(error.message, "error"); }
+                } else { 
+                    throw new Error("Incorrect Details."); 
+                }
+            } catch (error) { 
+                showToast(error.message, "error"); 
+            }
         }
 
         function loadSellerDashboard(sellerId) { 
@@ -565,8 +759,12 @@ function unlockSellerApp() {
                         if(d.actionType === 'backup') hasBackupApp = doc.id;
                         if(d.actionType === 'restore') hasRestoreApp = doc.id;
                         if(d.actionType === 'delete_history') executeDeleteHistory(d.extraData.historyId, doc.id);
+                        
+                        // নতুন লাইন: অ্যাডমিন অ্যাপ্রুভ করলে প্রোডাক্ট ডিলিট হবে
+                        if(d.actionType === 'delete_product') executeApprovedProductDeletion(d.extraData.productId, doc.id);
                     }
                 });
+                
                 const btnBackup = document.getElementById('btnBackupUI');
                 if(btnBackup) {
                     if(hasBackupApp) { btnBackup.innerHTML = `<i class="fas fa-check-circle"></i> Download Backup Now`; btnBackup.style.background = "#10b981"; btnBackup.style.color = "white"; btnBackup.onclick = async () => { await db.collection("AdminRequests").doc(hasBackupApp).delete(); performBackup(hasBackupApp); }; }
@@ -578,6 +776,19 @@ function unlockSellerApp() {
                     else { btnRestore.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Request Restore Data`; btnRestore.style.background = "#dcfce7"; btnRestore.style.color = "#15803d"; btnRestore.onclick = () => requestAdminAction('restore'); }
                 }
             });
+        }
+
+        // নতুন ফাংশন: অ্যাডমিন পারমিশন দিলে তবেই প্রোডাক্ট ডিলিট হবে
+        async function executeApprovedProductDeletion(productId, reqId) {
+            try {
+                await db.collection("Products").doc(productId).delete();
+                if(reqId) {
+                    await db.collection("AdminRequests").doc(reqId).delete();
+                }
+                showToast("Admin approved! Product Deleted.", "success");
+            } catch(e) {
+                console.error(e);
+            }
         }
         
         // Product Logic
@@ -609,7 +820,13 @@ function unlockSellerApp() {
             document.getElementById('addProdBtn').innerText = "Publishing..."; document.getElementById('addProdBtn').disabled = true;
             try { 
                 await db.collection("Products").add({ 
-                    sellerId: localStorage.getItem("seller_id"), storeName: localStorage.getItem("seller_store"), sellerName: localStorage.getItem("seller_name"), 
+                    sellerId: localStorage.getItem("seller_id"), 
+                    storeName: localStorage.getItem("seller_store"), 
+                    sellerName: localStorage.getItem("seller_name"), 
+                    
+                    // এই নতুন লাইনটি যোগ করা হলো (প্রোডাক্টের সাথে ফোন নম্বর ডেটাবেসে পাঠানোর জন্য)
+                    phone: localStorage.getItem("seller_phone"),
+                    
                     productName: pName, shortNote: pShortNote, category: pCategory, description: pDesc, 
                     buyPrice: pBuyPrice, mrp: pMrp, price: pPrice, stockCount: pStock, soldCount: 0, 
                     productPics: tempAddProdPics, productPic: finalPic, timestamp: firebase.firestore.FieldValue.serverTimestamp() 
@@ -633,27 +850,194 @@ function unlockSellerApp() {
         }
 
         function renderProductsList(productsArray) {
-            const cont = document.getElementById('products-container'); cont.innerHTML = ""; 
-            if(productsArray.length === 0) { cont.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No products found.</div>`; return; }
+            const cont = document.getElementById('products-container'); 
+            cont.innerHTML = ""; 
             
-            productsArray.forEach(d => {
+            if(productsArray.length === 0) { 
+                cont.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No products found.</div>`; 
+                return; 
+            }
+            
+            // ৩টি আলাদা গ্রুপ তৈরি করা হচ্ছে
+            let outOfStock = [];
+            let lowStock = [];
+            let inStock = [];
+
+            productsArray.forEach(p => {
+                if (p.stockCount <= 0) outOfStock.push(p);
+                else if (p.stockCount <= 2) lowStock.push(p);
+                else inStock.push(p);
+            });
+
+            // Alphanumeric সর্টিং লজিক
+            const sortAlphaNumeric = (a, b) => {
+                const nameA = a.productName || "";
+                const nameB = b.productName || "";
+                return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+            };
+
+            outOfStock.sort(sortAlphaNumeric);
+            lowStock.sort(sortAlphaNumeric);
+            inStock.sort(sortAlphaNumeric);
+
+            // প্রোডাক্টের HTML তৈরি করার কমন ফাংশন
+            const generateProductHTML = (d) => {
                 const imgSource = (d.productPics && d.productPics.length > 0) ? d.productPics[0] : (d.productPic || 'https://via.placeholder.com/100');
-                cont.innerHTML += `<div class="product-item">
-                    <img src="${imgSource}" class="product-img">
-                    <div class="product-info"><h4>${d.productName}</h4><div class="ecommerce-price"><span class="price-sell">₹${d.price}</span></div><span class="stock-badge">Stock: ${d.stockCount}</span></div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <button onclick="openEditModal('${d.id}')" style="background:#f1f5f9; border:none; color:#0ea5e9; font-size:14px; padding:10px; border-radius:8px; cursor:pointer;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteProduct('${d.id}')" style="background:#fee2e2; border:none; color:#ef4444; font-size:14px; padding:10px; border-radius:8px; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                
+                let stockBadgeHtml = '';
+                let borderStyle = ''; 
+                
+                if (d.stockCount <= 0) {
+                    stockBadgeHtml = `<span class="stock-badge" style="background:#fee2e2; color:#ef4444; border-color:#fca5a5;"><i class="fas fa-exclamation-circle"></i> Out of Stock</span>`;
+                    borderStyle = 'border: 1px solid #fca5a5; background: #fef2f2;';
+                } else if (d.stockCount <= 2) {
+                    stockBadgeHtml = `<span class="stock-badge" style="background:#fef3c7; color:#d97706; border-color:#fde68a;"><i class="fas fa-exclamation-triangle"></i> Low Stock: ${d.stockCount}</span>`;
+                    borderStyle = 'border: 1px solid #fde68a; background: #fffbeb;';
+                } else {
+                    stockBadgeHtml = `<span class="stock-badge">Stock: ${d.stockCount}</span>`;
+                    borderStyle = 'border: 1px solid #e2e8f0; background: white;';
+                }
+
+                // Hide/Show আইকন লজিক
+                const eyeIcon = d.isHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+                const eyeColor = d.isHidden ? '#ef4444' : '#3b82f6';
+                const eyeBg = d.isHidden ? '#fee2e2' : '#eff6ff';
+
+                // Hot Deal আইকন লজিক
+                const fireIcon = '<i class="fas fa-fire"></i>';
+                const fireColor = d.isHotDeal ? '#ef4444' : '#94a3b8'; 
+                const fireBg = d.isHotDeal ? '#fee2e2' : '#f1f5f9';
+
+                return `
+                <div class="product-item" style="${borderStyle}">
+                    <div style="display:flex; flex:1; cursor:pointer; align-items:center;" onclick="viewProductDetails('${d.id}')">
+                        <img src="${imgSource}" class="product-img">
+                        <div class="product-info" style="margin-left: 10px;">
+                            <h4>${d.productName}</h4>
+                            <div class="ecommerce-price"><span class="price-sell">₹${d.price}</span></div>
+                            ${stockBadgeHtml}
+                        </div>
+                    </div>
+                    <!-- বাটনগুলোকে 2x2 গ্রিডে সাজানো হয়েছে -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                        <button onclick="toggleHotDealStatus('${d.id}', ${d.isHotDeal ? true : false})" style="background:${fireBg}; border:none; color:${fireColor}; font-size:12px; padding:6px 10px; border-radius:6px; cursor:pointer;" title="Add/Remove Hot Deal">${fireIcon}</button>
+                        
+                        <button onclick="toggleProductVisibility('${d.id}', ${d.isHidden ? true : false})" style="background:${eyeBg}; border:none; color:${eyeColor}; font-size:12px; padding:6px 10px; border-radius:6px; cursor:pointer;" title="Hide/Show Product">${eyeIcon}</button>
+                        
+                        <button onclick="openEditModal('${d.id}')" style="background:#f1f5f9; border:none; color:#0ea5e9; font-size:12px; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-edit"></i></button>
+                        
+                        <button onclick="deleteProduct('${d.id}')" style="background:#fee2e2; border:none; color:#ef4444; font-size:12px; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
-            });
+            };
+
+            // আলাদা আলাদা হেডিং সহ প্রোডাক্ট রেন্ডার করা হচ্ছে
+            if (outOfStock.length > 0) {
+                cont.innerHTML += `<div style="margin: 20px 15px 10px; font-weight: 700; color: #ef4444; font-size: 14px; border-bottom: 1px solid #fca5a5; padding-bottom: 5px;"><i class="fas fa-ban"></i> Out of Stock</div>`;
+                outOfStock.forEach(p => cont.innerHTML += generateProductHTML(p));
+            }
+            
+            if (lowStock.length > 0) {
+                cont.innerHTML += `<div style="margin: 20px 15px 10px; font-weight: 700; color: #d97706; font-size: 14px; border-bottom: 1px solid #fde68a; padding-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Low Stock</div>`;
+                lowStock.forEach(p => cont.innerHTML += generateProductHTML(p));
+            }
+
+            if (inStock.length > 0) {
+                cont.innerHTML += `<div style="margin: 20px 15px 10px; font-weight: 700; color: #10b981; font-size: 14px; border-bottom: 1px solid #6ee7b7; padding-bottom: 5px;"><i class="fas fa-check-circle"></i> Available Items</div>`;
+                inStock.forEach(p => cont.innerHTML += generateProductHTML(p));
+            }
         }
 
-        function filterItemsTab() {
-            const query = document.getElementById('searchMyProducts').value.toLowerCase();
-            const filtered = currentSellerProducts.filter(p => p.productName.toLowerCase().includes(query));
-            renderProductsList(filtered);
+// প্রোডাক্টের ডিটেইলস দেখানোর ফাংশন
+function viewProductDetails(id) {
+    const p = currentSellerProducts.find(item => item.id === id);
+    if (!p) return;
+    
+    const imgSource = (p.productPics && p.productPics.length > 0) ? p.productPics[0] : (p.productPic || 'https://via.placeholder.com/100');
+    
+    const buyPrice = Number(p.buyPrice) || 0;
+    const sellPrice = Number(p.price) || 0;
+    const profit = sellPrice - buyPrice; // প্রফিট/লস ক্যালকুলেশন
+    
+    document.getElementById('viewProdImg').src = imgSource;
+    document.getElementById('viewProdName').innerText = p.productName || 'N/A';
+    document.getElementById('viewProdCategory').innerText = p.category || 'N/A';
+    document.getElementById('viewProdNote').innerText = p.shortNote || 'N/A';
+    document.getElementById('viewProdBuyPrice').innerText = buyPrice;
+    document.getElementById('viewProdPrice').innerText = sellPrice;
+    document.getElementById('viewProdMrp').innerText = p.mrp || '0';
+    document.getElementById('viewProdStock').innerText = p.stockCount || '0';
+    document.getElementById('viewProdDesc').innerText = p.description || 'No description provided.';
+    
+    // Profit/Loss UI আপডেট লজিক
+    const profitTextEl = document.getElementById('viewProdProfitText');
+    const profitContainer = document.getElementById('viewProdProfitContainer');
+    
+    if(profit > 0) {
+        profitTextEl.innerHTML = `Profit: <span style="color: #10b981;">₹${profit} / item</span>`;
+        profitContainer.style.background = "#ecfdf5"; // হালকা সবুজ ব্যাকগ্রাউন্ড
+        profitContainer.style.border = "1px solid #a7f3d0";
+    } else if(profit < 0) {
+        profitTextEl.innerHTML = `Loss: <span style="color: #ef4444;">₹${Math.abs(profit)} / item</span>`;
+        profitContainer.style.background = "#fef2f2"; // হালকা লাল ব্যাকগ্রাউন্ড
+        profitContainer.style.border = "1px solid #fecaca";
+    } else {
+        profitTextEl.innerHTML = `No Profit / No Loss`;
+        profitContainer.style.background = "#f1f5f9"; // সাধারণ ব্যাকগ্রাউন্ড
+        profitContainer.style.border = "1px solid #e2e8f0";
+    }
+    
+    document.getElementById('viewProductModal').style.display = 'flex';
+}
+
+        let activeProductFilter = 'all';
+
+// বাটনে ক্লিক করলে ফিল্টার চেঞ্জ করার ফাংশন
+function setStockFilter(filterType) {
+    activeProductFilter = filterType;
+    
+    // বাটনগুলোর অ্যাক্টিভ কালার চেঞ্জ করা
+    document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('filter-btn-' + filterType).classList.add('active');
+    
+    // বাটন দিয়ে ফিল্টার করলে সার্চ বক্স ক্লিয়ার হয়ে যাবে
+    document.getElementById('searchMyProducts').value = ""; 
+    
+    filterItemsTab();
+}
+
+// সার্চ এবং ফিল্টার করার মেইন ফাংশন
+function filterItemsTab() {
+    const query = document.getElementById('searchMyProducts').value.toLowerCase().trim();
+    let filtered = currentSellerProducts;
+    
+    if (query) {
+        // যদি সার্চ বক্সে কিছু লেখা হয়, তবে সব প্রোডাক্টের মধ্যে সার্চ হবে
+        filtered = currentSellerProducts.filter(p => {
+            const matchName = p.productName && p.productName.toLowerCase().includes(query);
+            const matchPrice = p.price && p.price.toString().includes(query);
+            return matchName || matchPrice;
+        });
+        
+        // সার্চ করার সময় অটোমেটিক "All" বাটনটি অ্যাক্টিভ হয়ে যাবে বোঝানোর জন্য যে সব জায়গাতে সার্চ হচ্ছে
+        document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('filter-btn-all').classList.add('active');
+        activeProductFilter = 'all'; 
+
+    } else {
+        // সার্চ বক্স ফাঁকা থাকলে পিল (Pill) বাটনের ফিল্টার কাজ করবে
+        if (activeProductFilter === 'available') {
+            filtered = filtered.filter(p => p.stockCount > 2);
+        } else if (activeProductFilter === 'low') {
+            filtered = filtered.filter(p => p.stockCount > 0 && p.stockCount <= 2);
+        } else if (activeProductFilter === 'out') {
+            filtered = filtered.filter(p => p.stockCount <= 0);
         }
+    }
+    
+    // আগের তৈরি করা render ফাংশনে ডাটা পাঠানো
+    renderProductsList(filtered);
+}
 
         function openEditModal(id) { 
             const p = currentSellerProducts.find(item => item.id === id); if(!p) return; 
@@ -688,7 +1072,19 @@ function unlockSellerApp() {
 
         function deleteProduct(prodId) { document.getElementById('deleteTargetId').value = prodId; document.getElementById('customConfirmModal').style.display = 'flex'; }
         function closeConfirmModal() { document.getElementById('customConfirmModal').style.display = 'none'; }
-        async function executeProductDeletion() { const prodId = document.getElementById('deleteTargetId').value; if(!prodId) return; try { await db.collection("Products").doc(prodId).delete(); showToast("Deleted Successfully!", "success"); closeConfirmModal(); } catch(e) { showToast("Error deleting", "error"); } }
+        async function executeProductDeletion() { 
+            const prodId = document.getElementById('deleteTargetId').value; 
+            if(!prodId) return; 
+            
+            try {
+                // সরাসরি ডিলিট করার বদলে অ্যাডমিনকে রিকোয়েস্ট পাঠানো হচ্ছে
+                await requestAdminAction('delete_product', { productId: prodId });
+                showToast("Delete request sent to Admin!", "success");
+                closeConfirmModal();
+            } catch(e) { 
+                showToast("Error sending request", "error"); 
+            } 
+        }
 
         // Customers Auto-Suggest
         function fetchMyCustomers(sellerId) { db.collection("Customers").where("sellerId", "==", sellerId).onSnapshot(snap => { currentSellerCustomers = []; snap.forEach(doc => { currentSellerCustomers.push(doc.data()); }); }); }
@@ -1023,6 +1419,417 @@ function downloadReceiptPDF(id) {
         }
     });
 }
+let enteredPin = "";
+
+function pressPin(num) {
+    if (enteredPin.length < 4) {
+        enteredPin += num;
+        updatePinUI();
+    }
+}
+
+function deletePin() {
+    if (enteredPin.length > 0) {
+        enteredPin = enteredPin.slice(0, -1);
+        updatePinUI();
+    }
+}
+
+function updatePinUI() {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i <= enteredPin.length) {
+            dot.classList.add('filled');
+        } else {
+            dot.classList.remove('filled');
+        }
+    }
+}
+
+function submitPin() {
+    if (enteredPin.length !== 4) {
+        showToast("Please enter 4 digits", "warning");
+        return;
+    }
+    
+    const savedPin = localStorage.getItem("seller_pass");
+    if (enteredPin === savedPin) {
+        // Unlock successful
+        document.getElementById('seller-lock-overlay').style.display = 'none';
+        const sid = localStorage.getItem("seller_id");
+        loadSellerDashboard(sid);
+        
+        // Reset for next time
+        enteredPin = ""; 
+        updatePinUI();
+        showToast("App Unlocked!", "success");
+    } else {
+        // Incorrect PIN
+        showToast("Incorrect PIN!", "error");
+        enteredPin = ""; // Clear entered pin
+        updatePinUI();
+    }
+}
+let currentSellerOrders = [];
+
+// 1. Add Order Function (Only Details Required)
+async function addOrder() {
+    const details = document.getElementById('orderItemDetails').value.trim();
+    const cName = document.getElementById('orderCustomerName').value.trim() || "Unknown"; // না দিলে Unknown দেখাবে
+    const advance = Number(document.getElementById('orderAdvance').value) || 0;
+    const orderDt = document.getElementById('orderCreateDate').value;
+    const deliveryDt = document.getElementById('orderDate').value;
+    const sid = localStorage.getItem("seller_id");
+
+    if(!details) return showToast("Order details are required!", "error");
+
+    try {
+        await db.collection("Orders").add({
+            sellerId: sid, orderDetails: details, customerName: cName, advance: advance, 
+            orderDate: orderDt, deliveryDate: deliveryDt, status: "Pending", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Order Added Successfully!", "success");
+        
+        // Reset Inputs
+        document.getElementById('orderItemDetails').value = ""; 
+        document.getElementById('orderCustomerName').value = "";
+        document.getElementById('orderAdvance').value = "0"; 
+        document.getElementById('orderCreateDate').value = ""; 
+        document.getElementById('orderDate').value = "";
+    } catch(e) { showToast("Error adding order", "error"); }
+}
+
+// 2. Fetch Orders Realtime
+function fetchMyOrders() {
+    const sid = localStorage.getItem("seller_id");
+    db.collection("Orders").where("sellerId", "==", sid).onSnapshot(snap => {
+        const cont = document.getElementById('orders-container'); cont.innerHTML = "";
+        currentSellerOrders = [];
+        if(snap.empty) { cont.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No pending orders.</div>`; return; }
+        
+        snap.forEach(doc => { const d = doc.data(); d.id = doc.id; currentSellerOrders.push(d); });
+        currentSellerOrders.sort((a,b) => { const timeA = a.timestamp ? a.timestamp.toMillis() : 0; const timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; });
+        
+        currentSellerOrders.forEach(d => {
+            const statusColor = d.status === "Completed" ? "#10b981" : "#f59e0b";
+            cont.innerHTML += `
+            <div class="order-item">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <h4 style="margin:0; font-size:14px; color:#0f172a;"><i class="fas fa-clipboard-check"></i> ${d.orderDetails}</h4>
+                    <span style="font-size:10px; font-weight:700; color:${statusColor}; background:#f8fafc; padding:3px 8px; border-radius:5px;">${d.status}</span>
+                </div>
+                <p style="margin:5px 0; font-size:12px; color:#475569;"><strong>Customer:</strong> ${d.customerName}</p>
+                <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-bottom:10px; gap:5px;">
+                    <span><strong style="color:#0f172a;">Adv:</strong> ₹${d.advance}</span> 
+                    <span><strong style="color:#0f172a;">Ord:</strong> ${d.orderDate || 'N/A'}</span> 
+                    <span><strong style="color:#0f172a;">Del:</strong> ${d.deliveryDate || 'N/A'}</span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="openEditOrderModal('${d.id}')" style="flex:1; background:#e0f2fe; color:#0ea5e9; border:none; padding:8px; border-radius:6px; cursor:pointer;"><i class="fas fa-edit"></i> Edit</button>
+                    <button onclick="deleteOrder('${d.id}')" style="flex:1; background:#fee2e2; color:#ef4444; border:none; padding:8px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>`;
+        });
+    });
+}
+
+// 3. Edit Order Modal Functions
+function openEditOrderModal(id) {
+    const order = currentSellerOrders.find(o => o.id === id); if(!order) return;
+    document.getElementById('editOrderId').value = order.id;
+    document.getElementById('editOrderItemDetails').value = order.orderDetails;
+    document.getElementById('editOrderCustomerName').value = order.customerName === "Unknown" ? "" : order.customerName;
+    document.getElementById('editOrderAdvance').value = order.advance;
+    document.getElementById('editOrderCreateDate').value = order.orderDate || "";
+    document.getElementById('editOrderDate').value = order.deliveryDate || "";
+    document.getElementById('editOrderStatus').value = order.status || "Pending";
+    document.getElementById('editOrderModal').style.display = 'flex';
+}
+
+async function saveOrderEdits() {
+    const id = document.getElementById('editOrderId').value;
+    const details = document.getElementById('editOrderItemDetails').value.trim();
+    const cName = document.getElementById('editOrderCustomerName').value.trim() || "Unknown";
+    const advance = Number(document.getElementById('editOrderAdvance').value) || 0;
+    const orderDt = document.getElementById('editOrderCreateDate').value;
+    const deliveryDt = document.getElementById('editOrderDate').value;
+    const status = document.getElementById('editOrderStatus').value;
+    
+    if(!details) return showToast("Order details are required!", "error");
+
+    try {
+        await db.collection("Orders").doc(id).update({
+            orderDetails: details, customerName: cName, advance: advance, 
+            orderDate: orderDt, deliveryDate: deliveryDt, status: status
+        });
+        document.getElementById('editOrderModal').style.display = 'none';
+        showToast("Order Updated!", "success");
+    } catch(e) { showToast("Error updating order", "error"); }
+}
+
+async function deleteOrder(id) {
+    if(confirm("Are you sure you want to delete this order?")) {
+        try { await db.collection("Orders").doc(id).delete(); showToast("Order Deleted!", "success"); } catch(e) {}
+    }
+}
+// প্রোডাক্ট হাইড বা আন-হাইড করার ফাংশন
+        async function toggleProductVisibility(id, currentStatus) {
+            try {
+                // বর্তমান স্ট্যাটাস উল্টে দেওয়া হবে (হাইড থাকলে শো, শো থাকলে হাইড)
+                const newStatus = !currentStatus; 
+                await db.collection("Products").doc(id).update({ 
+                    isHidden: newStatus 
+                });
+                
+                if (newStatus) {
+                    showToast("Product Hidden from Customer App!", "success");
+                } else {
+                    showToast("Product is now Visible!", "success");
+                }
+            } catch(e) { 
+                showToast("Error updating visibility!", "error"); 
+            }
+        }
+        // Hot Deals এ অ্যাড বা রিমুভ করার ফাংশন
+        async function toggleHotDealStatus(id, currentStatus) {
+            try {
+                const newStatus = !currentStatus; 
+                await db.collection("Products").doc(id).update({ 
+                    isHotDeal: newStatus 
+                });
+                
+                if (newStatus) {
+                    showToast("Added to Hot Deals! 🔥", "success");
+                } else {
+                    showToast("Removed from Hot Deals!", "warning");
+                }
+            } catch(e) { 
+                showToast("Error updating Hot Deal status!", "error"); 
+            }
+        }
+
+        // প্রোডাক্ট হাইড বা আন-হাইড করার ফাংশন
+        async function toggleProductVisibility(id, currentStatus) {
+            try {
+                const newStatus = !currentStatus; 
+                await db.collection("Products").doc(id).update({ 
+                    isHidden: newStatus 
+                });
+                
+                if (newStatus) {
+                    showToast("Product Hidden from Customer App!", "success");
+                } else {
+                    showToast("Product is now Visible!", "success");
+                }
+            } catch(e) { 
+                showToast("Error updating visibility!", "error"); 
+            }
+        }
+        // ==========================================
+        // Total App Backup & Restore Functions
+        // ==========================================
+
+        // ১. ব্যাকআপ ডাউনলোড করার ফাংশন
+        // ১. ব্যাকআপ ডাউনলোড করার ফাংশন (Select Folder Option সহ)
+        async function performBackup(reqId) {
+            try {
+                showToast("Preparing Total Backup... Please wait.", "warning");
+                const sid = localStorage.getItem("seller_id");
+                const storeName = localStorage.getItem("seller_store") || "Store";
+                
+                // ব্যাকআপের জন্য একটি ফাঁকা খাতা (Object) তৈরি করা হলো
+                let backupData = {
+                    storeName: storeName,
+                    backupDate: new Date().toISOString(),
+                    Products: [],
+                    SalesHistory: [],
+                    Orders: [],
+                    Customers: []
+                };
+
+                // ডেটা ফেচিং...
+                const prodSnap = await db.collection("Products").where("sellerId", "==", sid).get();
+                prodSnap.forEach(doc => { backupData.Products.push({ id: doc.id, ...doc.data() }); });
+
+                const salesSnap = await db.collection("SalesHistory").where("sellerId", "==", sid).get();
+                salesSnap.forEach(doc => { backupData.SalesHistory.push({ id: doc.id, ...doc.data() }); });
+
+                const orderSnap = await db.collection("Orders").where("sellerId", "==", sid).get();
+                orderSnap.forEach(doc => { backupData.Orders.push({ id: doc.id, ...doc.data() }); });
+
+                const custSnap = await db.collection("Customers").where("sellerId", "==", sid).get();
+                custSnap.forEach(doc => { backupData.Customers.push({ id: doc.id, ...doc.data() }); });
+
+                const jsonData = JSON.stringify(backupData, null, 2);
+                const fileName = `Total_Backup_${storeName}_${new Date().getTime()}.json`;
+
+                // File System Access API চেক করা হচ্ছে (আধুনিক ব্রাউজার/অ্যান্ড্রয়েডের জন্য)
+                if (window.showSaveFilePicker) {
+                    try {
+                        const fileHandle = await window.showSaveFilePicker({
+                            suggestedName: fileName,
+                            types: [{
+                                description: 'JSON Backup File',
+                                accept: {'application/json': ['.json']},
+                            }],
+                        });
+                        
+                        // ফোল্ডার সিলেক্ট করার পর ফাইলে ডেটা লেখা হচ্ছে
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(jsonData);
+                        await writable.close();
+                        
+                        showToast("Total Backup Saved Successfully! ✅", "success");
+                        return; // কাজ শেষ হলে এখান থেকেই ফিরে যাবে
+                    } catch (err) {
+                        // যদি ইউজার 'Cancel' করে দেয় বা পারমিশন না দেয়
+                        if (err.name !== 'AbortError') {
+                            console.error("Save picker error:", err);
+                        } else {
+                            showToast("Backup Cancelled", "warning");
+                            return;
+                        }
+                    }
+                } 
+
+                // যদি পুরনো ব্রাউজার হয় বা File Picker সাপোর্ট না করে (Fallback Method)
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonData);
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", fileName);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                document.body.removeChild(downloadAnchor);
+
+                showToast("Total Backup Downloaded Successfully! ✅", "success");
+
+            } catch(e) {
+                console.error(e);
+                showToast("Error generating backup!", "error");
+            }
+        }
+
+        // ২. ফাইল সিলেক্ট করে রিস্টোর (Restore) করার ফাংশন
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const contents = e.target.result;
+                    const data = JSON.parse(contents);
+                    await executeRestore(data);
+                } catch (err) {
+                    showToast("Invalid Backup File! ❌", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+// ৩. ডেটাবেসে পুরনো ডেটা আপলোড করার ফাংশন (Live Progress Bar সহ)
+        async function executeRestore(data) {
+            // মোট কতগুলো ডেটা আছে তা গোনা হচ্ছে
+            const totalProducts = data.Products ? data.Products.length : 0;
+            const totalSales = data.SalesHistory ? data.SalesHistory.length : 0;
+            const totalOrders = data.Orders ? data.Orders.length : 0;
+            const totalCustomers = data.Customers ? data.Customers.length : 0;
+            const totalItems = totalProducts + totalSales + totalOrders + totalCustomers;
+
+            if (totalItems === 0) {
+                showToast("No data found in backup file!", "warning");
+                return;
+            }
+
+            // প্রগ্রেস বার শো করা
+            const progressOverlay = document.getElementById('restoreProgressOverlay');
+            const progressBar = document.getElementById('restoreProgressBar');
+            const progressText = document.getElementById('restoreProgressText');
+            progressOverlay.style.display = 'flex';
+            progressBar.style.width = '0%';
+            progressText.innerText = '0%';
+
+            let restoredCount = 0;
+
+            // প্রগ্রেস আপডেট করার ছোট্ট ফাংশন
+            const updateProgress = () => {
+                restoredCount++;
+                const percentage = Math.round((restoredCount / totalItems) * 100);
+                progressBar.style.width = percentage + '%';
+                progressText.innerText = percentage + '%';
+            };
+
+            try {
+                const fixData = (obj) => {
+                    if (obj.timestamp && obj.timestamp.seconds) {
+                        obj.timestamp = new firebase.firestore.Timestamp(obj.timestamp.seconds, obj.timestamp.nanoseconds);
+                    } else if (!obj.timestamp) {
+                        obj.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                    }
+                    return obj;
+                };
+
+                // Restore Products
+                if (totalProducts > 0) {
+                    for (let p of data.Products) {
+                        const docId = p.id; delete p.id;
+                        await db.collection("Products").doc(docId).set(fixData(p));
+                        updateProgress(); // ১টি আপলোড হলে প্রগ্রেস বাড়বে
+                    }
+                }
+                // Restore SalesHistory
+                if (totalSales > 0) {
+                    for (let s of data.SalesHistory) {
+                        const docId = s.id; delete s.id;
+                        await db.collection("SalesHistory").doc(docId).set(fixData(s));
+                        updateProgress();
+                    }
+                }
+                // Restore Orders
+                if (totalOrders > 0) {
+                    for (let o of data.Orders) {
+                        const docId = o.id; delete o.id;
+                        await db.collection("Orders").doc(docId).set(fixData(o));
+                        updateProgress();
+                    }
+                }
+                // Restore Customers
+                if (totalCustomers > 0) {
+                    for (let c of data.Customers) {
+                        const docId = c.id; delete c.id;
+                        await db.collection("Customers").doc(docId).set(fixData(c));
+                        updateProgress();
+                    }
+                }
+
+                progressText.innerText = '100%';
+                showToast("Data Restored Successfully! 🎉", "success");
+                
+                // ২ সেকেন্ড পর অ্যাপ রিলোড হবে
+                setTimeout(() => location.reload(), 2000);
+            } catch (err) {
+                console.error(err);
+                progressOverlay.style.display = 'none';
+                showToast("Error restoring data!", "error");
+            }
+        }
     </script>
+    <!-- Restore Progress Overlay -->
+    <div class="modal-overlay" id="restoreProgressOverlay" style="z-index: 3000;">
+        <div class="edit-card" style="max-width: 300px; text-align: center; padding: 30px;">
+            <div style="width: 60px; height: 60px; background: #ecfdf5; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 28px; color: #10b981;"></i>
+            </div>
+            <h3 style="margin: 0 0 15px; color: #0f172a;">Restoring Data...</h3>
+            
+            <!-- Progress Bar -->
+            <div style="width: 100%; background: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 10px;">
+                <div id="restoreProgressBar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.3s;"></div>
+            </div>
+            
+            <h2 id="restoreProgressText" style="margin: 0; color: #10b981; font-weight: 800;">0%</h2>
+            <p style="font-size: 12px; color: #64748b; margin-top: 10px;">Please do not close or minimize the app.</p>
+        </div>
+    </div>
 </body>
 </html>
