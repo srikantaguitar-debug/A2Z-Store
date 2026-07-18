@@ -257,6 +257,16 @@
                 <p style="font-size: 12px; color: #64748b; margin: 0 0 5px;">Current Logo:</p>
                 <img id="settingsLogoPreview" src="https://via.placeholder.com/150x50?text=No+Logo" style="max-height: 50px; max-width: 100%; border-radius: 5px; border: 1px solid #e2e8f0; padding: 5px;">
             </div>
+            <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    <h3 style="margin-top: 0; font-size: 16px; color: #0f172a;">Change Store Name</h3>
+    
+    <div style="margin-bottom: 10px;">
+        <label style="font-size: 13px; color: #475569; font-weight: 600; display: block; margin-bottom: 5px;">App/Store Name</label>
+        <input type="text" id="adminStoreNameInput" placeholder="e.g. Payel's Cosmetic, Jwellery and Gifts" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Poppins'; outline: none; box-sizing: border-box;">
+    </div>
+    
+    <button onclick="updateStoreName()" style="background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">Save Store Name</button>
+</div>
             <div class="input-group">
                 <label style="color: #059669; font-weight: 600;"><i class="fas fa-image"></i> Change Store Logo</label>
                 <input type="file" accept="image/*" onchange="uploadLogoDB(this)" style="background: #f1f5f9; width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #cbd5e1;">
@@ -734,6 +744,46 @@
                 }
             };
         }
+        // ১. ডাটাবেস থেকে বর্তমান নামটা এনে ইনপুট বক্সে দেখানোর জন্য (অ্যাডমিন প্যানেল লোড হলে এটি কল হবে)
+function loadCurrentStoreName() {
+    db.collection("Settings").doc("StoreConfig").get().then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.storeName) {
+                document.getElementById('adminStoreNameInput').value = data.storeName;
+            }
+        }
+    }).catch(error => console.log("Error loading store name:", error));
+}
+
+// অ্যাডমিন অ্যাপ ওপেন হওয়ার সাথে সাথে ফাংশনটি কল করুন (আপনার window.onload এর ভেতরেও রাখতে পারেন)
+loadCurrentStoreName();
+
+
+// ২. সেভ বাটনে ক্লিক করলে নতুন নাম ডাটাবেসে আপডেট করার ফাংশন
+function updateStoreName() {
+    const newName = document.getElementById('adminStoreNameInput').value.trim();
+    
+    if (!newName) {
+        alert("Please enter a valid store name!");
+        // আপনার কাস্টম showToast ফাংশন থাকলে alert এর বদলে সেটি ব্যবহার করতে পারেন
+        // showToast("Please enter a valid store name!", "warning");
+        return;
+    }
+
+    // ফায়ারবেসে ডাটা আপডেট করা
+    db.collection("Settings").doc("StoreConfig").set({
+        storeName: newName
+    }, { merge: true }) // merge: true দেওয়া খুব জরুরি, তা না হলে লোগো, ক্যাটাগরি, নোটিফিকেশন সব ডিলিট হয়ে যাবে!
+    .then(() => {
+        alert("Store name updated successfully!");
+        // showToast("Store name updated successfully!", "success");
+    })
+    .catch((error) => {
+        console.error("Error updating store name:", error);
+        alert("Failed to update store name!");
+    });
+}
     </script>
 </body>
 </html>
