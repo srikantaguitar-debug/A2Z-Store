@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A2Z Online Store | Shopping App</title>
+    <title>Payel's Cosmetic, Jwellery and Gifts</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
@@ -24,6 +24,16 @@
         .cart-icon { position: relative; font-size: 24px; color: white; cursor: pointer; transition: 0.3s; }
         .cart-icon:active { transform: scale(0.9); }
         .cart-badge { position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 50px; border: 2px solid #8b5cf6; }
+        /* Fullscreen Lightbox Gallery Styles */
+        .lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; flex-direction: column; animation: fadeIn 0.3s forwards; }
+        .lightbox-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 5010; box-sizing: border-box; color: white; }
+        .lightbox-counter { font-size: 16px; font-weight: 700; letter-spacing: 1px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; }
+        .lightbox-close { font-size: 28px; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); padding: 5px; }
+        .lightbox-slider { display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth;}
+        .lightbox-slider::-webkit-scrollbar { display: none; }
+        .lightbox-slide { flex: 0 0 100%; height: 100%; display: flex; justify-content: center; align-items: center; scroll-snap-align: center; position: relative; overflow: auto; }
+        .lightbox-img { margin: auto; max-width: 100%; max-height: 100%; object-fit: contain; transition: all 0.3s ease; cursor: zoom-in; }
+        .lightbox-img.zoomed { max-width: none; max-height: none; width: 250%; cursor: zoom-out; }
 
         /* Beautiful Sliding Notification Bar Fix */
 .marquee-container { 
@@ -135,11 +145,18 @@
     </style>
 </head>
 <body>
-
+<!-- Fullscreen Lightbox Modal -->
+    <div class="lightbox-overlay" id="lightboxModal">
+        <div class="lightbox-header">
+            <span class="lightbox-counter" id="lightboxCounter">1 / 1</span>
+            <i class="fas fa-times lightbox-close" onclick="closeLightbox()"></i>
+        </div>
+        <div class="lightbox-slider" id="lightboxSlider" onscroll="updateLightboxCounter()"></div>
+    </div>
     <div class="header">
         <div class="header-left">
             <img class="dynamic-logo" id="storeLogo" src="" alt="Logo">
-            <h1 class="header-title" id="storeTitle">A2Z Store</h1>
+            <h1 class="header-title" id="storeTitle">Payel's Cosmetic, Jwellery and Gifts</h1>
             <button class="info-btn" onclick="openInfoModal()"><i class="fas fa-info-circle"></i></button>
         </div>
         <div class="cart-icon" onclick="openCart()">
@@ -242,19 +259,29 @@
         if(doc.exists) {
             const data = doc.data();
             
-            // 1. Logo Update
+            // 1. Store Name Update (New Logic)
+            if(data.storeName) {
+                document.getElementById('storeTitle').innerText = data.storeName;
+                document.title = data.storeName;
+            } else {
+                document.getElementById('storeTitle').innerText = "Payel's Cosmetic, Jwellery and Gifts";
+                document.title = "Payel's Cosmetic, Jwellery and Gifts";
+            }
+            
+            // 2. Logo Update
             if(data.logoUrl) { 
                 document.getElementById('storeLogo').src = data.logoUrl; 
                 document.getElementById('storeLogo').style.display = 'block'; 
             }
             
-            // 2. Info Button Text Update (Blue Circle)
-            window.infoText = data.storeInfo || "Welcome to A2Z Store! Stay tuned for more updates."; 
-            // Category render logic
+            // 3. Info Button Text Update (Blue Circle)
+            window.infoText = data.storeInfo || "Welcome to Payel's Cosmetic, Jwellery and Gifts! Stay tuned for more updates."; 
+            
+            // 4. Category render logic
             const categories = data.categories || [];
             renderCategoryButtons(categories);
             
-            // 3. Marquee Sliding Notification Update (Red Circle)
+            // 5. Marquee Sliding Notification Update (Red Circle)
             const marqueeText = data.notification; // Admin panel saves it as 'notification'
             if(marqueeText && marqueeText.trim() !== "") {
                 document.getElementById('marqueeBar').style.display = 'block';
@@ -272,24 +299,23 @@
         }
         function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
 
-        function fetchSellersPhoneMap() {
-            db.collection("Sellers").onSnapshot(snap => { snap.forEach(doc => { const d = doc.data(); sellersMap[doc.id] = { phone: d.phone, storeName: d.storeName }; }); });
-        }
-
+        
         function filterProducts() { renderProducts(); }
 
-        function fetchProducts() {
-            db.collection("Products").orderBy("timestamp", "desc").onSnapshot(snap => {
-                allProducts = []; snap.forEach(doc => { allProducts.push({ id: doc.id, ...doc.data() }); });
-                document.getElementById('loading').style.display = 'none'; document.getElementById('productsGrid').style.display = 'grid';
-                renderHotDeals(); renderProducts();
-            });
-        }
 
         function renderHotDeals() {
-            const container = document.getElementById('hotDealsList'); container.innerHTML = "";
-            if(allProducts.length === 0) { container.innerHTML = `<p style="font-size:12px; color:#64748b;">No deals available</p>`; return; }
-            allProducts.forEach(prod => {
+            const container = document.getElementById('hotDealsList'); 
+            container.innerHTML = "";
+            
+            // শুধু সেই প্রোডাক্টগুলো ফিল্টার করবে যেগুলোতে isHotDeal = true
+            const hotDealsOnly = allProducts.filter(p => p.isHotDeal === true);
+
+            if(hotDealsOnly.length === 0) { 
+                container.innerHTML = `<p style="font-size:12px; color:#64748b;">No hot deals right now</p>`; 
+                return; 
+            }
+            
+            hotDealsOnly.forEach(prod => {
                 let badgeHtml = '';
                 if(prod.mrp && prod.mrp > prod.price) {
                     let discountPercent = Math.round(((prod.mrp - prod.price) / prod.mrp) * 100);
@@ -303,100 +329,152 @@
         function renderProducts() {
             const container = document.getElementById('productsGrid');
             const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            container.innerHTML = ""; let count = 0;
+            container.innerHTML = ""; 
+            let count = 0;
+            
             allProducts.forEach(prod => {
-                if (searchQuery && !prod.productName.toLowerCase().includes(searchQuery)) return; count++;
+                // ১. যদি প্রোডাক্টটি সেলার হাইড করে রাখে, তবে সেটি স্কিপ করবে (শো করবে না)
+                if (prod.isHidden === true) return; 
+
+                // ২. সার্চ এবং ক্যাটাগরি ফিল্টার করার লজিক
+                if (searchQuery && !prod.productName.toLowerCase().includes(searchQuery)) return; 
                 if (selectedCategory !== "All" && prod.category !== selectedCategory) return;
+                
+                count++; // ফিল্টার পাস করলে কাউন্ট বাড়বে
+
+                // ৩. প্রাইস এবং ডিসকাউন্ট ক্যালকুলেশন
                 let priceHtml = `<div class="price-row"><span class="sell-price">₹${prod.price}</span></div>`;
                 if(prod.mrp && prod.mrp > prod.price) {
                     let discountPercent = Math.round(((prod.mrp - prod.price) / prod.mrp) * 100);
                     priceHtml = `<div class="price-row"><span class="sell-price">₹${prod.price}</span><span class="mrp-price">₹${prod.mrp}</span><span class="discount-tag">↓${discountPercent}%</span></div>`;
                 }
+                
                 let shortNoteHtml = prod.shortNote ? `<div style="font-size: 12px; color: #64748b; font-weight: 600; margin-top: -5px; margin-bottom: 8px;">${prod.shortNote}</div>` : '';
+                
+                // ৪. স্টক চেক
                 let isOutOfStock = prod.stockCount <= 0;
                 let overlayHtml = isOutOfStock ? `<div class="out-of-stock-overlay">Sold Out</div>` : '';
+                
                 const imgSource = (prod.productPics && prod.productPics.length > 0) ? prod.productPics[0] : (prod.productPic || 'https://via.placeholder.com/150');
                 
-                let btnHtml = isOutOfStock ? `<div class="btn-group"><button class="btn-add-cart btn-disabled" disabled>Out of Stock</button></div>` : `<div class="btn-group"><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${prod.id}', '${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${imgSource}', '${prod.sellerId}')"><i class="fas fa-cart-plus"></i> Add</button><button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${prod.sellerId}')"><i class="fab fa-whatsapp"></i> Buy</button></div>`;
+                // ৫. বাটন তৈরি (Buy Now এবং Add to Cart)
+                let btnHtml = isOutOfStock ? 
+                    `<div class="btn-group"><button class="btn-add-cart btn-disabled" disabled>Out of Stock</button></div>` : 
+                    `<div class="btn-group"><button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${prod.id}', '${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${imgSource}', '${prod.sellerId}')"><i class="fas fa-cart-plus"></i> Add</button><button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${prod.sellerId}')"><i class="fab fa-whatsapp"></i> Buy</button></div>`;
 
-                const card = document.createElement('div'); card.className = 'product-card';
+                // ৬. কার্ড তৈরি করে স্ক্রিনে দেখানো
+                const card = document.createElement('div'); 
+                card.className = 'product-card';
                 card.innerHTML = `<div class="product-img-wrapper" onclick="openProductModal('${prod.id}')">${overlayHtml}<img src="${imgSource}" class="product-img" loading="lazy"></div><div class="product-details" onclick="openProductModal('${prod.id}')"><div class="store-badge"><i class="fas fa-store"></i> ${prod.storeName}</div><h4 class="product-title">${prod.productName}</h4>${priceHtml}${shortNoteHtml}</div><div style="padding: 0 12px 12px;">${btnHtml}</div>`;
+                
                 container.appendChild(card);
             });
-            if(count === 0) { container.innerHTML = `<div style="grid-column: span 2; text-align:center; padding: 40px 20px; color: #8b5cf6; font-weight:600;">No products found.</div>`; }
+            
+            // যদি কোনো প্রোডাক্ট না পাওয়া যায়
+            if(count === 0) { 
+                container.innerHTML = `<div style="grid-column: span 2; text-align:center; padding: 40px 20px; color: #8b5cf6; font-weight:600;">No products found.</div>`; 
+            }
         }
         
+       let currentLightboxImages = []; // গ্যালারির ছবিগুলো স্টোর করার জন্য
+
         function openProductModal(productId) {
-    const prod = allProducts.find(p => p.id === productId); 
-    if(!prod) return;
-    
-    // --- NEW IMAGE SLIDER LOGIC ---
-    const slider = document.getElementById('fsImageSlider');
-    slider.innerHTML = ''; 
+            const prod = allProducts.find(p => p.id === productId); 
+            if(!prod) return;
+            
+            const slider = document.getElementById('fsImageSlider');
+            slider.innerHTML = ''; 
 
-    let images = [];
-    if(prod.productPics && prod.productPics.length > 0) {
-        images = prod.productPics;
-    } else if (prod.productPic) {
-        images = [prod.productPic];
-    } else {
-        images = ['https://via.placeholder.com/150'];
-    }
+            let images = [];
+            if(prod.productPics && prod.productPics.length > 0) {
+                images = prod.productPics;
+            } else if (prod.productPic) {
+                images = [prod.productPic];
+            } else {
+                images = ['https://via.placeholder.com/150'];
+            }
 
-    images.forEach((imgSrc, index) => {
-        let indicatorHtml = images.length > 1 ? `<div class="slide-indicator"><i class="far fa-images"></i> ${index + 1} / ${images.length}</div>` : '';
-        slider.innerHTML += `
-            <div class="fs-image-wrapper">
-                <img src="${imgSrc}" class="fs-product-img" onclick="toggleZoom(this)">
-                ${indicatorHtml}
-                <div class="zoom-hint"><i class="fas fa-search-plus"></i> Tap to Zoom</div>
-            </div>
-        `;
-    });
-    // --- END IMAGE SLIDER LOGIC ---
+            currentLightboxImages = images; // লাইটবক্সের জন্য ছবি সেভ করা
 
-    document.getElementById('fsStoreBadge').innerHTML = `<i class="fas fa-store"></i> ${prod.storeName}`;
-    document.getElementById('fsProductTitle').innerText = prod.productName;
-    document.getElementById('fsProductShortNote').innerText = prod.shortNote || "";
-    document.getElementById('fsProductDesc').innerText = prod.description || "No description available for this product.";
-    
-    let priceHtml = `<div class="price-row" style="margin-bottom:0;"><span class="sell-price" style="font-size:24px;">₹${prod.price}</span></div>`;
-    if(prod.mrp && prod.mrp > prod.price) {
-        let discountPercent = Math.round(((prod.mrp - prod.price) / prod.mrp) * 100);
-        priceHtml = `<div class="price-row" style="margin-bottom:0; align-items: center;"><span class="sell-price" style="font-size:24px;">₹${prod.price}</span><span class="mrp-price" style="font-size:16px;">₹${prod.mrp}</span><span class="discount-tag" style="font-size:14px; padding: 4px 8px;">↓${discountPercent}% OFF</span></div>`;
-    }
-    document.getElementById('fsProductPrice').innerHTML = priceHtml;
-    
-    let isOutOfStock = prod.stockCount <= 0;
-    document.getElementById('fsStockInfo').innerHTML = isOutOfStock ? `<span style="color:#ef4444; font-weight:800;"><i class="fas fa-exclamation-circle"></i> Out of Stock</span>` : `<span style="color:#10b981; font-weight:700;"><i class="fas fa-check-circle"></i> Available in Stock</span>`;
+            images.forEach((imgSrc, index) => {
+                let indicatorHtml = images.length > 1 ? `<div class="slide-indicator"><i class="far fa-images"></i> ${index + 1} / ${images.length}</div>` : '';
+                slider.innerHTML += `
+                    <div class="fs-image-wrapper">
+                        <!-- এখানে ক্লিক করলে এখন নতুন গ্যালারি ওপেন হবে -->
+                        <img src="${imgSrc}" class="fs-product-img" onclick="openLightbox(${index})">
+                        ${indicatorHtml}
+                        <div class="zoom-hint" style="background:#0f172a; cursor:pointer;" onclick="openLightbox(${index})"><i class="fas fa-expand-arrows-alt"></i> Tap to Fullscreen</div>
+                    </div>
+                `;
+            });
 
-    const mainImgSource = images[0];
+            document.getElementById('fsStoreBadge').innerHTML = `<i class="fas fa-store"></i> ${prod.storeName}`;
+            document.getElementById('fsProductTitle').innerText = prod.productName;
+            document.getElementById('fsProductShortNote').innerText = prod.shortNote || "";
+            document.getElementById('fsProductDesc').innerText = prod.description || "No description available for this product.";
+            
+            let priceHtml = `<div class="price-row" style="margin-bottom:0;"><span class="sell-price" style="font-size:24px;">₹${prod.price}</span></div>`;
+            if(prod.mrp && prod.mrp > prod.price) {
+                let discountPercent = Math.round(((prod.mrp - prod.price) / prod.mrp) * 100);
+                priceHtml = `<div class="price-row" style="margin-bottom:0; align-items: center;"><span class="sell-price" style="font-size:24px;">₹${prod.price}</span><span class="mrp-price" style="font-size:16px;">₹${prod.mrp}</span><span class="discount-tag" style="font-size:14px; padding: 4px 8px;">↓${discountPercent}% OFF</span></div>`;
+            }
+            document.getElementById('fsProductPrice').innerHTML = priceHtml;
+            
+            let isOutOfStock = prod.stockCount <= 0;
+            document.getElementById('fsStockInfo').innerHTML = isOutOfStock ? `<span style="color:#ef4444; font-weight:800;"><i class="fas fa-exclamation-circle"></i> Out of Stock</span>` : `<span style="color:#10b981; font-weight:700;"><i class="fas fa-check-circle"></i> Available in Stock</span>`;
 
-    let btnHtml = isOutOfStock ? `<button class="btn-buy-now btn-disabled" style="width:100%; padding:14px; font-size:16px;" disabled>Currently Unavailable</button>` : `<button class="btn-add-cart" onclick="addToCart('${prod.id}', '${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${mainImgSource}', '${prod.sellerId}')" style="flex:1; padding:14px; font-size:16px;"><i class="fas fa-cart-plus"></i> Add to Cart</button><button class="btn-buy-now" onclick="buyNow('${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${prod.sellerId}')" style="flex:1; padding:14px; font-size:16px;"><i class="fab fa-whatsapp"></i> Buy Now</button>`;
-        
-    document.getElementById('fsBottomBar').innerHTML = btnHtml;
-    document.getElementById('productFsModal').style.display = 'flex';
-}
+            const mainImgSource = images[0];
 
-        function closeProductModal() { document.getElementById('productFsModal').style.display = 'none'; }
-        function toggleZoom(imgEl) { 
-    imgEl.classList.toggle('zoomed'); 
-    if(imgEl.classList.contains('zoomed')) {
-        const wrapper = imgEl.parentElement;
-        // জুম হওয়ার পর ছবিটির একদম মাঝখানে ফোকাস করবে, যেখান থেকে সবদিকে স্ক্রল করা যাবে
-        wrapper.scrollLeft = (wrapper.scrollWidth - wrapper.clientWidth) / 2;
-        wrapper.scrollTop = (wrapper.scrollHeight - wrapper.clientHeight) / 2;
-    }
-}
+            let btnHtml = isOutOfStock ? `<button class="btn-buy-now btn-disabled" style="width:100%; padding:14px; font-size:16px;" disabled>Currently Unavailable</button>` : `<button class="btn-add-cart" onclick="addToCart('${prod.id}', '${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${mainImgSource}', '${prod.sellerId}')" style="flex:1; padding:14px; font-size:16px;"><i class="fas fa-cart-plus"></i> Add to Cart</button><button class="btn-buy-now" onclick="buyNow('${prod.productName.replace(/'/g, "\\'")}', ${prod.price}, '${prod.sellerId}')" style="flex:1; padding:14px; font-size:16px;"><i class="fab fa-whatsapp"></i> Buy Now</button>`;
+                
+            document.getElementById('fsBottomBar').innerHTML = btnHtml;
+            document.getElementById('productFsModal').style.display = 'flex';
+        }
+
+        // --- নতুন Lightbox Gallery এর ফাংশনগুলো ---
+        function openLightbox(startIndex) {
+            const slider = document.getElementById('lightboxSlider');
+            slider.innerHTML = '';
+            
+            currentLightboxImages.forEach((imgSrc) => {
+                slider.innerHTML += `
+                    <div class="lightbox-slide">
+                        <img src="${imgSrc}" class="lightbox-img" onclick="toggleLightboxZoom(this)">
+                    </div>
+                `;
+            });
+            
+            document.getElementById('lightboxModal').style.display = 'flex';
+            
+            // যে ছবিতে ক্লিক করা হয়েছে, স্লাইডারকে সরাসরি সেখানে নিয়ে যাওয়া
+            setTimeout(() => {
+                const slideWidth = slider.clientWidth;
+                slider.scrollLeft = slideWidth * startIndex;
+                updateLightboxCounter();
+            }, 50);
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxModal').style.display = 'none';
+        }
+
+        function toggleLightboxZoom(imgEl) {
+            imgEl.classList.toggle('zoomed');
+            if(imgEl.classList.contains('zoomed')) {
+                const wrapper = imgEl.parentElement;
+                wrapper.scrollLeft = (wrapper.scrollWidth - wrapper.clientWidth) / 2;
+                wrapper.scrollTop = (wrapper.scrollHeight - wrapper.clientHeight) / 2;
+            }
+        }
+
+        function updateLightboxCounter() {
+            const slider = document.getElementById('lightboxSlider');
+            if(slider.clientWidth === 0) return;
+            const currentIndex = Math.round(slider.scrollLeft / slider.clientWidth) + 1;
+            document.getElementById('lightboxCounter').innerText = currentIndex + " / " + currentLightboxImages.length;
+        }
         function formatPhoneForWA(phone) { if(!phone) return null; let p = phone.replace(/\D/g, ''); if(p.length === 10) p = '91' + p; return p; }
 
-        function buyNow(prodName, price, sellerId) {
-            const sellerInfo = sellersMap[sellerId];
-            if(!sellerInfo || !sellerInfo.phone) { alert("Seller phone number not found!"); return; }
-            const waPhone = formatPhoneForWA(sellerInfo.phone);
-            const message = `Hello ${sellerInfo.storeName},\nI want to buy:\n🛍️ *${prodName}*\n💰 Price: ₹${price}\n\nIs this available?`;
-            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
-        }
 
         function addToCart(id, name, price, pic, sellerId) {
             const existingItem = cart.find(item => item.id === id);
@@ -415,32 +493,7 @@
         function openCart() { document.getElementById('cartModal').style.display = 'flex'; renderCartItems(); }
         function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
 
-        function renderCartItems() {
-            const container = document.getElementById('cartItemsList'); const checkoutSection = document.getElementById('cartCheckoutSection');
-            container.innerHTML = ""; checkoutSection.innerHTML = "";
-            if(cart.length === 0) { container.innerHTML = `<div class="empty-cart-msg"><i class="fas fa-shopping-basket" style="font-size:40px; color:#cbd5e1; margin-bottom:10px; display:block;"></i> Your cart is empty</div>`; return; }
-
-            let groupedCart = {};
-            cart.forEach(item => { if(!groupedCart[item.sellerId]) groupedCart[item.sellerId] = []; groupedCart[item.sellerId].push(item); });
-
-            for (let sellerId in groupedCart) {
-                const sellerInfo = sellersMap[sellerId]; const storeName = sellerInfo ? sellerInfo.storeName : "Unknown Store";
-                container.innerHTML += `<div class="seller-group-title"><i class="fas fa-store"></i> Items from ${storeName}</div>`;
-                let sellerTotal = 0; let whatsappMsg = `Hello ${storeName},\nI want to order the following items from my cart:\n\n`;
-
-                groupedCart[sellerId].forEach((item, index) => {
-                    const itemTotal = item.price * item.qty; sellerTotal += itemTotal;
-                    whatsappMsg += `${index + 1}. *${item.name}*\n   ₹${item.price} x ${item.qty} = ₹${itemTotal}\n`;
-                    container.innerHTML += `<div class="cart-item"><img src="${item.pic}" alt="prod"><div class="cart-item-info"><p class="cart-item-title">${item.name}</p><p class="cart-item-price">₹${item.price}</p></div><div class="qty-controls"><button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button><span style="font-size:14px; font-weight:700; width:20px; text-align:center;">${item.qty}</span><button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button></div></div>`;
-                });
-                whatsappMsg += `\n*Total Amount: ₹${sellerTotal}*\nPlease confirm my order.`;
-
-                if(sellerInfo && sellerInfo.phone) {
-                    const waPhone = formatPhoneForWA(sellerInfo.phone); const encodedMsg = encodeURIComponent(whatsappMsg);
-                    checkoutSection.innerHTML += `<button class="checkout-btn" onclick="window.open('https://wa.me/${waPhone}?text=${encodedMsg}', '_blank')"><i class="fab fa-whatsapp" style="font-size: 20px;"></i> Order from ${storeName} (₹${sellerTotal})</button>`;
-                }
-            }
-        }
+        
         let selectedCategory = "All";
 
         function renderCategoryButtons(categories) {
@@ -463,6 +516,125 @@
                 else btn.classList.remove('active');
             });
             renderProducts(); // Refresh products based on category
+        }
+
+        function fetchProducts() {
+            db.collection("Products").orderBy("timestamp", "desc").onSnapshot(snap => {
+                allProducts = []; 
+                snap.forEach(doc => { 
+                    const data = doc.data();
+                    const correctSellerId = data.sellerId || data.userId || data.vendorId || data.ownerId;
+                    allProducts.push({ id: doc.id, sellerId: correctSellerId, ...data }); 
+                });
+                document.getElementById('loading').style.display = 'none'; 
+                document.getElementById('productsGrid').style.display = 'grid';
+                renderHotDeals(); 
+                renderProducts();
+            });
+        }
+
+function fetchSellersPhoneMap() {
+            db.collection("Sellers").onSnapshot(snap => { 
+                snap.forEach(doc => { 
+                    const d = doc.data(); 
+                    // এখানে বড় হাতের Phone এবং ছোট হাতের phone দুটোই খোঁজার ব্যবস্থা করা হলো
+                    const sellerPhone = d.phone || d.Phone || d.phoneNumber || d.mobile || d.mobileNumber || d.whatsapp || d.contact || d.whatsappNumber;
+                    const shopName = d.storeName || d.shopName || d.name || "Unknown Store";
+                    sellersMap[doc.id] = { phone: sellerPhone, storeName: shopName }; 
+                }); 
+            });
+        }
+
+        function buyNow(prodName, price, sellerId) {
+            const prod = allProducts.find(p => p.productName.replace(/'/g, "\\'") === prodName || p.productName === prodName);
+            let phoneNum = null;
+            let storeName = "Store";
+
+            if(prod) {
+                // এখানেও বড় হাতের Phone যুক্ত করা হলো
+                phoneNum = prod.phone || prod.Phone || prod.sellerPhone || prod.whatsappNumber || prod.contactNumber;
+                storeName = prod.storeName || storeName;
+            }
+
+            if(!phoneNum && sellerId && sellersMap[sellerId]) {
+                phoneNum = sellersMap[sellerId].phone;
+                storeName = sellersMap[sellerId].storeName || storeName;
+            }
+
+            if(!phoneNum) {
+                alert("এই প্রোডাক্টের জন্য সেলারের কোনো নম্বর যুক্ত করা নেই!");
+                return;
+            }
+
+            const waPhone = formatPhoneForWA(phoneNum); 
+            const message = `Hello ${storeName},\nI want to buy:\n🛍️ *${prodName}*\n💰 Price: ₹${price}\n\nIs this available?`;
+            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cartItemsList'); 
+            const checkoutSection = document.getElementById('cartCheckoutSection');
+            
+            container.innerHTML = ""; checkoutSection.innerHTML = "";
+            
+            if(cart.length === 0) { 
+                container.innerHTML = `<div class="empty-cart-msg"><i class="fas fa-shopping-basket" style="font-size:40px; color:#cbd5e1; margin-bottom:10px; display:block;"></i> Your cart is empty</div>`; 
+                return; 
+            }
+
+            let groupedCart = {};
+            cart.forEach(item => { 
+                let groupId = item.sellerId || "default"; 
+                if(!groupedCart[groupId]) groupedCart[groupId] = []; 
+                groupedCart[groupId].push(item); 
+            });
+
+            for (let groupId in groupedCart) {
+                let phoneNum = null;
+                let storeName = "Unknown Store";
+
+                if(sellersMap[groupId]) {
+                    phoneNum = sellersMap[groupId].phone;
+                    storeName = sellersMap[groupId].storeName;
+                }
+
+                if(!phoneNum) {
+                    const sampleItem = groupedCart[groupId][0];
+                    const prod = allProducts.find(p => p.id === sampleItem.id);
+                    if(prod) {
+                        phoneNum = prod.phone || prod.Phone || prod.sellerPhone || prod.whatsappNumber || prod.contactNumber;
+                        storeName = prod.storeName || storeName;
+                    }
+                }
+
+                container.innerHTML += `<div class="seller-group-title"><i class="fas fa-store"></i> Items from ${storeName}</div>`;
+                let sellerTotal = 0; 
+                let whatsappMsg = `Hello ${storeName},\nI want to order the following items from my cart:\n\n`;
+
+                groupedCart[groupId].forEach((item, index) => {
+                    const itemTotal = item.price * item.qty; 
+                    sellerTotal += itemTotal;
+                    whatsappMsg += `${index + 1}. *${item.name}*\n   ₹${item.price} x ${item.qty} = ₹${itemTotal}\n`;
+                    container.innerHTML += `<div class="cart-item"><img src="${item.pic}" alt="prod"><div class="cart-item-info"><p class="cart-item-title">${item.name}</p><p class="cart-item-price">₹${item.price}</p></div><div class="qty-controls"><button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button><span style="font-size:14px; font-weight:700; width:20px; text-align:center;">${item.qty}</span><button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button></div></div>`;
+                });
+                
+                whatsappMsg += `\n*Total Amount: ₹${sellerTotal}*\nPlease confirm my order.`;
+
+                if(phoneNum) {
+                    const waPhone = formatPhoneForWA(phoneNum); 
+                    
+                    // এই লাইনটি আপডেট করা হয়েছে ('Payel's' এর মতো নামের জন্য)
+                    const safeEncodedMsg = encodeURIComponent(whatsappMsg).replace(/'/g, "%27");
+                    
+                    checkoutSection.innerHTML += `<button class="checkout-btn" onclick="window.open('https://wa.me/${waPhone}?text=${safeEncodedMsg}', '_blank')"><i class="fab fa-whatsapp" style="font-size: 20px;"></i> Order from ${storeName} (₹${sellerTotal})</button>`;
+                } else {
+                    checkoutSection.innerHTML += `<button class="checkout-btn" style="background:#ef4444;" disabled><i class="fas fa-exclamation-circle"></i> Seller Number Missing</button>`;
+                }
+            }
+        }
+        // প্রোডাক্ট পেজ ক্লোজ করার ফাংশন
+        function closeProductModal() { 
+            document.getElementById('productFsModal').style.display = 'none'; 
         }
     </script>
 </body>
