@@ -237,8 +237,14 @@
                 <div class="stat-box" style="border-left: 4px solid #ef4444;" onclick="goToHistoryTab('due')">
                     <p>Total Due</p><h3 id="dashTotalDue" style="color: #ef4444;">₹0</h3>
                 </div>
-                <div class="stat-box" style="grid-column: span 2; border-left: 4px solid #8b5cf6;" onclick="goToHistoryTab('all')">
-                    <p>Total Profit</p><h3 id="dashTotalProfit" style="color: #8b5cf6;">₹0</h3>
+                <!-- নতুন: Total Invest বক্স -->
+                <div class="stat-box" style="border-left: 4px solid #6366f1;" onclick="switchTab('tab-products', document.getElementById('btn-tab-products'))">
+                    <p>Total Invest</p><h3 id="dashTotalInvest" style="color: #6366f1;">₹0</h3>
+                </div>
+                <!-- আপডেট: Profit / Loss ডায়নামিক বক্স -->
+                <div class="stat-box" id="profitBoxWrapper" style="border-left: 4px solid #10b981;" onclick="goToHistoryTab('all')">
+                    <p id="dashProfitLabel" style="font-weight: 800; font-size: 12px;">Total Profit</p>
+                    <h3 id="dashTotalProfit" style="color: #10b981;">₹0</h3>
                 </div>
             </div>
         </div>
@@ -257,7 +263,19 @@
                         <div class="custom-dropdown" id="saleProductDropdown"></div>
                     </div>
                 </div>
-                <div class="input-group" style="margin-top: 15px;"><label>Quantity</label><input type="number" id="saleQty" value="1" min="1" oninput="calculateSaleTotal()" style="text-align:center; font-weight: bold; font-size: 16px;"></div>
+                <div class="row" style="margin-top: 15px;">
+                    <div class="input-group" style="margin-bottom:0;"><label>Quantity</label><input type="number" id="saleQty" value="1" min="1" style="text-align:center; font-weight: bold; font-size: 16px;"></div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>&nbsp;</label>
+                        <button onclick="addToCart()" style="background:#0ea5e9; color:white; width:100%; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fas fa-plus"></i> Add Item</button>
+                    </div>
+                </div>
+                
+                <!-- Cart Items Display -->
+                <div id="cartItemsContainer" style="background: #f8fafc; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #e2e8f0; display:none;">
+                    <h4 style="margin:0 0 10px; font-size:12px; color:#475569; text-transform:uppercase;">Items in Cart:</h4>
+                    <div id="cartList"></div>
+                </div>
                 
                 <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 15px;">
                     <p style="font-size: 11px; color: #475569; margin: 0 0 10px; font-weight: 700; text-transform: uppercase;">Customer Details (Auto-Saved)</p>
@@ -520,7 +538,7 @@
                 <p style="margin: 0;"><strong>Sell Price:</strong> ₹<span id="viewProdPrice" style="color: #10b981; font-weight: bold;"></span></p>
             </div>
             
-            <!-- নতুন Profit/Loss সেকশন -->
+            <!-- Profit/Loss সেকশন -->
             <div id="viewProdProfitContainer" style="text-align: center; margin-top: 8px; padding: 6px; border-radius: 6px; background: #f1f5f9;">
                 <p style="margin: 0; font-weight: bold; font-size: 14px;" id="viewProdProfitText"></p>
             </div>
@@ -534,8 +552,23 @@
         </div>
         
         <button onclick="document.getElementById('viewProductModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);">Close</button>
+    </div>
+</div>
+
+<!-- View Sale Details Modal -->
+<div class="modal-overlay" id="viewSaleModal">
+    <div class="edit-card" style="text-align: left; max-width: 350px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-receipt" style="color: #3b82f6;"></i> Sale Details</h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('viewSaleModal').style.display='none'"></i>
         </div>
-  </div>
+        
+        <!-- Details Content -->
+        <div id="saleDetailsContent" style="font-size: 13px; color: #475569;"></div>
+        
+        <button onclick="document.getElementById('viewSaleModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer;">Close</button>
+    </div>
+</div>
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
         <div class="edit-card" style="max-width: 320px; text-align: center;">
@@ -585,17 +618,18 @@
     <p style="font-size: 13px; margin: 5px 0;"><strong>Phone:</strong> <span id="pdfPhone"></span></p>
     
     <!-- Billing Table -->
+    <!-- Billing Table -->
     <table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px;">
-        <tr style="border-bottom: 1px dashed #cbd5e1; text-align: left;">
-            <th style="padding-bottom: 5px;">Item</th>
-            <th style="padding-bottom: 5px; text-align: center;">Qty</th>
-            <th style="padding-bottom: 5px; text-align: right;">Price</th>
-        </tr>
-        <tr>
-            <td style="padding-top: 5px;" id="pdfItem"></td>
-            <td style="padding-top: 5px; text-align: center;" id="pdfQty"></td>
-            <td style="padding-top: 5px; text-align: right;">₹<span id="pdfPrice"></span></td>
-        </tr>
+        <thead>
+            <tr style="border-bottom: 1px dashed #cbd5e1; text-align: left;">
+                <th style="padding-bottom: 5px;">Item</th>
+                <th style="padding-bottom: 5px; text-align: center;">Qty</th>
+                <th style="padding-bottom: 5px; text-align: right;">Price</th>
+            </tr>
+        </thead>
+        <tbody id="pdfTableBody">
+            <!-- Items will be injected here automatically -->
+        </tbody>
     </table>
 
     <!-- Calculation Section -->
@@ -844,8 +878,10 @@ function unlockSellerApp() {
                 tempArr.sort((a,b) => { const timeA = a.timestamp ? a.timestamp.toMillis() : 0; const timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; });
                 currentSellerProducts = tempArr;
                 
-                // Re-render items in tab-products using current search query
                 filterItemsTab();
+                
+                // রিয়েল-টাইম স্টক ও ইনভেস্টমেন্ট আপডেট করার জন্য
+                updateDashboardStats();
             });
         }
 
@@ -948,50 +984,91 @@ function unlockSellerApp() {
             }
         }
 
-// প্রোডাক্টের ডিটেইলস দেখানোর ফাংশন
-function viewProductDetails(id) {
-    const p = currentSellerProducts.find(item => item.id === id);
-    if (!p) return;
-    
-    const imgSource = (p.productPics && p.productPics.length > 0) ? p.productPics[0] : (p.productPic || 'https://via.placeholder.com/100');
-    
-    const buyPrice = Number(p.buyPrice) || 0;
-    const sellPrice = Number(p.price) || 0;
-    const profit = sellPrice - buyPrice; // প্রফিট/লস ক্যালকুলেশন
-    
-    document.getElementById('viewProdImg').src = imgSource;
-    document.getElementById('viewProdName').innerText = p.productName || 'N/A';
-    document.getElementById('viewProdCategory').innerText = p.category || 'N/A';
-    document.getElementById('viewProdNote').innerText = p.shortNote || 'N/A';
-    document.getElementById('viewProdBuyPrice').innerText = buyPrice;
-    document.getElementById('viewProdPrice').innerText = sellPrice;
-    document.getElementById('viewProdMrp').innerText = p.mrp || '0';
-    document.getElementById('viewProdStock').innerText = p.stockCount || '0';
-    document.getElementById('viewProdDesc').innerText = p.description || 'No description provided.';
-    
-    // Profit/Loss UI আপডেট লজিক
-    const profitTextEl = document.getElementById('viewProdProfitText');
-    const profitContainer = document.getElementById('viewProdProfitContainer');
-    
-    if(profit > 0) {
-        profitTextEl.innerHTML = `Profit: <span style="color: #10b981;">₹${profit} / item</span>`;
-        profitContainer.style.background = "#ecfdf5"; // হালকা সবুজ ব্যাকগ্রাউন্ড
-        profitContainer.style.border = "1px solid #a7f3d0";
-    } else if(profit < 0) {
-        profitTextEl.innerHTML = `Loss: <span style="color: #ef4444;">₹${Math.abs(profit)} / item</span>`;
-        profitContainer.style.background = "#fef2f2"; // হালকা লাল ব্যাকগ্রাউন্ড
-        profitContainer.style.border = "1px solid #fecaca";
-    } else {
-        profitTextEl.innerHTML = `No Profit / No Loss`;
-        profitContainer.style.background = "#f1f5f9"; // সাধারণ ব্যাকগ্রাউন্ড
-        profitContainer.style.border = "1px solid #e2e8f0";
-    }
-    
-    document.getElementById('viewProductModal').style.display = 'flex';
-}
+let currentFsImages = [];
+        let currentFsIndex = 0;
 
-        let activeProductFilter = 'all';
+        function viewProductDetails(id) {
+            const p = currentSellerProducts.find(item => item.id === id);
+            if (!p) {
+                showToast("Product not found or deleted!", "warning");
+                return;
+            }
+            
+            // স্লাইডারের জন্য ছবিগুলো রেডি করা হচ্ছে
+            currentFsImages = (p.productPics && p.productPics.length > 0) ? p.productPics : (p.productPic ? [p.productPic] : ['https://via.placeholder.com/400']);
+            currentFsIndex = 0;
+            
+            const buyPrice = Number(p.buyPrice) || 0;
+            const sellPrice = Number(p.price) || 0;
+            const profit = sellPrice - buyPrice; 
+            
+            // ছবিতে ক্লিক করার ইভেন্ট বসানো হচ্ছে
+            const imgEl = document.getElementById('viewProdImg');
+            imgEl.src = currentFsImages[0];
+            imgEl.style.cursor = 'zoom-in'; 
+            imgEl.setAttribute('onclick', 'openFullscreenImage()');
+            
+            document.getElementById('viewProdName').innerText = p.productName || 'N/A';
+            document.getElementById('viewProdCategory').innerText = p.category || 'N/A';
+            document.getElementById('viewProdNote').innerText = p.shortNote || 'N/A';
+            document.getElementById('viewProdBuyPrice').innerText = buyPrice;
+            document.getElementById('viewProdPrice').innerText = sellPrice;
+            document.getElementById('viewProdMrp').innerText = p.mrp || '0';
+            document.getElementById('viewProdStock').innerText = p.stockCount || '0';
+            document.getElementById('viewProdDesc').innerText = p.description || 'No description provided.';
+            
+            const profitTextEl = document.getElementById('viewProdProfitText');
+            const profitContainer = document.getElementById('viewProdProfitContainer');
+            
+            if(profit > 0) {
+                profitTextEl.innerHTML = `Profit: <span style="color: #10b981;">₹${profit} / item</span>`;
+                profitContainer.style.background = "#ecfdf5"; profitContainer.style.border = "1px solid #a7f3d0";
+            } else if(profit < 0) {
+                profitTextEl.innerHTML = `Loss: <span style="color: #ef4444;">₹${Math.abs(profit)} / item</span>`;
+                profitContainer.style.background = "#fef2f2"; profitContainer.style.border = "1px solid #fecaca";
+            } else {
+                profitTextEl.innerHTML = `No Profit / No Loss`;
+                profitContainer.style.background = "#f1f5f9"; profitContainer.style.border = "1px solid #e2e8f0";
+            }
+            
+            // Sale Details পপ-আপের উপরে দেখানোর জন্য z-index বাড়ানো হলো
+            document.getElementById('viewProductModal').style.zIndex = '2000';
+            document.getElementById('viewProductModal').style.display = 'flex';
+        }
 
+        // --- Fullscreen Slider Functions ---
+        function openFullscreenImage() {
+            if(currentFsImages.length === 0) return;
+            document.getElementById('fullscreenImageModal').style.display = 'flex';
+            updateFsImage();
+        }
+
+        function closeFullscreenImage() {
+            document.getElementById('fullscreenImageModal').style.display = 'none';
+        }
+
+        function prevFsImage() {
+            if(currentFsIndex > 0) {
+                currentFsIndex--;
+                updateFsImage();
+            }
+        }
+
+        function nextFsImage() {
+            if(currentFsIndex < currentFsImages.length - 1) {
+                currentFsIndex++;
+                updateFsImage();
+            }
+        }
+
+        function updateFsImage() {
+            document.getElementById('fsMainImage').src = currentFsImages[currentFsIndex];
+            document.getElementById('fsImageIndicator').innerText = `${currentFsIndex + 1} / ${currentFsImages.length}`;
+            
+            // প্রথম বা শেষ ছবি হলে অ্যারো লুকিয়ে দেওয়া
+            document.getElementById('fsPrevBtn').style.display = currentFsIndex === 0 ? 'none' : 'flex';
+            document.getElementById('fsNextBtn').style.display = currentFsIndex === currentFsImages.length - 1 ? 'none' : 'flex';
+        }
 // বাটনে ক্লিক করলে ফিল্টার চেঞ্জ করার ফাংশন
 function setStockFilter(filterType) {
     activeProductFilter = filterType;
@@ -1108,14 +1185,63 @@ function filterItemsTab() {
                 dropdown.innerHTML += `<div class="custom-option" onclick="selectSaleProduct('${p.id}', '${p.productName}', ${p.price}, ${p.stockCount}, '${pPic}', ${pBuy})"><img src="${pPic}" class="dropdown-prod-img"><div style="flex:1"><div style="font-weight:600;font-size:13px;">${p.productName}</div><div style="color:#10b981;font-size:12px;font-weight:bold;">₹${p.price} (Stock: ${p.stockCount})</div></div></div>`; 
             }); 
         }
+       let saleCart = []; // কার্ট স্টোর করার জন্য গ্লোবাল ভেরিয়েবল
+
         function clearSaleForm() {
+            saleCart = [];
+            renderCart();
             document.getElementById('saleQty').value = 1; document.getElementById('saleDiscount').value = 0; document.getElementById('salePaid').value = 0;
             document.getElementById('saleTotalAmount').innerText = "Total: ₹0"; document.getElementById('saleDueAmount').innerText = "₹0";
             document.getElementById('buyerName').value = ""; document.getElementById('buyerPhone').value = "";
             document.getElementById('saleProductSearch').value = ""; document.getElementById('saleProductId').value = ""; document.getElementById('saleProductBuyPrice').value = 0;
             document.getElementById('salePaymentMethod').value = "Cash"; document.getElementById('saleTxnNote').value = "";
         }
+function addToCart() {
+            const id = document.getElementById('saleProductId').value;
+            const name = document.getElementById('saleProductSearch').value;
+            const price = Number(document.getElementById('saleProductPrice').value);
+            const buyPrice = Number(document.getElementById('saleProductBuyPrice').value) || 0;
+            const stock = Number(document.getElementById('saleProductStock').value);
+            const pic = document.getElementById('saleProductPic').value;
+            const qty = Number(document.getElementById('saleQty').value) || 1;
 
+            if(!id) return showToast("Please select a product first", "error");
+            if(qty > stock && stock > 0) return showToast("Not enough stock!", "error");
+
+            const existing = saleCart.find(item => item.id === id);
+            if(existing) {
+                if((existing.qty + qty) > stock && stock > 0) return showToast("Total quantity exceeds stock!", "error");
+                existing.qty += qty;
+            } else {
+                saleCart.push({ id, name, price, buyPrice, stock, pic, qty });
+            }
+
+            document.getElementById('saleProductSearch').value = "";
+            document.getElementById('saleProductId').value = "";
+            document.getElementById('saleQty').value = 1;
+            
+            renderCart(); calculateSaleTotal();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItemsContainer');
+            const list = document.getElementById('cartList');
+            if(saleCart.length === 0) { container.style.display = 'none'; list.innerHTML = ""; return; }
+            container.style.display = 'block';
+            let html = "";
+            saleCart.forEach((item, index) => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
+                    <div><strong style="color:#0f172a;">${item.name}</strong> <br><span style="color:#10b981; font-weight:bold;">₹${item.price} x ${item.qty}</span> = ₹${item.price * item.qty}</div>
+                    <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; width:28px; height:28px; border-radius:4px; cursor:pointer;"><i class="fas fa-times"></i></button>
+                </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function removeFromCart(index) {
+            saleCart.splice(index, 1);
+            renderCart(); calculateSaleTotal();
+        }
         function handleProdSearchInput() { 
             const input = document.getElementById('saleProductSearch').value.toLowerCase(); const options = document.getElementById('saleProductDropdown').getElementsByClassName('custom-option'); 
             let hasVisible = false; for (let i = 0; i < options.length; i++) { if (options[i].innerText.toLowerCase().includes(input)) { options[i].style.display = "flex"; hasVisible = true; } else { options[i].style.display = "none"; } } 
@@ -1128,51 +1254,82 @@ function filterItemsTab() {
             document.getElementById('saleProductDropdown').style.display = 'none'; calculateSaleTotal(); 
         }
 
-        function calculateSaleTotal() { 
-            const id = document.getElementById('saleProductId').value; const qty = Number(document.getElementById('saleQty').value) || 1; 
-            const discount = Number(document.getElementById('saleDiscount').value) || 0; let paid = Number(document.getElementById('salePaid').value) || 0;
-            if(id && qty > 0) { 
-                const price = Number(document.getElementById('saleProductPrice').value); const baseTotal = price * qty;
-                const finalTotal = baseTotal - discount;
-                document.getElementById('saleTotalAmount').innerText = "Total: ₹" + finalTotal; 
-                let dueAmount = finalTotal - paid; if(dueAmount < 0) dueAmount = 0; 
-                document.getElementById('saleDueAmount').innerText = "₹" + dueAmount;
-            } 
+        function calculateSaleTotal() {
+            let baseTotal = 0;
+            saleCart.forEach(item => { baseTotal += (item.price * item.qty); });
+
+            const discount = Number(document.getElementById('saleDiscount').value) || 0;
+            let paid = Number(document.getElementById('salePaid').value) || 0;
+            const finalTotal = baseTotal - discount;
+            
+            document.getElementById('saleTotalAmount').innerText = "Total: ₹" + finalTotal;
+            let dueAmount = finalTotal - paid;
+            document.getElementById('saleDueAmount').innerText = "₹" + (dueAmount < 0 ? 0 : dueAmount);
         }
 
         async function saveRecordSale() { 
-            const prodId = document.getElementById('saleProductId').value; const qty = Number(document.getElementById('saleQty').value) || 1; 
-            const stock = Number(document.getElementById('saleProductStock').value); const price = Number(document.getElementById('saleProductPrice').value); const buyPrice = Number(document.getElementById('saleProductBuyPrice').value) || 0;
-            const discount = Number(document.getElementById('saleDiscount').value) || 0; const paid = Number(document.getElementById('salePaid').value) || 0;
-            const bName = document.getElementById('buyerName').value.trim(); const bPhone = document.getElementById('buyerPhone').value.trim();
-            const payMethod = document.getElementById('salePaymentMethod').value; const txnNote = document.getElementById('saleTxnNote').value.trim();
+            if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
+            
+            let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
+            saleCart.forEach(item => { 
+                baseTotal += (item.price * item.qty); 
+                totalBuyPrice += (item.buyPrice * item.qty);
+                totalQty += item.qty;
+            });
+
+            const discount = Number(document.getElementById('saleDiscount').value) || 0; 
+            const paid = Number(document.getElementById('salePaid').value) || 0;
+            const bName = document.getElementById('buyerName').value.trim(); 
+            const bPhone = document.getElementById('buyerPhone').value.trim();
+            const payMethod = document.getElementById('salePaymentMethod').value; 
+            const txnNote = document.getElementById('saleTxnNote').value.trim();
             const sid = localStorage.getItem("seller_id");
 
-            if(!prodId) return showToast("Select a product", "error"); if(qty > stock && stock > 0) return showToast(`Not enough stock!`, "error"); 
-            
-            const finalTotal = (price * qty) - discount; const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
-            const profit = ((price - buyPrice) * qty) - discount;
+            const finalTotal = baseTotal - discount; 
+            const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
+            const profit = (baseTotal - totalBuyPrice) - discount;
 
             const dateObj = new Date();
             const yearStr = dateObj.getFullYear().toString();
             const monthStr = (dateObj.getMonth() + 1).toString().padStart(2, '0');
 
             try { 
+                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Saving...";
+                
                 if(bPhone || bName) {
                     const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
                     if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
                 }
-                await db.collection("Products").doc(prodId).update({ stockCount: firebase.firestore.FieldValue.increment(-qty), soldCount: firebase.firestore.FieldValue.increment(qty) }); 
+                
+                // সবগুলো আইটেমের স্টক একসাথে কমানো হচ্ছে
+                for (let item of saleCart) {
+                    await db.collection("Products").doc(item.id).update({ 
+                        stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
+                        soldCount: firebase.firestore.FieldValue.increment(item.qty) 
+                    });
+                }
+
+                const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
                 
                 await db.collection("SalesHistory").add({ 
-                    sellerId: sid, productId: prodId, productName: document.getElementById('saleProductSearch').value, productPic: document.getElementById('saleProductPic').value,
-                    qty: qty, price: price, buyPrice: buyPrice, totalAmount: finalTotal, discount: discount, paid: paid, due: dueAmount, profit: profit,
-                    paymentMethod: payMethod, txnNote: txnNote,
-                    year: yearStr, month: monthStr, buyerName: bName, buyerPhone: bPhone, timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                    sellerId: sid, isMultiItem: true, items: saleCart,
+                    productName: mainProductName, productPic: saleCart[0].pic,
+                    qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
+                    totalAmount: finalTotal, discount: discount, paid: paid, 
+                    due: dueAmount, profit: profit, paymentMethod: payMethod, 
+                    txnNote: txnNote, year: yearStr, month: monthStr, 
+                    buyerName: bName, buyerPhone: bPhone, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
                 }); 
-                showToast("Sale Recorded Successfully!", "success"); clearSaleForm(); 
+                
+                showToast("Sale Recorded Successfully!", "success"); 
+                clearSaleForm(); 
                 switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
-            } catch(e) { showToast("Error recording sale", "error"); } 
+                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Confirm Sale";
+            } catch(e) { 
+                showToast("Error recording sale", "error"); 
+                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Confirm Sale";
+            } 
         }
         
         // Single Source History Fetch
@@ -1210,11 +1367,42 @@ function filterItemsTab() {
                 tProfit += Number(d.profit) || 0;
             }); 
 
+            // Total Invest হিসাব করা হচ্ছে (বর্তমান স্টক * কেনার দাম)
+            let tInvest = 0;
+            if (typeof currentSellerProducts !== 'undefined') {
+                currentSellerProducts.forEach(p => {
+                    const bPrice = Number(p.buyPrice) || 0;
+                    const stock = Number(p.stockCount) || 0;
+                    if (stock > 0) tInvest += (bPrice * stock);
+                });
+            }
+
             document.getElementById('dashTotalSales').innerText = "₹" + tSales; 
             document.getElementById('dashTotalPaid').innerText = "₹" + tPaid;
             document.getElementById('dashTotalDiscount').innerText = "₹" + tDiscount;
             document.getElementById('dashTotalDue').innerText = "₹" + tDue;
-            document.getElementById('dashTotalProfit').innerText = "₹" + tProfit;
+            document.getElementById('dashTotalInvest').innerText = "₹" + tInvest;
+
+            // Profit বা Loss অনুযায়ী ডায়নামিক রঙ ও টেক্সট চেঞ্জ
+            const profitEl = document.getElementById('dashTotalProfit');
+            const profitLabel = document.getElementById('dashProfitLabel');
+            const profitBox = document.getElementById('profitBoxWrapper');
+            
+            if (tProfit >= 0) {
+                profitLabel.innerText = "TOTAL PROFIT";
+                profitLabel.style.color = "#10b981";
+                profitEl.innerText = "₹" + tProfit;
+                profitEl.style.color = "#10b981"; // সবুজ
+                profitBox.style.borderLeftColor = "#10b981";
+                profitBox.style.background = "#ecfdf5"; // হালকা সবুজ ব্যাকগ্রাউন্ড
+            } else {
+                profitLabel.innerText = "TOTAL LOSS";
+                profitLabel.style.color = "#ef4444";
+                profitEl.innerText = "₹" + Math.abs(tProfit);
+                profitEl.style.color = "#ef4444"; // লাল
+                profitBox.style.borderLeftColor = "#ef4444";
+                profitBox.style.background = "#fef2f2"; // হালকা লাল ব্যাকগ্রাউন্ড
+            }
         }
 
         function goToHistoryTab(filter) {
@@ -1265,49 +1453,74 @@ function filterItemsTab() {
                 const imgSource = d.productPic || 'https://via.placeholder.com/50';
                 let dueLabel = d.due > 0 ? `<span style="color:#ef4444; font-weight:bold;">Due: ₹${d.due}</span>` : `<span style="color:#10b981; font-weight:bold;">Paid</span>`;
                 
-                let contactBtnsHtml = '';
-                if(d.buyerPhone || d.buyerName) {
-                    let nameDisp = d.buyerName || 'Customer';
-                    let rawPhone = d.buyerPhone ? d.buyerPhone.replace(/\D/g, '') : ''; 
-                    let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone; 
-                    let storeN = localStorage.getItem("seller_store");
-                    let recMsgText = `Hello ${nameDisp},\nThank you for your purchase from ${storeN}!\n\nItem: ${d.productName} (x${d.qty})\nTotal Bill: ₹${d.totalAmount}\nPaid: ₹${d.paid}`;
-                    if(d.due > 0) recMsgText += `\n*Due Amount: ₹${d.due}*`;
-                    let encRecMsg = encodeURIComponent(recMsgText);
-
-                    contactBtnsHtml = `<div class="buyer-contact-btn">`;
-                    if(rawPhone) {
-                        contactBtnsHtml += `<a href="https://wa.me/${waPhone}?text=${encRecMsg}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i> WA</a>
-                        <a href="sms:${rawPhone}?body=${encRecMsg}" class="btn-sms"><i class="fas fa-comment-sms"></i> SMS</a>`;
-                    }
-                    contactBtnsHtml += `<button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="flex:auto;"><i class="fas fa-file-pdf"></i> PDF</button></div>`;
+                // আইটেমগুলোর ডিটেইলস লিস্ট তৈরি করা হচ্ছে (মেসেজের জন্য)
+                let itemListText = "";
+                if (d.isMultiItem && d.items && d.items.length > 0) {
+                    d.items.forEach(item => {
+                        itemListText += `▪ ${item.name} (x${item.qty}) = ₹${item.price * item.qty}\n`;
+                    });
                 } else {
-                    contactBtnsHtml = `<div class="buyer-contact-btn"><button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="width:100%;"><i class="fas fa-file-pdf"></i> Download PDF Receipt</button></div>`;
+                    itemListText = `▪ ${d.productName} (x${d.qty})\n`;
                 }
-                
-                // Add note display if present
+
+                // মেসেজের ফুল টেক্সট সাজানো হচ্ছে
+                let nameDisp = d.buyerName || 'Customer';
+                let storeN = localStorage.getItem("seller_store");
+                let recMsgText = `Hello ${nameDisp},\nThank you for your purchase from ${storeN}!\n\n*Order Details:*\n${itemListText}\nTotal Bill: ₹${d.totalAmount}\nPaid: ₹${d.paid}`;
+                if(d.due > 0) recMsgText += `\n*Due Amount: ₹${d.due}*`;
+                let encRecMsg = encodeURIComponent(recMsgText);
+
                 let noteHtml = d.txnNote ? `<br>Note: ${d.txnNote}` : '';
 
+                // আপনার পাঠানো ছবির মতো সমান মাপের বাটন ডিজাইন করা হচ্ছে
+                let contactBtnsHtml = '';
+                if(d.buyerPhone || d.buyerName) {
+                    let rawPhone = d.buyerPhone ? d.buyerPhone.replace(/\D/g, '') : ''; 
+                    let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone; 
+                    
+                    if(rawPhone) {
+                        contactBtnsHtml = `
+                        <div class="buyer-contact-btn" style="display: flex; gap: 8px; margin-top: 12px;">
+                            <a href="https://wa.me/${waPhone}?text=${encRecMsg}" target="_blank" class="btn-wa" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fab fa-whatsapp"></i> WA</a>
+                            <a href="sms:${rawPhone}?body=${encRecMsg}" class="btn-sms" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fas fa-comment-sms"></i> SMS</a>
+                            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="flex:1; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> PDF</button>
+                        </div>`;
+                    } else {
+                        contactBtnsHtml = `
+                        <div class="buyer-contact-btn" style="margin-top: 12px;">
+                            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="width:100%; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> Download PDF Receipt</button>
+                        </div>`;
+                    }
+                }
+
+                // পুরো কার্ডটিকে ক্লিক করার যোগ্য (Clickable) করা হচ্ছে
                 container.innerHTML += `
                 <div class="history-item">
-                    <button class="btn-del-history" onclick="askDeleteHistory('${d.id}')" title="Request Admin to Delete"><i class="fas fa-trash"></i></button>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 35px;">
-                        <div style="display:flex; gap:10px;">
-                            <img src="${imgSource}" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1;">
-                            <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date}</p></div>
+                    <!-- ডিলিট বাটন (আলাদা থাকবে, যাতে ভুল করে ক্লিক না পড়ে) -->
+                    <button class="btn-del-history" onclick="askDeleteHistory('${d.id}')" title="Request Admin to Delete" style="z-index: 10;"><i class="fas fa-trash"></i></button>
+                    
+                    <!-- ক্লিকেবল মেইন কার্ড -->
+                    <div onclick="viewSaleDetails('${d.id}')" style="cursor:pointer; position:relative; z-index: 1;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 35px;">
+                            <div style="display:flex; gap:10px;">
+                                <img src="${imgSource}" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1;">
+                                <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date}</p></div>
+                            </div>
+                            <div style="text-align:right;"><h3 style="margin:0; font-size:18px; color:#10b981; font-weight:800;">₹${d.totalAmount}</h3></div>
                         </div>
-                        <div style="text-align:right;"><h3 style="margin:0; font-size:18px; color:#10b981; font-weight:800;">₹${d.totalAmount}</h3></div>
-                    </div>
-                    <div style="background:#f1f5f9; padding:8px 10px; border-radius:8px; margin-top:10px; font-size:11px; color:#475569; border:1px solid #e2e8f0;">
-                        <i class="fas fa-user-circle" style="color:#0ea5e9;"></i> <strong style="color:#1e293b;">${d.buyerName || 'Customer'}</strong> ${d.buyerPhone ? `| ${d.buyerPhone}` : ''}
-                        <div style="margin-top:5px; border-top: 1px dashed #cbd5e1; padding-top: 5px;">
-                            Discount: ₹${d.discount || 0} | Paid: ₹${d.paid || 0} | Profit: ₹${d.profit || 0} | ${dueLabel}<br>
-                            Pay Mode: ${d.paymentMethod || 'Cash'} ${noteHtml}
+                        <div style="background:#f8fafc; padding:8px 10px; border-radius:8px; margin-top:10px; font-size:11px; color:#475569; border:1px solid #e2e8f0; transition:0.3s;">
+                            <i class="fas fa-user-circle" style="color:#0ea5e9;"></i> <strong style="color:#1e293b;">${d.buyerName || 'Customer'}</strong> ${d.buyerPhone ? `| ${d.buyerPhone}` : ''}
+                            <div style="margin-top:5px; border-top: 1px dashed #cbd5e1; padding-top: 5px;">
+                                Discount: ₹${d.discount || 0} | Paid: ₹${d.paid || 0} | Profit: ₹${d.profit || 0} | ${dueLabel}<br>
+                                Pay Mode: ${d.paymentMethod || 'Cash'} ${noteHtml}
+                            </div>
                         </div>
                     </div>
+                    
+                    <!-- 3টি সমান মাপের বাটন -->
                     ${contactBtnsHtml}
                 </div>`; 
-            }); 
+            });
         }
 
         function askDeleteHistory(historyId) {
@@ -1323,7 +1536,48 @@ function filterItemsTab() {
         }
         
         async function executeDeleteHistory(historyId, reqId) { 
-            try { const historyRef = db.collection("SalesHistory").doc(historyId); const historyDoc = await historyRef.get(); if(historyDoc.exists) { const data = historyDoc.data(); const prodId = data.productId; const qty = data.qty; if(prodId) { try { await db.collection("Products").doc(prodId).update({ stockCount: firebase.firestore.FieldValue.increment(qty), soldCount: firebase.firestore.FieldValue.increment(-qty) }); } catch(err) {} } } await historyRef.delete(); if(reqId) { await db.collection("AdminRequests").doc(reqId).delete(); } showToast("Sale Record Deleted & Stocks Updated!", "success"); } catch(e) {} 
+            try { 
+                const historyRef = db.collection("SalesHistory").doc(historyId); 
+                const historyDoc = await historyRef.get(); 
+                
+                if(historyDoc.exists) { 
+                    const data = historyDoc.data(); 
+                    
+                    // চেক করা হচ্ছে এটি মাল্টি-আইটেম (Cart) সেল কি না
+                    if (data.isMultiItem && data.items && data.items.length > 0) {
+                        for (let item of data.items) {
+                            try { 
+                                await db.collection("Products").doc(item.id).update({ 
+                                    stockCount: firebase.firestore.FieldValue.increment(item.qty), 
+                                    soldCount: firebase.firestore.FieldValue.increment(-item.qty) 
+                                }); 
+                            } catch(err) { console.error("Error updating stock for", item.name); }
+                        }
+                    } 
+                    // পুরনো সিঙ্গেল-আইটেম সেলের জন্য (যদি পুরনো কোনো হিস্ট্রি ডিলিট করতে চান)
+                    else if(data.productId) { 
+                        try { 
+                            await db.collection("Products").doc(data.productId).update({ 
+                                stockCount: firebase.firestore.FieldValue.increment(data.qty), 
+                                soldCount: firebase.firestore.FieldValue.increment(-data.qty) 
+                            }); 
+                        } catch(err) { console.error("Error updating stock"); } 
+                    } 
+                } 
+                
+                // হিস্ট্রি ডিলিট করা হচ্ছে
+                await historyRef.delete(); 
+                
+                // অ্যাডমিন রিকোয়েস্ট ডিলিট করা হচ্ছে (যদি থাকে)
+                if(reqId) { 
+                    await db.collection("AdminRequests").doc(reqId).delete(); 
+                } 
+                
+                showToast("Sale Record Deleted & All Stocks Returned!", "success"); 
+            } catch(e) {
+                showToast("Error deleting history", "error");
+                console.error(e);
+            } 
         }
 
 function preparePDFData(id) {
@@ -1348,9 +1602,25 @@ function preparePDFData(id) {
     document.getElementById('pdfPhone').innerText = record.buyerPhone || 'N/A';
     
     // Product Info
-    document.getElementById('pdfItem').innerText = record.productName;
-    document.getElementById('pdfQty').innerText = record.qty;
-    document.getElementById('pdfPrice').innerText = record.price;
+    const tbody = document.getElementById('pdfTableBody');
+    tbody.innerHTML = ""; 
+    
+    if (record.isMultiItem && record.items) {
+        record.items.forEach(item => {
+            tbody.innerHTML += `<tr>
+                <td style="padding-top: 5px;">${item.name}</td>
+                <td style="padding-top: 5px; text-align: center;">${item.qty}</td>
+                <td style="padding-top: 5px; text-align: right;">₹${item.price * item.qty}</td>
+            </tr>`;
+        });
+    } else {
+        // পুরনো সিঙ্গেল আইটেমের জন্য
+        tbody.innerHTML = `<tr>
+            <td style="padding-top: 5px;">${record.productName}</td>
+            <td style="padding-top: 5px; text-align: center;">${record.qty}</td>
+            <td style="padding-top: 5px; text-align: right;">₹${record.price || record.totalAmount}</td>
+        </tr>`;
+    }
     
     // Calculation
     document.getElementById('pdfTotal').innerText = record.totalAmount;
@@ -1813,6 +2083,49 @@ async function deleteOrder(id) {
                 showToast("Error restoring data!", "error");
             }
         }
+        function viewSaleDetails(id) {
+            const d = allSalesHistoryData.find(item => item.id === id);
+            if(!d) return;
+
+            let itemListHtml = "";
+            if (d.isMultiItem && d.items && d.items.length > 0) {
+                d.items.forEach(item => {
+                    itemListHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
+                        <span onclick="viewProductDetails('${item.id}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${item.name} (x${item.qty})</span>
+                        <strong style="color:#0f172a;">₹${item.price * item.qty}</strong>
+                    </div>`;
+                });
+            } else {
+                itemListHtml = `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
+                    <span onclick="viewProductDetails('${d.productId}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${d.productName} (x${d.qty})</span>
+                    <strong style="color:#0f172a;">₹${d.price || d.totalAmount}</strong>
+                </div>`;
+            }
+
+            const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
+
+            document.getElementById('saleDetailsContent').innerHTML = `
+                <div style="text-align:center; margin-bottom:15px;">
+                    <h2 style="margin:0; color:#10b981;">₹${d.totalAmount}</h2>
+                    <p style="margin:0; font-size:11px; color:#64748b;">${date}</p>
+                </div>
+                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                    <p style="margin:0 0 5px;"><strong>Customer:</strong> <span style="color:#0f172a;">${d.buyerName || 'N/A'}</span></p>
+                    <p style="margin:0 0 5px;"><strong>Phone:</strong> <span style="color:#0f172a;">${d.buyerPhone || 'N/A'}</span></p>
+                    <p style="margin:0;"><strong>Pay Mode:</strong> <span style="color:#0f172a;">${d.paymentMethod || 'Cash'}</span> ${d.txnNote ? `(${d.txnNote})` : ''}</p>
+                </div>
+                <h4 style="margin:0 0 8px; border-bottom:2px solid #cbd5e1; padding-bottom:5px; color:#0f172a;">Purchased Items</h4>
+                ${itemListHtml}
+                <div style="margin-top:10px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal:</span> <strong>₹${(d.totalAmount + (d.discount||0))}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#f59e0b;"><span>Discount:</span> <strong>- ₹${d.discount || 0}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#10b981;"><span>Paid Amount:</span> <strong>₹${d.paid || 0}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#ef4444;"><span>Due Amount:</span> <strong>₹${d.due || 0}</strong></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${d.profit || 0}</strong></div>
+                </div>
+            `;
+            document.getElementById('viewSaleModal').style.display = 'flex';
+        }
     </script>
     <!-- Restore Progress Overlay -->
     <div class="modal-overlay" id="restoreProgressOverlay" style="z-index: 3000;">
@@ -1831,5 +2144,24 @@ async function deleteOrder(id) {
             <p style="font-size: 12px; color: #64748b; margin-top: 10px;">Please do not close or minimize the app.</p>
         </div>
     </div>
+    <!-- Fullscreen Image Viewer Modal -->
+<div id="fullscreenImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    <!-- Close Button -->
+    <i class="fas fa-times" onclick="closeFullscreenImage()" style="position:absolute; top:20px; right:20px; color:white; font-size:30px; cursor:pointer; z-index:10000; padding:10px;"></i>
+    
+    <div style="position:relative; width:100%; max-width:500px; display:flex; align-items:center; justify-content:center;">
+        <!-- Left Arrow -->
+        <i class="fas fa-chevron-left" id="fsPrevBtn" onclick="prevFsImage()" style="position:absolute; left:15px; color:white; font-size:30px; cursor:pointer; background:rgba(255,255,255,0.2); width:45px; height:45px; display:flex; justify-content:center; align-items:center; border-radius:50%; z-index:100; transition:0.3s;"></i>
+        
+        <!-- Main Image -->
+        <img id="fsMainImage" src="" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius: 8px;">
+        
+        <!-- Right Arrow -->
+        <i class="fas fa-chevron-right" id="fsNextBtn" onclick="nextFsImage()" style="position:absolute; right:15px; color:white; font-size:30px; cursor:pointer; background:rgba(255,255,255,0.2); width:45px; height:45px; display:flex; justify-content:center; align-items:center; border-radius:50%; z-index:100; transition:0.3s;"></i>
+    </div>
+    
+    <!-- Image Count Indicator -->
+    <div id="fsImageIndicator" style="color:white; margin-top:20px; font-size:16px; font-weight:bold; background:rgba(255,255,255,0.2); padding:5px 15px; border-radius:20px;">1 / 1</div>
+</div>
 </body>
 </html>
