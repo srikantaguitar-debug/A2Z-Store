@@ -251,75 +251,85 @@
 
         <!-- TAB 2: Record Sale -->
         <div id="tab-record-sale" class="tab-content">
-            <div class="form-container" style="border-left: 5px solid #10b981;">
-                <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:10px;"><i class="fas fa-cash-register" style="color:#10b981;"></i> Record Sale</h3>
+            <div class="form-container" style="border-left: 4px solid #10b981; padding: 15px; margin: 10px;">
+                <h3 style="margin-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:8px; font-size:16px;"><i class="fas fa-cash-register" style="color:#10b981;"></i> Record Sale</h3>
                 
-                <div class="input-group">
-                    <label>Select Product</label>
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label style="font-size:11px; margin-bottom:4px;">Select Product</label>
                     <div class="custom-select-wrapper">
                         <!-- Auto filter as you type -->
-                        <input type="text" id="saleProductSearch" class="custom-select-input" placeholder="Type to search product..." oninput="handleProdSearchInput()" onclick="document.getElementById('saleProductDropdown').style.display='block'">
+                        <input type="text" id="saleProductSearch" class="custom-select-input" placeholder="Search product..." oninput="handleProdSearchInput()" onclick="document.getElementById('saleProductDropdown').style.display='block'" style="padding:10px; font-size:13px;">
                         <input type="hidden" id="saleProductId"><input type="hidden" id="saleProductPrice"><input type="hidden" id="saleProductStock"><input type="hidden" id="saleProductPic"><input type="hidden" id="saleProductBuyPrice">
                         <div class="custom-dropdown" id="saleProductDropdown"></div>
                     </div>
                 </div>
-                <div class="row" style="margin-top: 15px;">
-                    <div class="input-group" style="margin-bottom:0;"><label>Quantity</label><input type="number" id="saleQty" value="1" min="1" style="text-align:center; font-weight: bold; font-size: 16px;"></div>
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label>&nbsp;</label>
-                        <button onclick="addToCart()" style="background:#0ea5e9; color:white; width:100%; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fas fa-plus"></i> Add Item</button>
+                
+                <div class="row" style="margin-bottom: 10px; align-items: center;">
+                    <div class="input-group" style="margin-bottom:0; flex: 0.4;">
+                        <label style="font-size:11px; margin-bottom:4px;">Qty</label>
+                        <input type="number" id="saleQty" value="1" min="1" style="text-align:center; font-weight: bold; font-size: 14px; padding: 8px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0; flex: 0.6;">
+                        <button onclick="addToCart()" style="background:#0ea5e9; color:white; width:100%; padding:10px; border:none; border-radius:8px; font-weight:bold; font-size: 13px; cursor:pointer; margin-top: 18px;"><i class="fas fa-plus"></i> Add Item</button>
                     </div>
                 </div>
                 
                 <!-- Cart Items Display -->
-                <div id="cartItemsContainer" style="background: #f8fafc; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #e2e8f0; display:none;">
-                    <h4 style="margin:0 0 10px; font-size:12px; color:#475569; text-transform:uppercase;">Items in Cart:</h4>
+                <div id="cartItemsContainer" style="background: #f8fafc; padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; display:none;">
+                    <h4 style="margin:0 0 8px; font-size:11px; color:#475569; text-transform:uppercase;">Items in Cart:</h4>
                     <div id="cartList"></div>
                 </div>
                 
-                <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 15px;">
-                    <p style="font-size: 11px; color: #475569; margin: 0 0 10px; font-weight: 700; text-transform: uppercase;">Customer Details (Auto-Saved)</p>
-                    <div class="input-group" style="margin-bottom: 10px;">
-                        <input type="tel" id="buyerPhone" placeholder="Phone Number" onkeyup="suggestCustomer('phone')" autocomplete="off">
-                        <div id="suggestPhoneDropdown" class="suggest-dropdown"></div>
-                    </div>
-                    <div class="input-group" style="margin-bottom: 0;">
-                        <input type="text" id="buyerName" placeholder="Customer Name" onkeyup="suggestCustomer('name')" autocomplete="off">
-                        <div id="suggestNameDropdown" class="suggest-dropdown"></div>
+                <div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <p style="font-size: 10px; color: #475569; margin: 0 0 8px; font-weight: 700; text-transform: uppercase;">Customer Details (Auto-Saved)</p>
+                    <div class="row">
+                        <div class="input-group" style="margin-bottom: 0; position: relative;">
+                            <input type="tel" id="buyerPhone" placeholder="Phone Number" onkeyup="suggestCustomer('phone')" autocomplete="off" style="padding:8px 10px; font-size:12px;">
+                            <div id="suggestPhoneDropdown" class="suggest-dropdown"></div>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; position: relative;">
+                            <input type="text" id="buyerName" placeholder="Customer Name" onkeyup="suggestCustomer('name')" autocomplete="off" style="padding:8px 10px; font-size:12px;">
+                            <div id="suggestNameDropdown" class="suggest-dropdown"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div style="background: #fffbeb; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px dashed #fde68a;">
-                    <!-- New: Payment Method & Note -->
-                    <div class="row">
-                        <div class="input-group">
-                            <label>Payment Method</label>
-                            <select id="salePaymentMethod">
+                <div style="background: #fffbeb; padding: 10px; border-radius: 8px; border: 1px dashed #fde68a;">
+                    <div class="row" style="margin-bottom: 8px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:11px; margin-bottom:4px;">Pay Mode</label>
+                            <select id="salePaymentMethod" style="padding:8px; font-size:12px;">
                                 <option value="Cash">Cash</option>
-                                <option value="Online">Online (UPI/Bank)</option>
+                                <option value="Online">Online</option>
                             </select>
                         </div>
-                        <div class="input-group">
-                            <label>Note / Txn ID</label>
-                            <input type="text" id="saleTxnNote" placeholder="e.g. Note or UPI Ref">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:11px; margin-bottom:4px;">Txn Note</label>
+                            <input type="text" id="saleTxnNote" placeholder="Optional" style="padding:8px; font-size:12px;">
                         </div>
                     </div>
                     <div class="row">
-                        <div class="input-group"><label>Discount (₹)</label><input type="number" id="saleDiscount" value="0" oninput="calculateSaleTotal()"></div>
-                        <div class="input-group"><label>Paid Amount (₹)</label><input type="number" id="salePaid" value="0" oninput="calculateSaleTotal()"></div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:11px; margin-bottom:4px;">Discount (₹)</label>
+                            <input type="number" id="saleDiscount" value="0" oninput="calculateSaleTotal()" style="padding:8px; font-size:13px; font-weight:bold;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label style="font-size:11px; margin-bottom:4px;">Paid (₹)</label>
+                            <input type="number" id="salePaid" value="0" oninput="calculateSaleTotal()" style="padding:8px; font-size:13px; font-weight:bold; color:#10b981;">
+                        </div>
                     </div>
-                    <div style="display:flex; justify-content: space-between; font-weight: bold; margin-top:5px; border-top: 1px solid #fde68a; padding-top: 8px;">
-                        <span style="color:#ef4444;">Due Amount:</span><span id="saleDueAmount" style="color:#ef4444;">₹0</span>
+                    <div style="display:flex; justify-content: space-between; font-weight: bold; margin-top:8px; border-top: 1px solid #fde68a; padding-top: 6px; font-size:12px;">
+                        <span id="saleDueText" style="color:#ef4444;">Due Amount:</span><span id="saleDueAmount" style="color:#ef4444;">₹0</span>
                     </div>
                 </div>
 
-                <h2 id="saleTotalAmount" style="text-align: center; color: #0284c7; margin: 15px 0;">Total: ₹0</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="clearSaleForm()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#e2e8f0; cursor:pointer;">Reset</button>
-                    <button onclick="saveRecordSale()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; font-weight:bold; cursor:pointer;">Confirm Sale</button>
+                <h2 id="saleTotalAmount" style="text-align: center; color: #0284c7; margin: 10px 0; font-size:22px;">Total: ₹0</h2>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="clearSaleForm()" style="flex:0.4; padding:10px; border:none; border-radius:6px; background:#e2e8f0; cursor:pointer; font-size:13px; font-weight:600;">Reset</button>
+                    <button onclick="saveRecordSale()" style="flex:0.6; padding:10px; border:none; border-radius:6px; background:#10b981; color:white; font-weight:bold; cursor:pointer; font-size:14px;"><i class="fas fa-check-circle"></i> Confirm Sale</button>
                 </div>
             </div>
-        </div>
+        </div>  
 
         <!-- TAB 3: Add Product -->
         <div id="tab-add-product" class="tab-content">
@@ -1211,7 +1221,14 @@ function filterItemsTab() {
             saleCart = [];
             renderCart();
             document.getElementById('saleQty').value = 1; document.getElementById('saleDiscount').value = 0; document.getElementById('salePaid').value = 0;
-            document.getElementById('saleTotalAmount').innerText = "Total: ₹0"; document.getElementById('saleDueAmount').innerText = "₹0";
+            document.getElementById('saleTotalAmount').innerText = "Total: ₹0"; 
+            
+            // Due Amount টেক্সট এবং কালার রিসেট করা
+            const dueTextEl = document.getElementById('saleDueText');
+            const dueAmtEl = document.getElementById('saleDueAmount');
+            if(dueTextEl) { dueTextEl.innerText = "Due Amount:"; dueTextEl.style.color = "#ef4444"; }
+            if(dueAmtEl) { dueAmtEl.innerText = "₹0"; dueAmtEl.style.color = "#ef4444"; }
+            
             document.getElementById('buyerName').value = ""; document.getElementById('buyerPhone').value = "";
             document.getElementById('saleProductSearch').value = ""; document.getElementById('saleProductId').value = ""; document.getElementById('saleProductBuyPrice').value = 0;
             document.getElementById('salePaymentMethod').value = "Cash"; document.getElementById('saleTxnNote').value = "";
@@ -1284,7 +1301,23 @@ function addToCart() {
             
             document.getElementById('saleTotalAmount').innerText = "Total: ₹" + finalTotal;
             let dueAmount = finalTotal - paid;
-            document.getElementById('saleDueAmount').innerText = "₹" + (dueAmount < 0 ? 0 : dueAmount);
+            
+            const dueTextEl = document.getElementById('saleDueText');
+            const dueAmtEl = document.getElementById('saleDueAmount');
+            
+            if (dueAmount < 0) {
+                // কাস্টমার বেশি টাকা দিয়েছে (ফেরত দিতে হবে)
+                dueTextEl.innerText = "Return Change:";
+                dueTextEl.style.color = "#10b981"; // সবুজ
+                dueAmtEl.innerText = "₹" + Math.abs(dueAmount);
+                dueAmtEl.style.color = "#10b981";
+            } else {
+                // বাকি আছে বা সমান সমান
+                dueTextEl.innerText = "Due Amount:";
+                dueTextEl.style.color = "#ef4444"; // লাল
+                dueAmtEl.innerText = "₹" + dueAmount;
+                dueAmtEl.style.color = "#ef4444";
+            }
         }
 
         async function saveRecordSale() { 
@@ -1298,7 +1331,7 @@ function addToCart() {
             });
 
             const discount = Number(document.getElementById('saleDiscount').value) || 0; 
-            const paid = Number(document.getElementById('salePaid').value) || 0;
+            const enteredPaid = Number(document.getElementById('salePaid').value) || 0;
             const bName = document.getElementById('buyerName').value.trim(); 
             const bPhone = document.getElementById('buyerPhone').value.trim();
             const payMethod = document.getElementById('salePaymentMethod').value; 
@@ -1306,6 +1339,9 @@ function addToCart() {
             const sid = localStorage.getItem("seller_id");
 
             const finalTotal = baseTotal - discount; 
+            
+            // নতুন লজিক: কাস্টমার বেশি টাকা দিলেও ডেটাবেসে শুধু বিলের সমান টাকাই Paid হিসেবে সেভ হবে (হিসাব ঠিক রাখার জন্য)
+            const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
             const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
             const profit = (baseTotal - totalBuyPrice) - discount;
 
@@ -1382,9 +1418,14 @@ function addToCart() {
 
             let tSales = 0, tPaid = 0, tDiscount = 0, tDue = 0, tProfit = 0;
             filtered.forEach(d => { 
-                tSales += Number(d.totalAmount) || 0; tPaid += Number(d.paid) || 0;
-                tDiscount += Number(d.discount) || 0; tDue += Number(d.due) || 0;
-                tProfit += Number(d.profit) || 0;
+                // শুধুমাত্র যেগুলো রিটার্ন হয়নি, সেগুলোই ড্যাশবোর্ডে যোগ হবে
+                if(!d.isReturned) {
+                    tSales += Number(d.totalAmount) || 0; 
+                    tPaid += Number(d.paid) || 0;
+                    tDiscount += Number(d.discount) || 0; 
+                    tDue += Number(d.due) || 0;
+                    tProfit += Number(d.profit) || 0;
+                }
             }); 
 
             // Total Invest হিসাব করা হচ্ছে (বর্তমান স্টক * কেনার দাম)
@@ -1513,10 +1554,13 @@ function addToCart() {
                     }
                 }
 
+                let returnedBadge = d.isReturned ? `<span style="background:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:8px;"><i class="fas fa-undo"></i> Refunded</span>` : '';
+                let amountStyle = d.isReturned ? "text-decoration:line-through; color:#94a3b8;" : "color:#10b981;";
+
                 // পুরো কার্ডটিকে ক্লিক করার যোগ্য (Clickable) করা হচ্ছে
                 container.innerHTML += `
                 <div class="history-item">
-                    <!-- ডিলিট বাটন (আলাদা থাকবে, যাতে ভুল করে ক্লিক না পড়ে) -->
+                    <!-- ডিলিট বাটন (আলাদা থাকবে, যাতে ভুল করে ক্লিক না পড়ে) -->
                     <button class="btn-del-history" onclick="askDeleteHistory('${d.id}')" title="Request Admin to Delete" style="z-index: 10;"><i class="fas fa-trash"></i></button>
                     
                     <!-- ক্লিকেবল মেইন কার্ড -->
@@ -1524,9 +1568,9 @@ function addToCart() {
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 35px;">
                             <div style="display:flex; gap:10px;">
                                 <img src="${imgSource}" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1;">
-                                <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date}</p></div>
+                                <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName} ${returnedBadge}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date}</p></div>
                             </div>
-                            <div style="text-align:right;"><h3 style="margin:0; font-size:18px; color:#10b981; font-weight:800;">₹${d.totalAmount}</h3></div>
+                            <div style="text-align:right;"><h3 style="margin:0; font-size:18px; font-weight:800; ${amountStyle}">₹${d.totalAmount}</h3></div>
                         </div>
                         <div style="background:#f8fafc; padding:8px 10px; border-radius:8px; margin-top:10px; font-size:11px; color:#475569; border:1px solid #e2e8f0; transition:0.3s;">
                             <i class="fas fa-user-circle" style="color:#0ea5e9;"></i> <strong style="color:#1e293b;">${d.buyerName || 'Customer'}</strong> ${d.buyerPhone ? `| ${d.buyerPhone}` : ''}
@@ -1539,7 +1583,7 @@ function addToCart() {
                     
                     <!-- 3টি সমান মাপের বাটন -->
                     ${contactBtnsHtml}
-                </div>`; 
+                </div>`;
             });
         }
 
@@ -2124,9 +2168,14 @@ async function deleteOrder(id) {
 
             const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
 
+            // রিফান্ড বাটন লজিক
+            let refundHtml = d.isReturned 
+                ? `<div style="text-align:center; color:#ef4444; font-weight:bold; margin-top:15px; padding:10px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;"><i class="fas fa-check-circle"></i> Item Returned & Refunded</div>` 
+                : `<button onclick="processRefund('${d.id}')" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);"><i class="fas fa-undo"></i> Process Return & Refund</button>`;
+
             document.getElementById('saleDetailsContent').innerHTML = `
                 <div style="text-align:center; margin-bottom:15px;">
-                    <h2 style="margin:0; color:#10b981;">₹${d.totalAmount}</h2>
+                    <h2 style="margin:0; color:${d.isReturned ? '#94a3b8' : '#10b981'}; text-decoration:${d.isReturned ? 'line-through' : 'none'};">₹${d.totalAmount}</h2>
                     <p style="margin:0; font-size:11px; color:#64748b;">${date}</p>
                 </div>
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
@@ -2143,8 +2192,38 @@ async function deleteOrder(id) {
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#ef4444;"><span>Due Amount:</span> <strong>₹${d.due || 0}</strong></div>
                     <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${d.profit || 0}</strong></div>
                 </div>
+                ${refundHtml}
             `;
             document.getElementById('viewSaleModal').style.display = 'flex';
+        }
+
+        // --- নতুন processRefund ফাংশন ---
+        function processRefund(historyId) {
+            Swal.fire({
+                title: 'Process Return?', text: "Stock will be added back to inventory & sale will be marked as Refunded.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'Yes, Refund it!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const historyRef = db.collection("SalesHistory").doc(historyId); const historyDoc = await historyRef.get();
+                        if(historyDoc.exists) {
+                            const data = historyDoc.data();
+                            if(data.isReturned) return showToast("Already refunded!", "warning");
+                            
+                            if (data.isMultiItem && data.items && data.items.length > 0) {
+                                for (let item of data.items) {
+                                    try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
+                                }
+                            } else if(data.productId) { 
+                                try { await db.collection("Products").doc(data.productId).update({ stockCount: firebase.firestore.FieldValue.increment(data.qty), soldCount: firebase.firestore.FieldValue.increment(-data.qty) }); } catch(err) {} 
+                            }
+                            
+                            await historyRef.update({ isReturned: true });
+                            document.getElementById('viewSaleModal').style.display = 'none'; showToast("Return & Refund Processed!", "success");
+                        }
+                    } catch(e) { showToast("Error processing refund", "error"); }
+                }
+            });
         }
         // Similar Product Suggestion Logic
         function suggestProduct() {
