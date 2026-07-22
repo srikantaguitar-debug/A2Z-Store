@@ -209,19 +209,27 @@
                 </div>
             </div>
             
-            <div class="dashboard-filters">
-                <select id="dashFilterYear" class="dash-select" onchange="updateDashboardStats()">
-                    <option value="lifetime">Lifetime</option>
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                </select>
-                <select id="dashFilterMonth" class="dash-select" onchange="updateDashboardStats()" style="display:none;">
-                    <option value="all">All Months</option>
-                    <option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option>
-                    <option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option>
-                    <option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
-                </select>
+            <div class="dashboard-filters" style="background: white; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size:12px; font-weight:600; color:#475569; min-width: 40px;">Date:</label>
+                    <input type="date" id="dashFilterDate" class="dash-select" onchange="handleDashDateChange()" style="flex: 1; border-color: #0ea5e9; color: #0ea5e9; font-weight: bold;">
+                    <button onclick="setDashToday()" style="background:#0ea5e9; color:white; border:none; border-radius:8px; padding:0 12px; height: 38px; font-size:12px; font-weight:bold; cursor:pointer;">Today</button>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size:12px; font-weight:600; color:#475569; min-width: 40px;">Month:</label>
+                    <select id="dashFilterYear" class="dash-select" onchange="handleDashYearChange()" style="flex: 1;">
+                        <option value="lifetime">Lifetime</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <select id="dashFilterMonth" class="dash-select" onchange="updateDashboardStats()" style="display:none; flex: 1;">
+                        <option value="all">All</option>
+                        <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option>
+                        <option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option>
+                        <option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                    </select>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -439,10 +447,15 @@
                 
                 <div class="row" style="margin-bottom: 10px;">
                     <div class="input-group" style="margin-bottom:0;">
-                        <select id="historyYear" onchange="applyHistoryFilters()"><option value="lifetime">Lifetime</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option></select>
+                        <input type="date" id="historyDate" class="dash-select" onchange="handleHistoryDateChange()" style="padding: 10px; font-weight: bold; color: #0ea5e9;">
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <select id="historyYear" onchange="handleHistoryYearChange()" style="padding: 10px;"><option value="lifetime">Lifetime</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option></select>
                     </div>
                     <div class="input-group" style="margin-bottom:0;">
-                        <select id="historyMonth" onchange="applyHistoryFilters()">
+                        <select id="historyMonth" onchange="applyHistoryFilters()" style="padding: 10px;">
                             <option value="all">All Months</option>
                             <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option>
                             <option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option>
@@ -523,19 +536,29 @@
             <button class="tab-btn" id="btn-tab-history" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> History</button>
         </div>
     </div>
-    <!-- 6 Tabs Bottom Navigation (Slideable) -->
+    <!-- 7 Tabs Bottom Navigation (Slideable) -->
 <div class="tab-bar">
     <button class="tab-btn active" id="btn-tab-dashboard" onclick="switchTab('tab-dashboard', this)"><i class="fas fa-home"></i> Home</button>
     <button class="tab-btn" id="btn-tab-record-sale" onclick="setupRecordSaleTab(); switchTab('tab-record-sale', this)"><i class="fas fa-cash-register"></i> Sell</button>
     <button class="tab-btn" id="btn-tab-add-product" onclick="switchTab('tab-add-product', this)"><i class="fas fa-plus-circle"></i> Add</button>
     <button class="tab-btn" id="btn-tab-products" onclick="switchTab('tab-products', this)"><i class="fas fa-box"></i> Items</button>
     
-    <!-- New Order Tab Button -->
-    <button class="tab-btn" id="btn-tab-order" onclick="switchTab('tab-order', this)"><i class="fas fa-clipboard-list"></i> Orders</button>
+    <!-- New Customers Tab Button -->
+    <button class="tab-btn" id="btn-tab-customers" onclick="switchTab('tab-customers', this); renderCustomersTab();"><i class="fas fa-users"></i> Contacts</button>
     
+    <button class="tab-btn" id="btn-tab-order" onclick="switchTab('tab-order', this)"><i class="fas fa-clipboard-list"></i> Orders</button>
     <button class="tab-btn" id="btn-tab-history" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> History</button>
 </div>
-
+<!-- TAB 7: Customers List -->
+        <div id="tab-customers" class="tab-content">
+            <div style="margin: 15px 15px 5px;">
+                <h3 style="margin: 0; font-size: 16px; color: #0f172a;"><i class="fas fa-address-book" style="color:#0ea5e9;"></i> Customer Directory</h3>
+                <div class="input-group" style="margin-top: 10px; margin-bottom: 15px;">
+                    <input type="text" id="searchCustomerInput" class="custom-select-input" placeholder="Search by name or phone..." oninput="renderCustomersTab(this.value)">
+                </div>
+            </div>
+            <div id="customers-container" style="padding-bottom: 20px;"></div>
+        </div>
     <!-- Edit Product Modal -->
     <div class="modal-overlay" id="editProdModal">
         <div class="edit-card">
@@ -739,6 +762,9 @@
                 document.getElementById('seller-login-overlay').style.display = 'none';
                 document.getElementById('seller-lock-overlay').style.display = 'flex';
                 
+                // ডিফল্টভাবে আজকের তারিখ ড্যাশবোর্ডে সেট করে দেওয়া হচ্ছে
+                setDashToday();
+
                 // ব্যাকগ্রাউন্ডে সমস্ত ডেটা লোড হতে থাকবে
                 fetchMyProducts(sid); 
                 listenToSalesHistory(sid); 
@@ -749,6 +775,39 @@
                 fetchMyCustomers(sid); 
             }
         };
+        
+        // --- নতুন ফিল্টার ফাংশনগুলো ---
+        function setDashToday() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            
+            document.getElementById('dashFilterDate').value = todayStr;
+            document.getElementById('dashFilterYear').value = "lifetime";
+            updateDashboardStats();
+        }
+
+        function handleDashDateChange() {
+            document.getElementById('dashFilterYear').value = "lifetime";
+            updateDashboardStats();
+        }
+
+        function handleDashYearChange() {
+            document.getElementById('dashFilterDate').value = "";
+            updateDashboardStats();
+        }
+
+        function handleHistoryDateChange() {
+            document.getElementById('historyYear').value = "lifetime";
+            applyHistoryFilters();
+        }
+
+        function handleHistoryYearChange() {
+            document.getElementById('historyDate').value = "";
+            applyHistoryFilters();
+        }
 // আনলক করার নতুন ফাংশন
 function unlockSellerApp() {
     const enteredPin = document.getElementById('unlockPinInput').value;
@@ -1209,8 +1268,72 @@ function filterItemsTab() {
             } 
         }
 
-        // Customers Auto-Suggest
-        function fetchMyCustomers(sellerId) { db.collection("Customers").where("sellerId", "==", sellerId).onSnapshot(snap => { currentSellerCustomers = []; snap.forEach(doc => { currentSellerCustomers.push(doc.data()); }); }); }
+        // Customers Logic & Auto-Suggest
+        function fetchMyCustomers(sellerId) { 
+            db.collection("Customers").where("sellerId", "==", sellerId).onSnapshot(snap => { 
+                currentSellerCustomers = []; 
+                snap.forEach(doc => { currentSellerCustomers.push(doc.data()); }); 
+                // লিস্ট আপডেট হলে পেজ রিলোড করবে
+                if(document.getElementById('tab-customers').classList.contains('active')) {
+                    renderCustomersTab();
+                }
+            }); 
+        }
+
+        function renderCustomersTab(query = "") {
+            const container = document.getElementById('customers-container');
+            if(!container) return;
+            container.innerHTML = "";
+            
+            let filtered = currentSellerCustomers;
+            if(query) {
+                const q = query.toLowerCase();
+                filtered = filtered.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q)));
+            }
+            
+            // একই নম্বর দু'বার থাকলে তা রিমুভ করা হচ্ছে
+            const uniqueCustomers = Array.from(new Map(filtered.map(c => [c.phone, c])).values());
+
+            if(uniqueCustomers.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No customers found.</div>`;
+                return;
+            }
+            
+            const shopDetails = "Payel's Cosmetic, Jwellery and Gifts.\n📍 Moyna Shivtala, Nabagram, Purba Bardhaman.";
+
+            uniqueCustomers.forEach(c => {
+                let rawPhone = c.phone ? c.phone.replace(/\D/g, '') : ''; 
+                let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
+                let cName = c.name || "Customer";
+
+                // WhatsApp-এর জন্য আপনার দোকানের ঠিকানাসহ রেডিমেড মেসেজ
+                let msgNewProd = encodeURIComponent(`Hello ${cName},\nWe have received exciting new products!\n\nVisit our shop to check them out:\n${shopDetails}`);
+                let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
+                let msgInvite = encodeURIComponent(`Hello ${cName},\nYou are warmly invited to visit our store! Discover our latest collections today.\n\n${shopDetails}`);
+
+                container.innerHTML += `
+                <div style="background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div>
+                            <h4 style="margin:0 0 4px; font-size:15px; color:#0f172a;"><i class="fas fa-user-circle" style="color:#0ea5e9;"></i> ${cName}</h4>
+                            <p style="margin:0; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone}</p>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <a href="tel:${rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
+                            <a href="sms:${rawPhone}" style="background:#fef3c7; color:#d97706; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-comment-sms"></i></a>
+                        </div>
+                    </div>
+                    <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1;">
+                        <p style="font-size:10px; color:#64748b; margin:0 0 6px; font-weight:bold; text-transform:uppercase;">Quick WhatsApp Messages:</p>
+                        <div style="display:flex; gap:6px;">
+                            <a href="https://wa.me/${waPhone}?text=${msgNewProd}" target="_blank" style="flex:1; background:#10b981; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> New Item</a>
+                            <a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>
+                            <a href="https://wa.me/${waPhone}?text=${msgInvite}" target="_blank" style="flex:1; background:#3b82f6; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Invite</a>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
         function suggestCustomer(type) {
             const query = type === 'phone' ? document.getElementById('buyerPhone').value.toLowerCase() : document.getElementById('buyerName').value.toLowerCase();
             const dropdown = type === 'phone' ? document.getElementById('suggestPhoneDropdown') : document.getElementById('suggestNameDropdown');
@@ -1441,6 +1564,7 @@ function addToCart() {
 
         // Dashboard Filters & Logic
         function updateDashboardStats() {
+            const dateVal = document.getElementById('dashFilterDate').value;
             const y = document.getElementById('dashFilterYear').value;
             const m = document.getElementById('dashFilterMonth').value;
             
@@ -1448,7 +1572,16 @@ function addToCart() {
             else { document.getElementById('dashFilterMonth').style.display = 'block'; }
 
             let filtered = allSalesHistoryData;
-            if(y !== 'lifetime') {
+            
+            if (dateVal) {
+                // নির্দিষ্ট তারিখ দিয়ে ফিল্টার করা হচ্ছে
+                filtered = filtered.filter(d => {
+                    if(!d.timestamp) return false;
+                    const dDate = d.timestamp.toDate();
+                    const dStr = dDate.getFullYear() + "-" + String(dDate.getMonth() + 1).padStart(2, '0') + "-" + String(dDate.getDate()).padStart(2, '0');
+                    return dStr === dateVal;
+                });
+            } else if (y !== 'lifetime') {
                 filtered = filtered.filter(d => d.year === y);
                 if(m !== 'all') { filtered = filtered.filter(d => d.month === m); }
             }
@@ -1505,6 +1638,7 @@ function addToCart() {
 
         function goToHistoryTab(filter) {
             activeHistoryFilter = filter;
+            document.getElementById('historyDate').value = document.getElementById('dashFilterDate').value;
             document.getElementById('historyYear').value = document.getElementById('dashFilterYear').value;
             document.getElementById('historyMonth').value = document.getElementById('dashFilterMonth').value;
             document.getElementById('historySearch').value = "";
@@ -1516,6 +1650,7 @@ function addToCart() {
         // History Tab Filters
         function applyHistoryFilters() {
             const container = document.getElementById('historyListContainer'); container.innerHTML = "";
+            const dateVal = document.getElementById('historyDate').value;
             const y = document.getElementById('historyYear').value;
             const m = document.getElementById('historyMonth').value;
             const searchQuery = document.getElementById('historySearch').value.toLowerCase();
@@ -1525,7 +1660,15 @@ function addToCart() {
 
             let filteredData = allSalesHistoryData;
             
-            if(y !== 'lifetime') {
+            if (dateVal) {
+                // তারিখ দিয়ে হিস্ট্রি ফিল্টার
+                filteredData = filteredData.filter(d => {
+                    if(!d.timestamp) return false;
+                    const dDate = d.timestamp.toDate();
+                    const dStr = dDate.getFullYear() + "-" + String(dDate.getMonth() + 1).padStart(2, '0') + "-" + String(dDate.getDate()).padStart(2, '0');
+                    return dStr === dateVal;
+                });
+            } else if(y !== 'lifetime') {
                 filteredData = filteredData.filter(d => d.year === y);
                 if(m !== 'all') { filteredData = filteredData.filter(d => d.month === m); }
             }
