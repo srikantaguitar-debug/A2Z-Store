@@ -647,6 +647,60 @@
         <button onclick="document.getElementById('viewSaleModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer;">Close</button>
     </div>
 </div>
+<!-- Edit Sale Modal -->
+<div class="modal-overlay" id="editSaleModal">
+    <div class="edit-card" style="max-width: 350px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-edit" style="color: #0ea5e9;"></i> Edit Sale Bill</h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('editSaleModal').style.display='none'"></i>
+        </div>
+        
+        <input type="hidden" id="editSaleId">
+        <input type="hidden" id="editSaleBasePrice">
+        <input type="hidden" id="editSaleBuyPrice">
+        
+        <div class="row">
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="font-size: 11px;">Customer Name</label>
+                <input type="text" id="editSaleBuyerName" style="padding: 10px; font-size: 13px;">
+            </div>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="font-size: 11px;">Phone Number</label>
+                <input type="tel" id="editSaleBuyerPhone" style="padding: 10px; font-size: 13px;">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="font-size: 11px;">Discount (₹)</label>
+                <input type="number" id="editSaleDiscount" style="padding: 10px; font-size: 13px; font-weight:bold;">
+            </div>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="font-size: 11px;">Paid Amount (₹)</label>
+                <input type="number" id="editSalePaid" style="padding: 10px; font-size: 13px; font-weight:bold; color:#10b981;">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="font-size: 11px;">Payment Method</label>
+                <select id="editSalePayMethod" style="padding: 10px; font-size: 13px;">
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
+                </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="font-size: 11px;">Note / Txn ID</label>
+                <input type="text" id="editSaleTxnNote" style="padding: 10px; font-size: 13px;">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <button onclick="document.getElementById('editSaleModal').style.display='none'" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:600;">Cancel</button>
+            <button onclick="saveSaleEdits()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#0ea5e9; color:white; cursor:pointer; font-weight:600;">Update Bill</button>
+        </div>
+    </div>
+</div>
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
         <div class="edit-card" style="max-width: 320px; text-align: center;">
@@ -1306,10 +1360,29 @@ function filterItemsTab() {
                 let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
                 let cName = c.name || "Customer";
 
+                // কাস্টমারের মোট বাকি (Due) ডাইনামিকভাবে হিসাব করা হচ্ছে
+                let totalDue = 0;
+                allSalesHistoryData.forEach(sale => {
+                    // সেল রিটার্ন না হলে এবং ফোন নম্বর মিললে বাকি টাকা যোগ হবে
+                    if(!sale.isReturned && sale.buyerPhone === c.phone) {
+                        totalDue += Number(sale.due) || 0;
+                    }
+                });
+
                 // WhatsApp-এর জন্য আপনার দোকানের ঠিকানাসহ রেডিমেড মেসেজ
                 let msgNewProd = encodeURIComponent(`Hello ${cName},\nWe have received exciting new products!\n\nVisit our shop to check them out:\n${shopDetails}`);
-                let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
+                // মেসেজে অটোমেটিক টাকার পরিমাণ বসে যাবে
+                let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due of ₹${totalDue} at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
                 let msgInvite = encodeURIComponent(`Hello ${cName},\nYou are warmly invited to visit our store! Discover our latest collections today.\n\n${shopDetails}`);
+
+                // Due থাকলে তবেই Due Alert বাটন দেখাবে এবং লাল রঙে Due amount দেখাবে
+                let dueDisplayHtml = totalDue > 0 
+                    ? `<p style="margin:5px 0 0; font-size:12px; font-weight:bold; color:#ef4444;">Total Due: ₹${totalDue}</p>` 
+                    : `<p style="margin:5px 0 0; font-size:12px; font-weight:bold; color:#10b981;">No Pending Due</p>`;
+
+                let dueAlertBtnHtml = totalDue > 0 
+                    ? `<a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>`
+                    : ''; // Due না থাকলে বাটন হাইড থাকবে
 
                 container.innerHTML += `
                 <div style="background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
@@ -1317,6 +1390,7 @@ function filterItemsTab() {
                         <div>
                             <h4 style="margin:0 0 4px; font-size:15px; color:#0f172a;"><i class="fas fa-user-circle" style="color:#0ea5e9;"></i> ${cName}</h4>
                             <p style="margin:0; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone}</p>
+                            ${dueDisplayHtml}
                         </div>
                         <div style="display:flex; gap:8px;">
                             <a href="tel:${rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
@@ -1327,7 +1401,7 @@ function filterItemsTab() {
                         <p style="font-size:10px; color:#64748b; margin:0 0 6px; font-weight:bold; text-transform:uppercase;">Quick WhatsApp Messages:</p>
                         <div style="display:flex; gap:6px;">
                             <a href="https://wa.me/${waPhone}?text=${msgNewProd}" target="_blank" style="flex:1; background:#10b981; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> New Item</a>
-                            <a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>
+                            ${dueAlertBtnHtml}
                             <a href="https://wa.me/${waPhone}?text=${msgInvite}" target="_blank" style="flex:1; background:#3b82f6; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Invite</a>
                         </div>
                     </div>
@@ -2348,10 +2422,17 @@ async function deleteOrder(id) {
 
             const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
 
-            // রিফান্ড বাটন লজিক
-            let refundHtml = d.isReturned 
-                ? `<div style="text-align:center; color:#ef4444; font-weight:bold; margin-top:15px; padding:10px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;"><i class="fas fa-check-circle"></i> Item Returned & Refunded</div>` 
-                : `<button onclick="processRefund('${d.id}')" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);"><i class="fas fa-undo"></i> Process Return & Refund</button>`;
+            // ফুল এডিট এবং রিফান্ড বাটন লজিক
+            let actionButtonsHtml = "";
+            if(d.isReturned) {
+                actionButtonsHtml = `<div style="text-align:center; color:#ef4444; font-weight:bold; margin-top:15px; padding:10px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;"><i class="fas fa-check-circle"></i> Item Returned & Refunded</div>`;
+            } else {
+                actionButtonsHtml = `
+                <div style="display: flex; gap: 8px; margin-top: 15px;">
+                    <button onclick="fullEditSale('${d.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #0ea5e9; color: white; font-weight: bold; cursor: pointer;"><i class="fas fa-edit"></i> Full Edit</button>
+                    <button onclick="processRefund('${d.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer;"><i class="fas fa-undo"></i> Refund</button>
+                </div>`;
+            }
 
             document.getElementById('saleDetailsContent').innerHTML = `
                 <div style="text-align:center; margin-bottom:15px;">
@@ -2372,7 +2453,7 @@ async function deleteOrder(id) {
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#ef4444;"><span>Due Amount:</span> <strong>₹${d.due || 0}</strong></div>
                     <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${d.profit || 0}</strong></div>
                 </div>
-                ${refundHtml}
+                ${actionButtonsHtml}
             `;
             document.getElementById('viewSaleModal').style.display = 'flex';
         }
@@ -2439,6 +2520,140 @@ async function deleteOrder(id) {
             document.getElementById('prodName').value = name;
             document.getElementById('suggestProductDropdown').style.display = 'none';
             showToast("Warning: This product already exists!", "warning");
+        }
+        function openEditSaleModal(id) {
+            const d = allSalesHistoryData.find(item => item.id === id);
+            if(!d) return;
+
+            document.getElementById('editSaleId').value = d.id;
+            document.getElementById('editSaleBasePrice').value = d.price || 0; 
+            document.getElementById('editSaleBuyPrice').value = d.buyPrice || 0;
+            
+            document.getElementById('editSaleBuyerName').value = d.buyerName || "";
+            document.getElementById('editSaleBuyerPhone').value = d.buyerPhone || "";
+            document.getElementById('editSaleDiscount').value = d.discount || 0;
+            document.getElementById('editSalePaid').value = d.paid || 0;
+            document.getElementById('editSalePayMethod').value = d.paymentMethod || "Cash";
+            document.getElementById('editSaleTxnNote').value = d.txnNote || "";
+
+            // রসিদ বন্ধ করে এডিট পপ-আপ খোলা হবে
+            document.getElementById('viewSaleModal').style.display = 'none';
+            document.getElementById('editSaleModal').style.display = 'flex';
+        }
+
+        async function saveSaleEdits() {
+            const id = document.getElementById('editSaleId').value;
+            const basePrice = Number(document.getElementById('editSaleBasePrice').value) || 0;
+            const buyPrice = Number(document.getElementById('editSaleBuyPrice').value) || 0;
+            
+            const bName = document.getElementById('editSaleBuyerName').value.trim();
+            const bPhone = document.getElementById('editSaleBuyerPhone').value.trim();
+            const discount = Number(document.getElementById('editSaleDiscount').value) || 0;
+            const enteredPaid = Number(document.getElementById('editSalePaid').value) || 0;
+            const payMethod = document.getElementById('editSalePayMethod').value;
+            const txnNote = document.getElementById('editSaleTxnNote').value.trim();
+
+            // নতুন করে বিল, বাকি এবং লাভ হিসাব করা হচ্ছে
+            const finalTotal = basePrice - discount;
+            const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
+            const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
+            const profit = (basePrice - buyPrice) - discount;
+
+            try {
+                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Updating...";
+                await db.collection("SalesHistory").doc(id).update({
+                    buyerName: bName,
+                    buyerPhone: bPhone,
+                    discount: discount,
+                    paid: paid,
+                    due: dueAmount,
+                    profit: profit,
+                    totalAmount: finalTotal,
+                    paymentMethod: payMethod,
+                    txnNote: txnNote
+                });
+
+                document.getElementById('editSaleModal').style.display = 'none';
+                showToast("Sale Bill Updated!", "success");
+                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
+            } catch(e) {
+                showToast("Error updating bill", "error");
+                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
+            }
+        }
+        // --- Full Sale Edit Logic ---
+        function fullEditSale(historyId) {
+            Swal.fire({
+                title: 'Edit Full Bill?',
+                text: "This bill will be moved to the 'Sell' tab. You can add/remove items and confirm again.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, Move to Sell Tab!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const historyRef = db.collection("SalesHistory").doc(historyId);
+                        const historyDoc = await historyRef.get();
+                        if(!historyDoc.exists) return showToast("Bill not found!", "error");
+                        
+                        const data = historyDoc.data();
+                        if(data.isReturned) return showToast("Refunded bill cannot be edited!", "warning");
+
+                        showToast("Loading bill into Cart...", "warning");
+                        
+                        // ১. পুরনো স্টক ফেরত দেওয়া হচ্ছে
+                        if (data.isMultiItem && data.items && data.items.length > 0) {
+                            for (let item of data.items) {
+                                try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
+                            }
+                        } else if(data.productId) { 
+                            try { await db.collection("Products").doc(data.productId).update({ stockCount: firebase.firestore.FieldValue.increment(data.qty), soldCount: firebase.firestore.FieldValue.increment(-data.qty) }); } catch(err) {} 
+                        }
+
+                        // ২. পুরনো রেকর্ড হিস্ট্রি থেকে ডিলিট করা হচ্ছে
+                        await historyRef.delete();
+
+                        // ৩. Sell ট্যাবে ডেটাগুলো লোড করা হচ্ছে
+                        saleCart = data.isMultiItem && data.items ? [...data.items] : []; 
+
+                        document.getElementById('buyerName').value = data.buyerName || "";
+                        document.getElementById('buyerPhone').value = data.buyerPhone || "";
+                        document.getElementById('saleDiscount').value = data.discount || 0;
+                        document.getElementById('salePaid').value = data.paid || 0;
+                        document.getElementById('salePaymentMethod').value = data.paymentMethod || "Cash";
+                        document.getElementById('saleTxnNote').value = data.txnNote || "";
+
+                        // পুরনো ডেট ও টাইম সেট করা হচ্ছে
+                        if(data.timestamp && document.getElementById('saleCustomDate')) {
+                            const dDate = data.timestamp.toDate();
+                            const yyyy = dDate.getFullYear();
+                            const mm = String(dDate.getMonth() + 1).padStart(2, '0');
+                            const dd = String(dDate.getDate()).padStart(2, '0');
+                            const hh = String(dDate.getHours()).padStart(2, '0');
+                            const min = String(dDate.getMinutes()).padStart(2, '0');
+                            
+                            document.getElementById('saleCustomDate').value = `${yyyy}-${mm}-${dd}`;
+                            document.getElementById('saleCustomTime').value = `${hh}:${min}`;
+                        }
+
+                        // কার্ট রেন্ডার করা
+                        renderCart();
+                        calculateSaleTotal();
+
+                        // ৪. পপ-আপ বন্ধ করে Sell ট্যাবে সুইচ করা হচ্ছে
+                        document.getElementById('viewSaleModal').style.display = 'none';
+                        switchTab('tab-record-sale', document.getElementById('btn-tab-record-sale'));
+                        
+                        showToast("Ready to Edit! Please Confirm Sale when done.", "success");
+
+                    } catch(e) {
+                        console.error(e);
+                        showToast("Error loading edit mode", "error");
+                    }
+                }
+            });
         }
     </script>
     <!-- Restore Progress Overlay -->
