@@ -344,8 +344,8 @@
 
                 <h2 id="saleTotalAmount" style="text-align: center; color: #0284c7; margin: 10px 0; font-size:22px;">Total: ₹0</h2>
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="clearSaleForm()" style="flex:0.4; padding:10px; border:none; border-radius:6px; background:#e2e8f0; cursor:pointer; font-size:13px; font-weight:600;">Reset</button>
-                    <button onclick="saveRecordSale()" style="flex:0.6; padding:10px; border:none; border-radius:6px; background:#10b981; color:white; font-weight:bold; cursor:pointer; font-size:14px;"><i class="fas fa-check-circle"></i> Confirm Sale</button>
+                    <button onclick="cancelSale()" style="flex:0.4; padding:12px; border:none; border-radius:8px; background:#fee2e2; color:#ef4444; cursor:pointer; font-size:14px; font-weight:bold;"><i class="fas fa-times-circle"></i> Cancel</button>
+                    <button onclick="saveRecordSale()" style="flex:0.6; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; font-weight:bold; cursor:pointer; font-size:14px;"><i class="fas fa-check-circle"></i> Confirm</button>
                 </div>
             </div>
         </div>  
@@ -1565,13 +1565,10 @@ function addToCart() {
             const sid = localStorage.getItem("seller_id");
 
             const finalTotal = baseTotal - discount; 
-            
-            // নতুন লজিক: কাস্টমার বেশি টাকা দিলেও ডেটাবেসে শুধু বিলের সমান টাকাই Paid হিসেবে সেভ হবে (হিসাব ঠিক রাখার জন্য)
             const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
             const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
             const profit = (baseTotal - totalBuyPrice) - discount;
 
-            // কাস্টম ডেট এবং টাইম লজিক
             const sDate = document.getElementById('saleCustomDate').value;
             const sTime = document.getElementById('saleCustomTime').value;
             let dateObj = new Date();
@@ -1590,8 +1587,19 @@ function addToCart() {
                     const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
                     if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
                 }
+
+                // যদি এডিট করা হয়, তবে আগে পুরনো বিলের স্টকগুলো ইনভেন্টরিতে ফেরত পাঠানো হচ্ছে
+                if (typeof editingHistoryId !== 'undefined' && editingHistoryId && originalSaleData) {
+                    let oldItems = originalSaleData.isMultiItem && originalSaleData.items ? originalSaleData.items : [];
+                    if(oldItems.length === 0 && originalSaleData.productId) {
+                        oldItems = [{id: originalSaleData.productId, qty: originalSaleData.qty}];
+                    }
+                    for (let item of oldItems) {
+                        try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
+                    }
+                }
                 
-                // সবগুলো আইটেমের স্টক একসাথে কমানো হচ্ছে
+                // নতুন বা এডিট করা বিল অনুযায়ী নতুন করে স্টক কমানো হচ্ছে
                 for (let item of saleCart) {
                     await db.collection("Products").doc(item.id).update({ 
                         stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
@@ -1601,7 +1609,7 @@ function addToCart() {
 
                 const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
                 
-                await db.collection("SalesHistory").add({ 
+                const saleDataToSave = { 
                     sellerId: sid, isMultiItem: true, items: saleCart,
                     productName: mainProductName, productPic: saleCart[0].pic,
                     qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
@@ -1610,15 +1618,26 @@ function addToCart() {
                     txnNote: txnNote, year: yearStr, month: monthStr, 
                     buyerName: bName, buyerPhone: bPhone, 
                     timestamp: customTimestamp 
-                }); 
+                };
+
+                // এডিট নাকি নতুন সেল, সেই অনুযায়ী ডাটাবেস আপডেট করা হচ্ছে
+                if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
+                    await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
+                    showToast("Sale Updated Successfully!", "success");
+                    editingHistoryId = null;
+                    originalSaleData = null;
+                } else {
+                    await db.collection("SalesHistory").add(saleDataToSave); 
+                    showToast("Sale Recorded Successfully!", "success"); 
+                }
                 
-                showToast("Sale Recorded Successfully!", "success"); 
                 clearSaleForm(); 
                 switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
-                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Confirm Sale";
+                document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
             } catch(e) { 
                 showToast("Error recording sale", "error"); 
-                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Confirm Sale";
+                const btnText = (typeof editingHistoryId !== 'undefined' && editingHistoryId) ? `<i class="fas fa-check-circle"></i> Update Sale` : `<i class="fas fa-check-circle"></i> Confirm`;
+                document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = btnText;
             } 
         }
         
@@ -1681,6 +1700,14 @@ function addToCart() {
                     if (stock > 0) tInvest += (bPrice * stock);
                 });
             }
+
+            // দশমিকের পর অতিরিক্ত সংখ্যা সরিয়ে সর্বোচ্চ ২ ঘর রাখার লজিক
+            tSales = parseFloat(tSales.toFixed(2));
+            tPaid = parseFloat(tPaid.toFixed(2));
+            tDiscount = parseFloat(tDiscount.toFixed(2));
+            tDue = parseFloat(tDue.toFixed(2));
+            tInvest = parseFloat(tInvest.toFixed(2));
+            tProfit = parseFloat(tProfit.toFixed(2));
 
             document.getElementById('dashTotalSales').innerText = "₹" + tSales; 
             document.getElementById('dashTotalPaid').innerText = "₹" + tPaid;
@@ -2582,78 +2609,90 @@ async function deleteOrder(id) {
             }
         }
         // --- Full Sale Edit Logic ---
+        let editingHistoryId = null;
+        let originalSaleData = null;
+
         function fullEditSale(historyId) {
+            const data = allSalesHistoryData.find(item => item.id === historyId);
+            if(!data) return showToast("Bill not found!", "error");
+            if(data.isReturned) return showToast("Refunded bill cannot be edited!", "warning");
+
             Swal.fire({
                 title: 'Edit Full Bill?',
-                text: "This bill will be moved to the 'Sell' tab. You can add/remove items and confirm again.",
+                text: "This bill will be loaded into the 'Sell' tab for editing.",
                 icon: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#0ea5e9',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, Move to Sell Tab!'
-            }).then(async (result) => {
+                confirmButtonText: 'Yes, Edit Bill'
+            }).then((result) => {
                 if (result.isConfirmed) {
-                    try {
-                        const historyRef = db.collection("SalesHistory").doc(historyId);
-                        const historyDoc = await historyRef.get();
-                        if(!historyDoc.exists) return showToast("Bill not found!", "error");
+                    // অরিজিনাল ডেটা ব্যাকআপ রাখা হলো (ডিলিট করা হলো না)
+                    editingHistoryId = historyId;
+                    originalSaleData = JSON.parse(JSON.stringify(data)); 
+
+                    saleCart = data.isMultiItem && data.items ? [...data.items] : []; 
+
+                    document.getElementById('buyerName').value = data.buyerName || "";
+                    document.getElementById('buyerPhone').value = data.buyerPhone || "";
+                    document.getElementById('saleDiscount').value = data.discount || 0;
+                    document.getElementById('salePaid').value = data.paid || 0;
+                    document.getElementById('salePaymentMethod').value = data.paymentMethod || "Cash";
+                    document.getElementById('saleTxnNote').value = data.txnNote || "";
+
+                    if(data.timestamp && document.getElementById('saleCustomDate')) {
+                        const dDate = data.timestamp.toDate();
+                        const yyyy = dDate.getFullYear();
+                        const mm = String(dDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(dDate.getDate()).padStart(2, '0');
+                        const hh = String(dDate.getHours()).padStart(2, '0');
+                        const min = String(dDate.getMinutes()).padStart(2, '0');
                         
-                        const data = historyDoc.data();
-                        if(data.isReturned) return showToast("Refunded bill cannot be edited!", "warning");
-
-                        showToast("Loading bill into Cart...", "warning");
-                        
-                        // ১. পুরনো স্টক ফেরত দেওয়া হচ্ছে
-                        if (data.isMultiItem && data.items && data.items.length > 0) {
-                            for (let item of data.items) {
-                                try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
-                            }
-                        } else if(data.productId) { 
-                            try { await db.collection("Products").doc(data.productId).update({ stockCount: firebase.firestore.FieldValue.increment(data.qty), soldCount: firebase.firestore.FieldValue.increment(-data.qty) }); } catch(err) {} 
-                        }
-
-                        // ২. পুরনো রেকর্ড হিস্ট্রি থেকে ডিলিট করা হচ্ছে
-                        await historyRef.delete();
-
-                        // ৩. Sell ট্যাবে ডেটাগুলো লোড করা হচ্ছে
-                        saleCart = data.isMultiItem && data.items ? [...data.items] : []; 
-
-                        document.getElementById('buyerName').value = data.buyerName || "";
-                        document.getElementById('buyerPhone').value = data.buyerPhone || "";
-                        document.getElementById('saleDiscount').value = data.discount || 0;
-                        document.getElementById('salePaid').value = data.paid || 0;
-                        document.getElementById('salePaymentMethod').value = data.paymentMethod || "Cash";
-                        document.getElementById('saleTxnNote').value = data.txnNote || "";
-
-                        // পুরনো ডেট ও টাইম সেট করা হচ্ছে
-                        if(data.timestamp && document.getElementById('saleCustomDate')) {
-                            const dDate = data.timestamp.toDate();
-                            const yyyy = dDate.getFullYear();
-                            const mm = String(dDate.getMonth() + 1).padStart(2, '0');
-                            const dd = String(dDate.getDate()).padStart(2, '0');
-                            const hh = String(dDate.getHours()).padStart(2, '0');
-                            const min = String(dDate.getMinutes()).padStart(2, '0');
-                            
-                            document.getElementById('saleCustomDate').value = `${yyyy}-${mm}-${dd}`;
-                            document.getElementById('saleCustomTime').value = `${hh}:${min}`;
-                        }
-
-                        // কার্ট রেন্ডার করা
-                        renderCart();
-                        calculateSaleTotal();
-
-                        // ৪. পপ-আপ বন্ধ করে Sell ট্যাবে সুইচ করা হচ্ছে
-                        document.getElementById('viewSaleModal').style.display = 'none';
-                        switchTab('tab-record-sale', document.getElementById('btn-tab-record-sale'));
-                        
-                        showToast("Ready to Edit! Please Confirm Sale when done.", "success");
-
-                    } catch(e) {
-                        console.error(e);
-                        showToast("Error loading edit mode", "error");
+                        document.getElementById('saleCustomDate').value = `${yyyy}-${mm}-${dd}`;
+                        document.getElementById('saleCustomTime').value = `${hh}:${min}`;
                     }
+
+                    renderCart();
+                    calculateSaleTotal();
+
+                    document.getElementById('viewSaleModal').style.display = 'none';
+                    switchTab('tab-record-sale', document.getElementById('btn-tab-record-sale'));
+                    
+                    document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Update Sale`;
+                    showToast("Ready to Edit! Click Cancel to discard changes.", "success");
                 }
             });
+        }
+
+        // Cancel Sale Logic
+        function cancelSale() {
+            if(saleCart.length > 0) {
+                Swal.fire({
+                    title: 'Cancel Action?',
+                    text: editingHistoryId ? "Discard changes? The original bill will NOT be deleted." : "Are you sure you want to clear the cart?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        editingHistoryId = null; // এডিট মোড ক্যানসেল করা হলো
+                        originalSaleData = null;
+                        document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
+                        
+                        clearSaleForm();
+                        showToast("Action Cancelled. Original bill is safe.", "warning");
+                        switchTab('tab-history', document.getElementById('btn-tab-history'));
+                    }
+                });
+            } else {
+                editingHistoryId = null;
+                originalSaleData = null;
+                document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
+                clearSaleForm();
+                switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
+            }
         }
     </script>
     <!-- Restore Progress Overlay -->
