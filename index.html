@@ -145,6 +145,7 @@
 .filter-pill .fa-check-circle { color: #10b981; }
 .filter-pill.active i { color: white; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -249,10 +250,18 @@
                 <div class="stat-box" style="border-left: 4px solid #6366f1;" onclick="switchTab('tab-products', document.getElementById('btn-tab-products'))">
                     <p>Total Invest</p><h3 id="dashTotalInvest" style="color: #6366f1;">₹0</h3>
                 </div>
-                <!-- আপডেট: Profit / Loss ডায়নামিক বক্স -->
+                <!-- আপডেট: Profit / Loss ডায়নামিক বক্স -->
                 <div class="stat-box" id="profitBoxWrapper" style="border-left: 4px solid #10b981;" onclick="goToHistoryTab('all')">
                     <p id="dashProfitLabel" style="font-weight: 800; font-size: 12px;">Total Profit</p>
                     <h3 id="dashTotalProfit" style="color: #10b981;">₹0</h3>
+                </div>
+                
+                <!-- নতুন: Daily Average Sale & Profit -->
+                <div class="stat-box" style="border-left: 4px solid #8b5cf6;" onclick="goToHistoryTab('all')">
+                    <p>Daily Avg Sale</p><h3 id="dashAvgSale" style="color: #8b5cf6;">₹0</h3>
+                </div>
+                <div class="stat-box" style="border-left: 4px solid #d946ef;" onclick="goToHistoryTab('all')">
+                    <p>Daily Avg Profit</p><h3 id="dashAvgProfit" style="color: #d946ef;">₹0</h3>
                 </div>
             </div>
         </div>
@@ -548,7 +557,43 @@
     
     <button class="tab-btn" id="btn-tab-order" onclick="switchTab('tab-order', this)"><i class="fas fa-clipboard-list"></i> Orders</button>
     <button class="tab-btn" id="btn-tab-history" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> History</button>
+    <!-- নতুন Analytics ট্যাব বাটন -->
+    <button class="tab-btn" id="btn-tab-analytics" onclick="switchTab('tab-analytics', this)"><i class="fas fa-chart-line"></i> Analytic</button>
 </div>
+<!-- TAB 8: Analytics (With Chart) -->
+        <div id="tab-analytics" class="tab-content">
+            <!-- Yearly Analysis & Chart Section -->
+            <div style="margin: 15px; background: white; padding: 20px; border-radius: 15px; border-top: 5px solid #3b82f6; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h3 style="margin-top:0; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">Yearly Analysis & Comparison</h3>
+                
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label style="color:#64748b; font-size:12px;">Select Year</label>
+                        <input type="tel" id="chartYear" class="dash-select" placeholder="e.g. 2026" maxlength="4" onkeyup="if(this.value.length === 4) renderAnalyticsChart()">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label style="color:#64748b; font-size:12px;">Compare Year</label>
+                        <input type="tel" id="compareYear" class="dash-select" placeholder="YYYY" maxlength="4" onkeyup="if(this.value.length === 4 || this.value.length === 0) renderAnalyticsChart()">
+                    </div>
+                </div>
+
+                <div style="position: relative; height: 250px; width: 100%; margin-bottom: 15px;">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+
+                <!-- Monthly Avg Sale & Profit (Red Circled Area) -->
+                <div style="display:flex; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                    <div style="flex:1; padding:15px 10px; text-align:center; background:#f8fafc; border-right:1px solid #e2e8f0;">
+                        <p id="lblAvgSaleChart" style="margin:0 0 5px; font-size:10px; color:#64748b; font-weight:800; text-transform:uppercase;">MONTHLY AVG SALE</p>
+                        <h3 id="valAvgSaleChart" style="margin:0; color:#10b981; font-size:18px;">₹0</h3>
+                    </div>
+                    <div style="flex:1; padding:15px 10px; text-align:center; background:#f8fafc;">
+                        <p id="lblAvgProfitChart" style="margin:0 0 5px; font-size:10px; color:#64748b; font-weight:800; text-transform:uppercase;">MONTHLY AVG PROFIT</p>
+                        <h3 id="valAvgProfitChart" style="margin:0; color:#3b82f6; font-size:18px;">₹0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
 <!-- TAB 7: Customers List -->
         <div id="tab-customers" class="tab-content">
             <div style="margin: 15px 15px 5px;">
@@ -810,11 +855,15 @@
         let activeHistoryFilter = 'all';
 
         window.onload = function() {
+            // সবার আগে ড্রপডাউনগুলোতে অটোমেটিক সাল বসিয়ে দেওয়া হচ্ছে
+            generateYearDropdowns(); 
+
             const sid = localStorage.getItem("seller_id");
             if (sid) { 
                 // লগিন করা থাকলে মেইন স্ক্রিন না দেখিয়ে লক স্ক্রিন দেখাবে
                 document.getElementById('seller-login-overlay').style.display = 'none';
                 document.getElementById('seller-lock-overlay').style.display = 'flex';
+                
                 
                 // ডিফল্টভাবে আজকের তারিখ ড্যাশবোর্ডে সেট করে দেওয়া হচ্ছে
                 setDashToday();
@@ -897,6 +946,8 @@ function unlockSellerApp() {
     
     // নতুন লাইন: Order ট্যাবে ক্লিক করলে অর্ডারগুলো লোড হবে
     if(tabId === 'tab-order') fetchMyOrders();
+    // Analytics ট্যাবে ক্লিক করলে চার্ট লোড হবে
+    if(tabId === 'tab-analytics') renderAnalyticsChart();
 }
 
         async function loginSeller() {
@@ -1671,16 +1722,23 @@ function addToCart() {
             }
 
             let tSales = 0, tPaid = 0, tDiscount = 0, tDue = 0, tProfit = 0;
+            let uniqueDates = new Set(); // প্রতিদিনের গড় বের করার জন্য
+
             filtered.forEach(d => { 
-                // শুধুমাত্র যেগুলো রিটার্ন হয়নি, সেগুলোই ড্যাশবোর্ডে যোগ হবে
                 if(!d.isReturned) {
                     tSales += Number(d.totalAmount) || 0; 
                     tPaid += Number(d.paid) || 0;
                     tDiscount += Number(d.discount) || 0; 
                     tDue += Number(d.due) || 0;
                     tProfit += Number(d.profit) || 0;
+                    
+                    // ডেট সেভ করা হচ্ছে (যাতে কতদিন সেল হয়েছে তা গোনা যায়)
+                    if(d.timestamp) {
+                        const dt = d.timestamp.toDate();
+                        uniqueDates.add(dt.toDateString());
+                    }
                 }
-            }); 
+            });
 
             // Total Invest হিসাব করা হচ্ছে (বর্তমান স্টক * কেনার দাম)
             let tInvest = 0;
@@ -1705,6 +1763,18 @@ function addToCart() {
             document.getElementById('dashTotalDiscount').innerText = "₹" + tDiscount;
             document.getElementById('dashTotalDue').innerText = "₹" + tDue;
             document.getElementById('dashTotalInvest').innerText = "₹" + tInvest;
+            // নতুন: প্রতিদিনের অ্যাভারেজ সেল এবং অ্যাভারেজ প্রফিট হিসাব
+            let totalActiveDays = uniqueDates.size > 0 ? uniqueDates.size : 1;
+            let avgSalePerDay = parseFloat((tSales / totalActiveDays).toFixed(2));
+            let avgProfitPerDay = parseFloat((tProfit / totalActiveDays).toFixed(2));
+            
+            // লাভের পার্সেন্টেজ (%) হিসাব করা হচ্ছে
+            let profitMargin = tSales > 0 ? Math.round((tProfit / tSales) * 100) : 0;
+            
+            if(document.getElementById('dashAvgSale')) {
+                document.getElementById('dashAvgSale').innerText = "₹" + avgSalePerDay;
+                document.getElementById('dashAvgProfit').innerHTML = "₹" + avgProfitPerDay + ` <span style="font-size:12px; color:#64748b;">(${profitMargin}%)</span>`;
+            }
 
             // Profit বা Loss অনুযায়ী ডায়নামিক রঙ ও টেক্সট চেঞ্জ
             const profitEl = document.getElementById('dashTotalProfit');
@@ -2802,6 +2872,235 @@ async function deleteOrder(id) {
                 clearSaleForm();
                 switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
             }
+        }
+        // Analytics Compare Logic
+        function executeComparison() {
+            const mA = document.getElementById('compMonthA').value;
+            const yA = document.getElementById('compYearA').value;
+            const mB = document.getElementById('compMonthB').value;
+            const yB = document.getElementById('compYearB').value;
+
+            // একটি নির্দিষ্ট মাসের হিসাব বের করার ফাংশন
+            const calculateMonthStats = (targetMonth, targetYear) => {
+                let totalSales = 0, totalProfit = 0;
+                let uniqueDates = new Set();
+                
+                allSalesHistoryData.forEach(d => {
+                    if(!d.isReturned && d.month === targetMonth && d.year === targetYear) {
+                        totalSales += Number(d.totalAmount) || 0;
+                        totalProfit += Number(d.profit) || 0;
+                        
+                        if(d.timestamp) {
+                            uniqueDates.add(d.timestamp.toDate().toDateString());
+                        }
+                    }
+                });
+                
+                let activeDays = uniqueDates.size > 0 ? uniqueDates.size : 1;
+                if(totalSales === 0) activeDays = 1; // যদি কোনো সেল না থাকে
+                
+                return {
+                    avgSale: parseFloat((totalSales / activeDays).toFixed(2)),
+                    avgProfit: parseFloat((totalProfit / activeDays).toFixed(2))
+                };
+            };
+
+            // Period A এবং Period B এর ডেটা ক্যালকুলেট করা
+            const dataA = calculateMonthStats(mA, yA);
+            const dataB = calculateMonthStats(mB, yB);
+
+            // স্ক্রিনে রেজাল্ট দেখানো
+            document.getElementById('resSaleA').innerText = "₹" + dataA.avgSale;
+            document.getElementById('resProfitA').innerText = "₹" + dataA.avgProfit;
+            document.getElementById('resSaleB').innerText = "₹" + dataB.avgSale;
+            document.getElementById('resProfitB').innerText = "₹" + dataB.avgProfit;
+
+            // Sales Difference (বিক্রি কতটা বাড়ল বা কমলো)
+            const diffSale = (dataB.avgSale - dataA.avgSale).toFixed(2);
+            const dSaleEl = document.getElementById('diffSale');
+            if (diffSale > 0) { 
+                dSaleEl.innerHTML = `<span style="color:#10b981;">↑ ₹${diffSale}</span>`; 
+            } else if (diffSale < 0) { 
+                dSaleEl.innerHTML = `<span style="color:#ef4444;">↓ ₹${Math.abs(diffSale)}</span>`; 
+            } else { 
+                dSaleEl.innerHTML = `<span style="color:#64748b;">-</span>`; 
+            }
+
+            // Profit Difference (লাভ কতটা বাড়ল বা কমলো)
+            const diffProfit = (dataB.avgProfit - dataA.avgProfit).toFixed(2);
+            const dProfitEl = document.getElementById('diffProfit');
+            if (diffProfit > 0) { 
+                dProfitEl.innerHTML = `<span style="color:#10b981;">↑ ₹${diffProfit}</span>`; 
+            } else if (diffProfit < 0) { 
+                dProfitEl.innerHTML = `<span style="color:#ef4444;">↓ ₹${Math.abs(diffProfit)}</span>`; 
+            } else { 
+                dProfitEl.innerHTML = `<span style="color:#64748b;">-</span>`; 
+            }
+        }
+        // --- Analytics Chart Logic (With Comparison) ---
+        let myChart = null;
+
+        function renderAnalyticsChart() {
+            const year1 = document.getElementById('chartYear').value;
+            const year2 = document.getElementById('compareYear').value;
+            
+            // দুটি বছরের জন্য খালি অ্যারে তৈরি
+            let sales1 = new Array(12).fill(0);
+            let profit1 = new Array(12).fill(0);
+            let sales2 = new Array(12).fill(0);
+            let profit2 = new Array(12).fill(0);
+            
+            // ডেটাবেস থেকে দুই বছরের ডেটা আলাদা করা
+            allSalesHistoryData.forEach(d => {
+                if(!d.isReturned) {
+                    let mIndex = parseInt(d.month) - 1; // 0 মানে Jan, 11 মানে Dec
+                    if(mIndex >= 0 && mIndex <= 11) {
+                        if (d.year === year1) {
+                            sales1[mIndex] += Number(d.totalAmount) || 0;
+                            profit1[mIndex] += Number(d.profit) || 0;
+                        }
+                        if (year2 && d.year === year2) {
+                            sales2[mIndex] += Number(d.totalAmount) || 0;
+                            profit2[mIndex] += Number(d.profit) || 0;
+                        }
+                    }
+                }
+            });
+            
+            // Base Year (Select Year) এর Monthly Average ক্যালকুলেশন (নিচের বক্সগুলোর জন্য)
+            let totalYearSale = sales1.reduce((a,b) => a+b, 0);
+            let totalYearProfit = profit1.reduce((a,b) => a+b, 0);
+            
+            let activeMonths = sales1.filter(v => v > 0).length || 1; 
+            let avgSale = (totalYearSale / activeMonths).toFixed(2);
+            let avgProfit = (totalYearProfit / activeMonths).toFixed(2);
+            
+            document.getElementById('lblAvgSaleChart').innerText = `MONTHLY AVG SALE (${year1})`;
+            document.getElementById('lblAvgProfitChart').innerText = `MONTHLY AVG PROFIT (${year1})`;
+            document.getElementById('valAvgSaleChart').innerText = `₹${avgSale}`;
+            document.getElementById('valAvgProfitChart').innerText = `₹${avgProfit}`;
+
+            // Chart.js ডেটাসেট তৈরি
+            let chartDatasets = [
+                {
+                    type: 'bar',
+                    label: `Sale (${year1})`,
+                    data: sales1,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)', // সবুজ রঙ
+                    borderColor: '#10b981',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: `Profit (${year1})`,
+                    data: profit1,
+                    borderColor: '#3b82f6', // নীল রঙ
+                    backgroundColor: '#3b82f6',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#3b82f6',
+                    pointRadius: 4,
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                }
+            ];
+
+            // যদি Compare Year সিলেক্ট করা থাকে, তবে তার বার ও লাইনও অ্যাড হবে
+            if (year2 && year1 !== year2) {
+                chartDatasets.push({
+                    type: 'bar',
+                    label: `Sale (${year2})`,
+                    data: sales2,
+                    backgroundColor: 'rgba(148, 163, 184, 0.6)', // ছাই/ধূসর রঙ
+                    borderColor: '#94a3b8',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                });
+                chartDatasets.push({
+                    type: 'line',
+                    label: `Profit (${year2})`,
+                    data: profit2,
+                    borderColor: '#f59e0b', // কমলা রঙ
+                    backgroundColor: '#f59e0b',
+                    borderWidth: 2,
+                    borderDash: [5, 5], // ড্যাশ লাইন যাতে বুঝতে সুবিধা হয়
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#f59e0b',
+                    pointRadius: 4,
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                });
+            }
+
+            // Chart.js গ্রাফ রেন্ডারিং
+            const ctx = document.getElementById('yearlyChart').getContext('2d');
+            
+            if(myChart) { myChart.destroy(); } // আগের চার্ট মুছে নতুনটা আঁকা
+            
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: chartDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            beginAtZero: true, 
+                            position: 'left', 
+                            title: { display: true, text: 'Sales Amount', color: '#64748b' }
+                        },
+                        y1: { 
+                            beginAtZero: true, 
+                            position: 'right', 
+                            grid: { display: false },
+                            title: { display: true, text: 'Profit', color: '#64748b' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, family: 'Poppins' } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { size: 13, family: 'Poppins' },
+                            bodyFont: { size: 12, family: 'Poppins' },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+        // --- Auto Generate Years for All Dropdowns ---
+        function generateYearDropdowns() {
+            const currentYear = new Date().getFullYear(); // বর্তমান সাল বের করবে
+            const startYear = 2024; // যে বছর থেকে আপনার ডেটা শুরু
+            
+            let commonOptions = `<option value="lifetime">Lifetime</option>`;
+            let chartOptions = "";
+            let compareOptions = `<option value="">YYYY</option>`;
+
+            // বর্তমান সাল থেকে শুরু করে পেছনের দিকে (2024 পর্যন্ত) লুপ চলবে
+            for (let y = currentYear; y >= startYear; y--) {
+                const opt = `<option value="${y}">${y}</option>`;
+                commonOptions += opt;
+                chartOptions += opt;
+                compareOptions += opt;
+            }
+
+            // ড্রপডাউনগুলোতে অপশনগুলো বসিয়ে দেওয়া হচ্ছে
+            if(document.getElementById('dashFilterYear')) document.getElementById('dashFilterYear').innerHTML = commonOptions;
+            if(document.getElementById('historyYear')) document.getElementById('historyYear').innerHTML = commonOptions;
+            
+            // Analytics-এর ইনপুট বক্সে ডিফল্টভাবে বর্তমান সাল বসিয়ে দেওয়া হচ্ছে
+            if(document.getElementById('chartYear')) document.getElementById('chartYear').value = currentYear;
         }
     </script>
     <!-- Restore Progress Overlay -->
