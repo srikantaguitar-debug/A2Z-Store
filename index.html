@@ -144,6 +144,48 @@
 .filter-pill .fa-ban { color: #ef4444; }
 .filter-pill .fa-check-circle { color: #10b981; }
 .filter-pill.active i { color: white; }
+
+/* =========================================
+   MOBILE SCREEN FIT & BALANCED DESIGN CSS
+   ========================================= */
+body { padding-bottom: 65px !important; }
+.header { padding: 10px 18px !important; font-size: 17px !important; }
+
+/* Dashboard & Cards */
+.profile-summary { margin: 10px 15px !important; padding: 10px 15px !important; border-radius: 12px !important; gap: 12px !important;}
+.profile-summary img { width: 45px !important; height: 45px !important; }
+.profile-summary h3 { font-size: 15px !important; margin-bottom: 3px !important;}
+.profile-summary p { font-size: 12px !important; }
+
+.dashboard-filters { margin: 0 15px 10px !important; padding: 10px !important; gap: 8px !important;}
+.dash-select, .dashboard-filters button { height: 35px !important; padding: 0 10px !important; font-size: 12px !important; }
+
+.stats-grid { gap: 10px !important; margin: 0 15px 10px !important; }
+.stat-box { padding: 12px !important; border-radius: 10px !important; }
+.stat-box p { font-size: 10px !important; margin-bottom: 3px !important; }
+.stat-box h3 { font-size: 16px !important; }
+
+/* Forms (Sell, Add Tab) */
+.form-container { padding: 15px !important; margin: 10px 15px !important; border-radius: 12px !important; }
+.form-container h3 { font-size: 15px !important; margin-bottom: 10px !important; padding-bottom: 6px !important; }
+.input-group { margin-bottom: 8px !important; }
+.input-group label { font-size: 11px !important; margin-bottom: 4px !important; }
+.input-group input, .input-group select, .input-group textarea, .custom-select-input { padding: 8px 10px !important; font-size: 13px !important; height: 38px !important; border-radius: 8px !important; box-sizing: border-box !important;}
+.input-group textarea { height: auto !important; }
+
+.row { gap: 10px !important; margin-bottom: 6px !important; }
+.btn-action { padding: 12px !important; font-size: 14px !important; margin-top: 5px !important; border-radius: 8px !important; }
+
+/* Sell Tab Overrides */
+button[onclick="addToCart()"] { height: 38px !important; padding: 0 10px !important; font-size: 13px !important; margin-top: 18px !important; }
+div[style*="background: #f1f5f9;"], div[style*="background: #fffbeb;"] { padding: 10px !important; margin-bottom: 8px !important; }
+#saleTotalAmount { font-size: 18px !important; margin: 6px 0 !important; }
+button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 12px !important; font-size: 14px !important; }
+
+/* Bottom Tab Navigation */
+.tab-bar { height: 60px !important; border-top: 1px solid #e2e8f0 !important; padding-bottom: 5px !important;}
+.tab-btn { padding: 8px 2px !important; font-size: 10px !important; gap: 4px !important; min-width: 60px !important; }
+.tab-btn i { font-size: 18px !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -761,7 +803,36 @@
             <button class="settings-menu-btn btn-menu-logout" onclick="logoutSeller()"><i class="fas fa-sign-out-alt"></i> Secure Logout</button>
         </div>
     </div>
+    <!-- Customer Purchase History Modal -->
+<div class="modal-overlay" id="customerHistoryModal">
+    <div class="edit-card" style="text-align: left; max-height: 85vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #0f172a; font-size:16px;"><i class="fas fa-shopping-bag" style="color: #0ea5e9;"></i> <span id="chModalTitle">Customer History</span></h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('customerHistoryModal').style.display='none'"></i>
+        </div>
+        <div id="customerHistoryContent" style="font-size: 13px; color: #475569; overflow-y: auto; flex: 1;">
+            <!-- History items will be injected here -->
+        </div>
+        <button onclick="document.getElementById('customerHistoryModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #f1f5f9; color: #475569; font-weight: bold; cursor: pointer;">Close</button>
+    </div>
+</div>
 
+<!-- Sold Items Summary Modal -->
+<div class="modal-overlay" id="soldItemsModal">
+    <div class="edit-card" style="text-align: left; max-height: 85vh; display: flex; flex-direction: column; max-width:350px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
+            <h3 style="margin: 0; color: #0f172a; font-size:16px;"><i class="fas fa-box-open" style="color: #0ea5e9;"></i> Items Sold Overview</h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('soldItemsModal').style.display='none'"></i>
+        </div>
+        <p style="font-size:11px; color:#64748b; margin-top:0; margin-bottom:15px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px;">Click on any item below to view its full details (Current Stock, Buy Price, Profit etc.)</p>
+        
+        <div id="soldItemsContent" style="overflow-y: auto; flex: 1;">
+            <!-- Items list will be injected here -->
+        </div>
+        
+        <button onclick="document.getElementById('soldItemsModal').style.display='none'" style="width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);">Close</button>
+    </div>
+</div>
     <!-- Confirm Modal -->
     <div class="modal-overlay" id="customConfirmModal" style="z-index: 9999;">
         <div class="edit-card" style="max-width: 300px; text-align: center; padding: 30px 20px;">
@@ -879,35 +950,59 @@
             }
         };
         
-        // --- নতুন ফিল্টার ফাংশনগুলো ---
+        // --- আপডেট করা স্মার্ট ফিল্টার ফাংশনগুলো ---
         function setDashToday() {
             const now = new Date();
-            const yyyy = now.getFullYear();
+            const yyyy = now.getFullYear().toString();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const dd = String(now.getDate()).padStart(2, '0');
             const todayStr = `${yyyy}-${mm}-${dd}`;
             
+            // Dashboard-এর জন্য আজকের তারিখ সেট
             document.getElementById('dashFilterDate').value = todayStr;
-            document.getElementById('dashFilterYear').value = "lifetime";
+            document.getElementById('dashFilterYear').value = yyyy; 
+            const mDrop = document.getElementById('dashFilterMonth');
+            if(mDrop) { mDrop.value = mm; mDrop.style.display = 'block'; }
+            
+            // History ট্যাবের জন্য অটোমেটিক বর্তমান বছর এবং বর্তমান মাস ডিফল্ট সেট করা হলো (তারিখ ফাঁকা থাকবে)
+            if(document.getElementById('historyDate')) document.getElementById('historyDate').value = ""; 
+            if(document.getElementById('historyYear')) document.getElementById('historyYear').value = yyyy;
+            const hDrop = document.getElementById('historyMonth');
+            if(hDrop) { hDrop.value = mm; hDrop.style.display = 'block'; }
+            
             updateDashboardStats();
         }
 
         function handleDashDateChange() {
-            document.getElementById('dashFilterYear').value = "lifetime";
+            const dateVal = document.getElementById('dashFilterDate').value;
+            if(dateVal) {
+                const parts = dateVal.split('-');
+                document.getElementById('dashFilterYear').value = parts[0];
+                const mDrop = document.getElementById('dashFilterMonth');
+                if(mDrop) { mDrop.value = parts[1]; mDrop.style.display = 'block'; }
+            }
             updateDashboardStats();
         }
 
         function handleDashYearChange() {
+            // সাল পরিবর্তন করলে নির্দিষ্ট তারিখ মুছে যাবে, যাতে পুরো সালের ডেটা দেখায়
             document.getElementById('dashFilterDate').value = "";
             updateDashboardStats();
         }
 
         function handleHistoryDateChange() {
-            document.getElementById('historyYear').value = "lifetime";
+            const dateVal = document.getElementById('historyDate').value;
+            if(dateVal) {
+                const parts = dateVal.split('-');
+                document.getElementById('historyYear').value = parts[0];
+                const mDrop = document.getElementById('historyMonth');
+                if(mDrop) { mDrop.value = parts[1]; mDrop.style.display = 'block'; }
+            }
             applyHistoryFilters();
         }
 
         function handleHistoryYearChange() {
+            // সাল পরিবর্তন করলে নির্দিষ্ট তারিখ মুছে যাবে
             document.getElementById('historyDate').value = "";
             applyHistoryFilters();
         }
@@ -941,13 +1036,20 @@ function unlockSellerApp() {
     document.getElementById(tabId).classList.add('active');
     btnElement.classList.add('active');
     
-    // Auto refresh product list search when changing to tab
-    if(tabId === 'tab-products') filterItemsTab();
+    // Items ট্যাবে ক্লিক করলে ডিফল্টভাবে সার্চ বক্স ক্লিয়ার হয়ে সব প্রোডাক্ট শো হবে
+    if(tabId === 'tab-products') {
+        const searchBox = document.getElementById('searchMyProducts');
+        if(searchBox) searchBox.value = "";
+        setStockFilter('all');
+    }
     
     // নতুন লাইন: Order ট্যাবে ক্লিক করলে অর্ডারগুলো লোড হবে
     if(tabId === 'tab-order') fetchMyOrders();
     // Analytics ট্যাবে ক্লিক করলে চার্ট লোড হবে
     if(tabId === 'tab-analytics') renderAnalyticsChart();
+    
+    // History ট্যাবে ক্লিক করলে সেই দিনের ডেটা অটোমেটিক রেন্ডার হবে
+    if(tabId === 'tab-history') applyHistoryFilters();
 }
 
         async function loginSeller() {
@@ -1387,7 +1489,22 @@ function filterItemsTab() {
                 filtered = filtered.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q)));
             }
             
-            const uniqueCustomers = Array.from(new Map(filtered.map(c => [c.phone, c])).values());
+            // Fix 1: ফোন নম্বর না থাকলেও নাম দিয়ে আলাদা কাস্টমার তৈরি করবে
+            const uniqueCustomers = [];
+            const seen = new Set();
+            filtered.forEach(c => {
+                let identifier = c.phone ? c.phone.trim() : (c.name ? c.name.trim().toLowerCase() : Math.random().toString());
+                if (!seen.has(identifier)) {
+                    seen.add(identifier);
+                    uniqueCustomers.push(c);
+                }
+            });
+
+            uniqueCustomers.sort((a, b) => {
+                const nameA = a.name || "";
+                const nameB = b.name || "";
+                return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+            });
 
             if(uniqueCustomers.length === 0) {
                 container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No customers found.</div>`;
@@ -1395,47 +1512,84 @@ function filterItemsTab() {
             }
             
             const shopDetails = "Payel's Cosmetic, Jwellery and Gifts.\n📍 Moyna Shivtala, Nabagram, Purba Bardhaman.";
-
-            let htmlString = ""; // একবারে রেন্ডার করার জন্য
+            let htmlString = ""; 
 
             uniqueCustomers.forEach(c => {
                 let rawPhone = c.phone ? c.phone.replace(/\D/g, '') : ''; 
                 let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
                 let cName = c.name || "Customer";
 
+                // Fix 2: শুধুমাত্র এই নির্দিষ্ট কাস্টমারের হিসাব বের করা হবে
+                let totalPurchase = 0;
+                let totalPaid = 0;
                 let totalDue = 0;
+                let totalProfit = 0;
+
                 allSalesHistoryData.forEach(sale => {
-                    if(!sale.isReturned && sale.buyerPhone === c.phone) {
-                        totalDue += Number(sale.due) || 0;
+                    if(!sale.isReturned) {
+                        let isPhoneMatch = c.phone && sale.buyerPhone === c.phone;
+                        let isNameMatch = !c.phone && c.name && sale.buyerName === c.name;
+
+                        if (isPhoneMatch || isNameMatch) {
+                            totalPurchase += Number(sale.totalAmount) || 0;
+                            totalPaid += Number(sale.paid) || 0;
+                            totalDue += Number(sale.due) || 0;
+                            totalProfit += Number(sale.profit) || 0;
+                        }
                     }
                 });
+
+                totalPurchase = parseFloat(totalPurchase.toFixed(2));
+                totalPaid = parseFloat(totalPaid.toFixed(2));
+                totalDue = parseFloat(totalDue.toFixed(2));
+                totalProfit = parseFloat(totalProfit.toFixed(2));
 
                 let msgNewProd = encodeURIComponent(`Hello ${cName},\nWe have received exciting new products!\n\nVisit our shop to check them out:\n${shopDetails}`);
                 let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due of ₹${totalDue} at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
                 let msgInvite = encodeURIComponent(`Hello ${cName},\nYou are warmly invited to visit our store! Discover our latest collections today.\n\n${shopDetails}`);
 
-                let dueDisplayHtml = totalDue > 0 
-                    ? `<p style="margin:5px 0 0; font-size:12px; font-weight:bold; color:#ef4444;">Total Due: ₹${totalDue}</p>` 
-                    : `<p style="margin:5px 0 0; font-size:12px; font-weight:bold; color:#10b981;">No Pending Due</p>`;
-
                 let dueAlertBtnHtml = totalDue > 0 
                     ? `<a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>`
                     : '';
 
+                // এখানে viewCustomerHistory তে ফোন নম্বর না থাকলে নাম পাস করা হচ্ছে
                 htmlString += `
                 <div style="background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div>
-                            <h4 style="margin:0 0 4px; font-size:15px; color:#0f172a;"><i class="fas fa-user-circle" style="color:#0ea5e9;"></i> ${cName}</h4>
-                            <p style="margin:0; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone}</p>
-                            ${dueDisplayHtml}
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        
+                        <div onclick="viewCustomerHistory('${c.phone || ''}', '${cName}')" style="cursor:pointer; flex:1;">
+                            <h4 style="margin:0 0 4px; font-size:16px; color:#0ea5e9; text-decoration:underline;"><i class="fas fa-user-circle"></i> ${cName}</h4>
+                            <p style="margin:0 0 8px; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone || 'No Phone'}</p>
+                            
+                            <div style="display:flex; gap:5px; font-size:10px; margin-top:5px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Buy</span>
+                                    <strong style="color:#0f172a; font-size:12px;">₹${totalPurchase}</strong>
+                                </div>
+                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Paid</span>
+                                    <strong style="color:#10b981; font-size:12px;">₹${totalPaid}</strong>
+                                </div>
+                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Profit</span>
+                                    <strong style="color:#3b82f6; font-size:12px;">₹${totalProfit}</strong>
+                                </div>
+                                <div style="flex:1; text-align:center;">
+                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Due</span>
+                                    <strong style="color:#ef4444; font-size:12px;">₹${totalDue}</strong>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display:flex; gap:8px;">
-                            <a href="tel:${rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
-                            <a href="sms:${rawPhone}" style="background:#fef3c7; color:#d97706; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-comment-sms"></i></a>
+
+                        <div style="display:flex; gap:8px; flex-direction:column; align-items:flex-end; margin-left:10px;">
+                            <div style="display:flex; gap:8px;">
+                                <a href="tel:${rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
+                                <a href="sms:${rawPhone}" style="background:#fef3c7; color:#d97706; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-comment-sms"></i></a>
+                            </div>
                         </div>
                     </div>
-                    <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1;">
+                    
+                    <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-top:10px;">
                         <p style="font-size:10px; color:#64748b; margin:0 0 6px; font-weight:bold; text-transform:uppercase;">Quick WhatsApp Messages:</p>
                         <div style="display:flex; gap:6px;">
                             <a href="https://wa.me/${waPhone}?text=${msgNewProd}" target="_blank" style="flex:1; background:#10b981; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> New Item</a>
@@ -1874,51 +2028,56 @@ function addToCart() {
 
             // ৩. স্মার্ট সামারি হিসাব (সিঙ্গেল আইটেম এবং মাল্টি আইটেম দুটোর জন্যই)
             let tQty = 0, tAmt = 0, tProf = 0;
+            window.currentFilteredSoldItems = []; 
+
             filteredData.forEach(d => {
                 if(!d.isReturned) {
-                    if (searchQuery) {
-                        const isCustomerSearch = (d.buyerName && d.buyerName.toLowerCase().includes(searchQuery)) || (d.buyerPhone && d.buyerPhone.toLowerCase().includes(searchQuery));
-                        
-                        if (!isCustomerSearch) {
-                            // প্রোডাক্ট সার্চ করা হয়েছে
-                            if (d.isMultiItem && d.items && d.items.length > 0) {
-                                // মাল্টি-আইটেম কার্ট থেকে শুধু নির্দিষ্ট প্রোডাক্টের হিসাব
-                                let matchedItems = d.items.filter(item => item.name && item.name.toLowerCase().includes(searchQuery));
-                                matchedItems.forEach(item => {
-                                    tQty += Number(item.qty) || 0;
-                                    tAmt += (Number(item.price) * Number(item.qty)) || 0;
-                                    tProf += ((Number(item.price) - Number(item.buyPrice)) * Number(item.qty)) || 0;
-                                });
-                            } else if (d.productName && d.productName.toLowerCase().includes(searchQuery)) {
-                                // পুরনো সিঙ্গেল আইটেম বিল থেকে নির্দিষ্ট প্রোডাক্টের হিসাব
-                                tQty += Number(d.qty) || 0;
-                                tAmt += Number(d.totalAmount) || 0;
-                                tProf += Number(d.profit) || 0;
+                    let isCustomerMatch = searchQuery ? ((d.buyerName && d.buyerName.toLowerCase().includes(searchQuery)) || (d.buyerPhone && d.buyerPhone.toLowerCase().includes(searchQuery))) : false;
+                    
+                    if (d.isMultiItem && d.items && d.items.length > 0) {
+                        d.items.forEach(item => {
+                            let itemMatch = searchQuery ? (item.name && item.name.toLowerCase().includes(searchQuery)) : true;
+                            
+                            // যদি কাস্টমার বা আইটেম ম্যাচ করে অথবা কোনো সার্চ না থাকে
+                            if (!searchQuery || isCustomerMatch || itemMatch) {
+                                let iQty = Number(item.qty) || 0;
+                                let iSale = (Number(item.price) * iQty) || 0;
+                                let iProf = ((Number(item.price) - Number(item.buyPrice)) * iQty) || 0;
+                                
+                                tQty += iQty; tAmt += iSale; tProf += iProf;
+                                window.currentFilteredSoldItems.push({id: item.id, name: item.name, qty: iQty, sale: iSale, profit: iProf});
                             }
-                        } else {
-                            // কাস্টমার সার্চ হলে তার পুরো বিলের হিসাব যোগ হবে
-                            tQty += Number(d.qty) || 0;
-                            tAmt += Number(d.totalAmount) || 0;
-                            tProf += Number(d.profit) || 0;
+                        });
+                    } else if (d.productId) { // পুরনো সিঙ্গেল আইটেমের জন্য
+                        let itemMatch = searchQuery ? (d.productName && d.productName.toLowerCase().includes(searchQuery)) : true;
+                        
+                        if (!searchQuery || isCustomerMatch || itemMatch) {
+                            let iQty = Number(d.qty) || 0;
+                            let iSale = Number(d.totalAmount) || 0;
+                            let iProf = Number(d.profit) || 0;
+                            
+                            tQty += iQty; tAmt += iSale; tProf += iProf;
+                            window.currentFilteredSoldItems.push({id: d.productId, name: d.productName, qty: iQty, sale: iSale, profit: iProf});
                         }
-                    } else {
-                        // কোনো সার্চ না থাকলে সব বিলের হিসাব যোগ হবে
-                        tQty += Number(d.qty) || 0;
-                        tAmt += Number(d.totalAmount) || 0;
-                        tProf += Number(d.profit) || 0;
                     }
                 }
             });
 
-            tAmt = parseFloat(tAmt.toFixed(2));
-            tProf = parseFloat(tProf.toFixed(2));
-
-            // ৪. HTML স্ট্রাকচার তৈরি 
+            // ৪. HTML স্ট্রাকচার তৈরি (Items Sold বক্সটি ক্লিকেবল করা হলো এবং দশমিক ২ ঘরে ফিক্স করা হলো)
             let htmlString = `
-            <div style="background: #eff6ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                <div style="flex:1; border-right: 1px dashed #bae6fd;"><p style="margin:0 0 4px; font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">Items Sold</p><strong style="color:#0ea5e9; font-size:16px;">${tQty}</strong></div>
-                <div style="flex:1; border-right: 1px dashed #bae6fd;"><p style="margin:0 0 4px; font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">Total Sale</p><strong style="color:#10b981; font-size:16px;">₹${tAmt}</strong></div>
-                <div style="flex:1;"><p style="margin:0 0 4px; font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">Net Profit</p><strong style="color:#f59e0b; font-size:16px;">₹${tProf}</strong></div>
+            <div style="background: #eff6ff; border: 1px solid #bae6fd; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden;">
+                <div onclick="showSoldItemsList()" style="flex:1; border-right: 1px dashed #bae6fd; padding: 12px; background: #e0f2fe; cursor: pointer; transition: 0.2s;" onmousedown="this.style.background='#bae6fd'" onmouseup="this.style.background='#e0f2fe'">
+                    <p style="margin:0 0 4px; font-size:10px; color:#0284c7; font-weight:800; text-transform:uppercase;"><i class="fas fa-box-open"></i> Items Sold</p>
+                    <strong style="color:#0ea5e9; font-size:18px;">${tQty}</strong>
+                </div>
+                <div style="flex:1; border-right: 1px dashed #bae6fd; padding: 12px;">
+                    <p style="margin:0 0 4px; font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">Total Sale</p>
+                    <strong style="color:#10b981; font-size:16px;">₹${tAmt.toFixed(2)}</strong>
+                </div>
+                <div style="flex:1; padding: 12px;">
+                    <p style="margin:0 0 4px; font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">Net Profit</p>
+                    <strong style="color:#f59e0b; font-size:16px;">₹${tProf.toFixed(2)}</strong>
+                </div>
             </div>`;
 
             filteredData.forEach(d => { 
@@ -2630,6 +2789,8 @@ async function deleteOrder(id) {
                 </div>
                 ${actionButtonsHtml}
             `;
+            // z-index 4000 করে দেওয়া হলো যাতে হিস্ট্রি পপ-আপের (3000) ওপরে ওপেন হয়
+            document.getElementById('viewSaleModal').style.zIndex = '4000';
             document.getElementById('viewSaleModal').style.display = 'flex';
         }
 
@@ -3078,6 +3239,60 @@ async function deleteOrder(id) {
                 }
             });
         }
+        // --- Items Sold List Logic ---
+        function showSoldItemsList() {
+            if(!window.currentFilteredSoldItems || window.currentFilteredSoldItems.length === 0) {
+                showToast("No items sold in this period.", "warning");
+                return;
+            }
+
+            // একই আইটেম অনেকবার বিক্রি হলে তার পরিমাণ, সেল এবং লাভ একসাথে যোগ করা
+            let aggregatedItems = {};
+            window.currentFilteredSoldItems.forEach(item => {
+                if(item.id) {
+                    if(aggregatedItems[item.id]) {
+                        aggregatedItems[item.id].qty += item.qty;
+                        aggregatedItems[item.id].sale += item.sale;
+                        aggregatedItems[item.id].profit += item.profit;
+                    } else {
+                        aggregatedItems[item.id] = { id: item.id, name: item.name, qty: item.qty, sale: item.sale, profit: item.profit };
+                    }
+                }
+            });
+
+            // সবচেয়ে বেশি বিক্রি হওয়া আইটেমগুলো ওপরে রাখার জন্য সর্টিং
+            let sortedItems = Object.values(aggregatedItems).sort((a,b) => b.qty - a.qty);
+
+            let html = "";
+            sortedItems.forEach(item => {
+                let fSale = parseFloat(item.sale.toFixed(2));
+                let fProf = parseFloat(item.profit.toFixed(2));
+                
+                html += `
+                <div onclick="openProductDetailsOnTop('${item.id}')" style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 6px;">
+                        <span style="font-weight:600; color:#0ea5e9; font-size:13px; line-height: 1.3; padding-right: 10px;">${item.name}</span>
+                        <span style="background:#10b981; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; white-space: nowrap;">Sold: ${item.qty}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size: 11px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 4px;">
+                        <span>Total Sale: <strong style="color:#0f172a; font-size:13px;">₹${fSale}</strong></span>
+                        <span>Total Profit: <strong style="color:#f59e0b; font-size:13px;">₹${fProf}</strong></span>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('soldItemsContent').innerHTML = html;
+            document.getElementById('soldItemsModal').style.zIndex = '3500'; // যাতে অন্যান্য পপ-আপের ওপরে থাকে
+            document.getElementById('soldItemsModal').style.display = 'flex';
+        }
+
+        // প্রোডাক্ট ডিটেইলস পপ-আপ যেনো সবার ওপরে ওপেন হয় তার ব্যবস্থা
+        function openProductDetailsOnTop(productId) {
+            viewProductDetails(productId); // আগের অরিজিনাল ফাংশনটি কল করা হলো
+            setTimeout(() => {
+                document.getElementById('viewProductModal').style.zIndex = '5000'; // সবার ওপরে
+            }, 50);
+        }
         // --- Auto Generate Years for All Dropdowns ---
         function generateYearDropdowns() {
             const currentYear = new Date().getFullYear(); // বর্তমান সাল বের করবে
@@ -3101,6 +3316,70 @@ async function deleteOrder(id) {
             
             // Analytics-এর ইনপুট বক্সে ডিফল্টভাবে বর্তমান সাল বসিয়ে দেওয়া হচ্ছে
             if(document.getElementById('chartYear')) document.getElementById('chartYear').value = currentYear;
+        }
+// কাস্টমারের কেনাকাটার হিস্ট্রি বের করার লজিক
+        function viewCustomerHistory(phone, name) {
+            const modal = document.getElementById('customerHistoryModal');
+            const content = document.getElementById('customerHistoryContent');
+            
+            document.getElementById('chModalTitle').innerText = name + "'s History";
+            content.innerHTML = "";
+
+            // Fix: ফোন থাকলে ফোন দিয়ে, না থাকলে নাম দিয়ে ফিল্টার
+            let customerSales = allSalesHistoryData.filter(sale => {
+                if (phone) return sale.buyerPhone === phone;
+                return sale.buyerName === name;
+            });
+            
+            customerSales.sort((a, b) => { 
+                const timeA = a.timestamp ? a.timestamp.toMillis() : 0; 
+                const timeB = b.timestamp ? b.timestamp.toMillis() : 0; 
+                return timeB - timeA; 
+            });
+
+            if(customerSales.length === 0) {
+                content.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No purchase history found for this customer.</p>`;
+            } else {
+                let historyHtml = "";
+                customerSales.forEach(d => {
+                    const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "";
+                    const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
+                    const fDue = parseFloat(Number(d.due || 0).toFixed(2));
+                    
+                    let statusBadge = d.isReturned 
+                        ? `<span style="background:#fee2e2; color:#ef4444; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;"><i class="fas fa-undo"></i> Refunded</span>`
+                        : (fDue > 0 ? `<span style="background:#fef3c7; color:#d97706; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Due: ₹${fDue}</span>` 
+                                    : `<span style="background:#dcfce7; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Fully Paid</span>`);
+
+                    let itemListText = "";
+                    if (d.isMultiItem && d.items && d.items.length > 0) {
+                        d.items.forEach(item => {
+                            itemListText += `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${item.name} (x${item.qty})</div>`;
+                        });
+                    } else {
+                        itemListText = `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${d.productName} (x${d.qty})</div>`;
+                    }
+
+                    historyHtml += `
+                    <div style="border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px; background:${d.isReturned ? '#f8fafc' : 'white'};">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong style="color:#0f172a; font-size:13px;"><i class="far fa-calendar-alt"></i> ${date}</strong>
+                            ${statusBadge}
+                        </div>
+                        <div style="margin-bottom:8px; background:#f1f5f9; padding:5px; border-radius:6px;">
+                            ${itemListText}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                            <span>Total Bill: <strong style="font-size:14px;">₹${fTotal}</strong></span>
+                            <button onclick="viewSaleDetails('${d.id}')" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:5px 10px; font-weight:bold; cursor:pointer;"><i class="fas fa-eye"></i> View Bill</button>
+                        </div>
+                    </div>`;
+                });
+                content.innerHTML = historyHtml;
+            }
+            
+            modal.style.zIndex = "3000"; 
+            modal.style.display = 'flex';
         }
     </script>
     <!-- Restore Progress Overlay -->
