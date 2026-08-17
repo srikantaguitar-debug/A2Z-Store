@@ -186,6 +186,10 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
 .tab-bar { height: 50px !important; border-top: 1px solid #e2e8f0 !important; }
 .tab-btn { padding: 5px 2px !important; font-size: 9px !important; gap: 2px !important; min-width: 55px !important; }
 .tab-btn i { font-size: 16px !important; }
+/* SweetAlert (Full Edit / Delete Popup) কে সবার ওপরে রাখার জন্য */
+.swal2-container {
+    z-index: 99999 !important;
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -255,7 +259,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
             <div class="dashboard-filters" style="background: white; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px;">
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <label style="font-size:12px; font-weight:600; color:#475569; min-width: 40px;">Date:</label>
-                    <input type="date" id="dashFilterDate" class="dash-select" onchange="handleDashDateChange()" style="flex: 1; border-color: #0ea5e9; color: #0ea5e9; font-weight: bold;">
+                    <input type="date" id="dashFilterDate" class="dash-select" oninput="handleDashDateChange()" style="flex: 1; border-color: #0ea5e9; color: #0ea5e9; font-weight: bold;">
                     <button onclick="setDashToday()" style="background:#0ea5e9; color:white; border:none; border-radius:8px; padding:0 12px; height: 38px; font-size:12px; font-weight:bold; cursor:pointer;">Today</button>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -266,7 +270,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
                     </select>
-                    <select id="dashFilterMonth" class="dash-select" onchange="updateDashboardStats()" style="display:none; flex: 1;">
+                    <select id="dashFilterMonth" class="dash-select" onchange="handleDashMonthChange()">
                         <option value="all">All</option>
                         <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option>
                         <option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option>
@@ -498,7 +502,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
                 
                 <div class="row" style="margin-bottom: 10px;">
                     <div class="input-group" style="margin-bottom:0;">
-                        <input type="date" id="historyDate" class="dash-select" onchange="handleHistoryDateChange()" style="padding: 10px; font-weight: bold; color: #0ea5e9;">
+                        <input type="date" id="historyDate" class="dash-select" oninput="handleHistoryDateChange()" style="padding: 10px; font-weight: bold; color: #0ea5e9;">
                     </div>
                 </div>
                 <div class="row" style="margin-bottom: 10px;">
@@ -506,7 +510,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
                         <select id="historyYear" onchange="handleHistoryYearChange()" style="padding: 10px;"><option value="lifetime">Lifetime</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option></select>
                     </div>
                     <div class="input-group" style="margin-bottom:0;">
-                        <select id="historyMonth" onchange="applyHistoryFilters()" style="padding: 10px;">
+                        <select id="historyMonth" onchange="handleHistoryMonthChange()" style="padding: 10px;">
                             <option value="all">All Months</option>
                             <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option>
                             <option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option>
@@ -985,25 +989,22 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         }
 
         function handleDashYearChange() {
-            // সাল পরিবর্তন করলে নির্দিষ্ট তারিখ মুছে যাবে, যাতে পুরো সালের ডেটা দেখায়
-            document.getElementById('dashFilterDate').value = "";
+            document.getElementById('dashFilterDate').value = ""; // সাল পাল্টালে নির্দিষ্ট তারিখ মুছে যাবে
             updateDashboardStats();
         }
 
-        function handleHistoryDateChange() {
-            const dateVal = document.getElementById('historyDate').value;
-            if(dateVal) {
-                const parts = dateVal.split('-');
-                document.getElementById('historyYear').value = parts[0];
-                const mDrop = document.getElementById('historyMonth');
-                if(mDrop) { mDrop.value = parts[1]; mDrop.style.display = 'block'; }
-            }
-            applyHistoryFilters();
+        function handleDashMonthChange() {
+            document.getElementById('dashFilterDate').value = ""; // মাস পাল্টালে নির্দিষ্ট তারিখ মুছে যাবে
+            updateDashboardStats();
         }
 
         function handleHistoryYearChange() {
-            // সাল পরিবর্তন করলে নির্দিষ্ট তারিখ মুছে যাবে
-            document.getElementById('historyDate').value = "";
+            document.getElementById('historyDate').value = ""; // সাল পাল্টালে তারিখ মুছে যাবে
+            applyHistoryFilters();
+        }
+
+        function handleHistoryMonthChange() {
+            document.getElementById('historyDate').value = ""; // মাস পাল্টালে তারিখ মুছে যাবে
             applyHistoryFilters();
         }
 // আনলক করার নতুন ফাংশন
@@ -1763,7 +1764,9 @@ function addToCart() {
             const finalTotal = baseTotal - discount; 
             const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
             const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
-            const profit = (baseTotal - totalBuyPrice) - discount;
+            
+            // আপডেট: হাতে পাওয়া টাকার ওপর ভিত্তি করে লাভ (Profit) হিসাব হবে
+            const profit = paid - totalBuyPrice;
 
             const sDate = document.getElementById('saleCustomDate').value;
             const sTime = document.getElementById('saleCustomTime').value;
@@ -2026,39 +2029,50 @@ function addToCart() {
                 return; 
             }
 
-            // ৩. স্মার্ট সামারি হিসাব (সিঙ্গেল আইটেম এবং মাল্টি আইটেম দুটোর জন্যই)
+            // ৩. স্মার্ট সামারি হিসাব (Discount বাদ দিয়ে এবং Cash-flow Profit অনুযায়ী)
             let tQty = 0, tAmt = 0, tProf = 0;
             window.currentFilteredSoldItems = []; 
 
             filteredData.forEach(d => {
                 if(!d.isReturned) {
                     let isCustomerMatch = searchQuery ? ((d.buyerName && d.buyerName.toLowerCase().includes(searchQuery)) || (d.buyerPhone && d.buyerPhone.toLowerCase().includes(searchQuery))) : false;
-                    
+                    let hasItemMatch = false;
+                    let billTotalQty = 0;
+
                     if (d.isMultiItem && d.items && d.items.length > 0) {
                         d.items.forEach(item => {
                             let itemMatch = searchQuery ? (item.name && item.name.toLowerCase().includes(searchQuery)) : true;
+                            billTotalQty += Number(item.qty) || 0;
                             
-                            // যদি কাস্টমার বা আইটেম ম্যাচ করে অথবা কোনো সার্চ না থাকে
                             if (!searchQuery || isCustomerMatch || itemMatch) {
+                                hasItemMatch = true;
                                 let iQty = Number(item.qty) || 0;
+                                // Items Sold লিস্টের পপ-আপের জন্য আইটেমের অরিজিনাল ডেটা
                                 let iSale = (Number(item.price) * iQty) || 0;
                                 let iProf = ((Number(item.price) - Number(item.buyPrice)) * iQty) || 0;
                                 
-                                tQty += iQty; tAmt += iSale; tProf += iProf;
                                 window.currentFilteredSoldItems.push({id: item.id, name: item.name, qty: iQty, sale: iSale, profit: iProf});
                             }
                         });
                     } else if (d.productId) { // পুরনো সিঙ্গেল আইটেমের জন্য
                         let itemMatch = searchQuery ? (d.productName && d.productName.toLowerCase().includes(searchQuery)) : true;
+                        billTotalQty += Number(d.qty) || 0;
                         
                         if (!searchQuery || isCustomerMatch || itemMatch) {
+                            hasItemMatch = true;
                             let iQty = Number(d.qty) || 0;
-                            let iSale = Number(d.totalAmount) || 0;
+                            let iSale = (Number(d.totalAmount) + Number(d.discount || 0)) || 0;
                             let iProf = Number(d.profit) || 0;
                             
-                            tQty += iQty; tAmt += iSale; tProf += iProf;
                             window.currentFilteredSoldItems.push({id: d.productId, name: d.productName, qty: iQty, sale: iSale, profit: iProf});
                         }
+                    }
+
+                    // 👉 History Tab-এর ওপরের বক্সে শুধুমাত্র বিলের ফাইনাল এমাউন্ট যোগ হবে
+                    if (!searchQuery || hasItemMatch || isCustomerMatch) {
+                        tQty += billTotalQty;
+                        tAmt += Number(d.totalAmount) || 0; // এটি Discount বাদ দিয়ে ফাইনাল সেল এমাউন্ট (যেমন: 180)
+                        tProf += Number(d.profit) || 0;     // এটি Paid - Buy Price লজিকে আসা আপনার প্রফিট (যেমন: -5)
                     }
                 }
             });
@@ -2874,8 +2888,10 @@ async function deleteOrder(id) {
 
             // রসিদ বন্ধ করে এডিট পপ-আপ খোলা হবে
             document.getElementById('viewSaleModal').style.display = 'none';
+            // z-index 6000 করে দেওয়া হলো যাতে এটি সবকিছুর ওপরে ওপেন হয়
+            document.getElementById('editSaleModal').style.zIndex = '6000';
             document.getElementById('editSaleModal').style.display = 'flex';
-        }
+    }
 
         async function saveSaleEdits() {
             const id = document.getElementById('editSaleId').value;
@@ -2893,7 +2909,9 @@ async function deleteOrder(id) {
             const finalTotal = basePrice - discount;
             const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
             const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
-            const profit = (basePrice - buyPrice) - discount;
+            
+            // আপডেট: হাতে পাওয়া টাকার ওপর ভিত্তি করে লাভ (Profit) হিসাব হবে
+            const profit = paid - buyPrice;
 
             try {
                 document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Updating...";
