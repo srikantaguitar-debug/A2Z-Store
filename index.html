@@ -1883,7 +1883,8 @@ function addToCart() {
 
             filtered.forEach(d => { 
                 if(!d.isReturned) {
-                    tSales += Number(d.totalAmount) || 0; 
+                    // আপডেট: d.totalAmount এর বদলে d.price ব্যবহার করা হলো, যাতে ডিসকাউন্টের আগের অরিজিনাল টোটাল সেল দেখায়
+                    tSales += Number(d.price) || Number(d.totalAmount) || 0; 
                     tPaid += Number(d.paid) || 0;
                     tDiscount += Number(d.discount) || 0; 
                     tDue += Number(d.due) || 0;
