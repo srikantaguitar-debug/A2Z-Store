@@ -1288,7 +1288,8 @@ let currentFsImages = [];
             
             const buyPrice = Number(p.buyPrice) || 0;
             const sellPrice = Number(p.price) || 0;
-            const profit = sellPrice - buyPrice; 
+            // দশমিকের পর মাত্র ২ ঘর দেখানোর জন্য parseFloat এবং toFixed(2) অ্যাড করা হলো
+            const profit = parseFloat((sellPrice - buyPrice).toFixed(2)); 
             
             // ছবিতে ক্লিক করার ইভেন্ট বসানো হচ্ছে
             const imgEl = document.getElementById('viewProdImg');
