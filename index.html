@@ -190,6 +190,11 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
 .swal2-container {
     z-index: 99999 !important;
 }
+
+/* সমস্ত Edit Popup যেন সবার ওপরে থাকে তার ব্যবস্থা */
+#editSaleModal, #editProdModal, #editOrderModal {
+    z-index: 9000 !important;
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -749,6 +754,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         <input type="hidden" id="editSaleId">
         <input type="hidden" id="editSaleBasePrice">
         <input type="hidden" id="editSaleBuyPrice">
+        <input type="hidden" id="editSaleOldPaid">
         
         <div class="row">
             <div class="input-group" style="margin-bottom: 10px;">
@@ -1809,7 +1815,14 @@ function addToCart() {
 
                 const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
                 
+                // নতুন: প্রথমবার যত টাকা দিচ্ছে, সেটা লিস্টে যোগ করা হলো
+                let initialPaymentHistory = [];
+                if (paid > 0) {
+                    initialPaymentHistory.push({ amount: paid, date: new Date().toISOString() });
+                }
+                
                 const saleDataToSave = { 
+                    paymentHistory: initialPaymentHistory, // লিস্ট সেভ হচ্ছে 
                     sellerId: sid, isMultiItem: true, items: saleCart,
                     productName: mainProductName, productPic: saleCart[0].pic,
                     qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
@@ -1820,8 +1833,9 @@ function addToCart() {
                     timestamp: customTimestamp 
                 };
 
-                // এডিট নাকি নতুন সেল, সেই অনুযায়ী ডাটাবেস আপডেট করা হচ্ছে
+                // এডিট নাকি নতুন সেল, সেই অনুযায়ী ডাটাবেস আপডেট করা হচ্ছে
                 if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
+                    saleDataToSave.lastPaymentDate = firebase.firestore.FieldValue.serverTimestamp(); // নতুন: ফুল এডিট করার তারিখ
                     await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
                     showToast("Sale Updated Successfully!", "success");
                     editingHistoryId = null;
@@ -2150,6 +2164,9 @@ function addToCart() {
                 let amountStyle = d.isReturned ? "text-decoration:line-through; color:#94a3b8;" : "color:#10b981;";
 
                 let phoneText = d.buyerPhone ? " | " + d.buyerPhone : "";
+                
+                // নতুন: Last Payment Date দেখানোর লজিক
+                let lastPayText = d.lastPaymentDate ? `<br><span style="color:#10b981; font-weight:700; font-size:10px;"><i class="fas fa-check-circle"></i> Last Paid: ${d.lastPaymentDate.toDate().toLocaleDateString('en-IN')}</span>` : "";
 
                 htmlString += `
                 <div class="history-item">
@@ -2159,7 +2176,7 @@ function addToCart() {
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 35px;">
                             <div style="display:flex; gap:10px;">
                                 <img src="${imgSource}" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #cbd5e1;">
-                                <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName} ${returnedBadge}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date}</p></div>
+                                <div><h4 style="margin:0 0 4px; font-size:14px; color:#0f172a;">${d.productName} ${returnedBadge}</h4><p style="margin:0; font-size:11px; color:#64748b;">Qty: ${d.qty} | ${date} ${lastPayText}</p></div>
                             </div>
                             <div style="text-align:right;"><h3 style="margin:0; font-size:18px; font-weight:800; ${amountStyle}">₹${fTotal}</h3></div>
                         </div>
@@ -2768,6 +2785,24 @@ async function deleteOrder(id) {
             }
 
             const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
+            
+            // নতুন: Last Payment Date
+            let lastPayHtml = d.lastPaymentDate ? `<p style="margin:4px 0 0; font-size:12px; color:#10b981; font-weight:bold;"><i class="fas fa-check-circle"></i> Last Paid: ${d.lastPaymentDate.toDate().toLocaleDateString('en-IN')} ${d.lastPaymentDate.toDate().toLocaleTimeString('en-IN')}</p>` : "";
+            // নতুন: কবে কবে কত পেমেন্ট করেছে তার পুরো লিস্ট (Payment Ledger)
+            let paymentListHtml = "";
+            if (d.paymentHistory && d.paymentHistory.length > 0) {
+                paymentListHtml = `<div style="margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px;">
+                    <p style="margin:0 0 6px; font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;"><i class="fas fa-list-ol"></i> Payment History</p>`;
+                d.paymentHistory.forEach((ph, index) => {
+                    let phDate = new Date(ph.date).toLocaleDateString('en-IN') + ' ' + new Date(ph.date).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
+                    paymentListHtml += `<div style="display:flex; justify-content:space-between; font-size:11px; color:#15803d; border-bottom:1px dashed #bbf7d0; padding:4px 0;">
+                        <span>${index + 1}. ${phDate}</span> <strong>+ ₹${ph.amount}</strong>
+                    </div>`;
+                });
+                paymentListHtml += `</div>`;
+            }
+
+            // ফুল এডিট এবং রিফান্ড বাটন লজিক
 
             // ফুল এডিট এবং রিফান্ড বাটন লজিক
             let actionButtonsHtml = "";
@@ -2787,7 +2822,8 @@ async function deleteOrder(id) {
             document.getElementById('saleDetailsContent').innerHTML = `
                 <div style="text-align:center; margin-bottom:15px;">
                     <h2 style="margin:0; color:${d.isReturned ? '#94a3b8' : '#10b981'}; text-decoration:${d.isReturned ? 'line-through' : 'none'};">₹${fTotal}</h2>
-                    <p style="margin:0; font-size:11px; color:#64748b;">${date}</p>
+                    <p style="margin:0; font-size:11px; color:#64748b;">Bought: ${date}</p>
+                    ${lastPayHtml}
                 </div>
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
                     <p style="margin:0 0 5px;"><strong>Customer:</strong> <span style="color:#0f172a;">${d.buyerName || 'N/A'}</span></p>
@@ -2803,6 +2839,7 @@ async function deleteOrder(id) {
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#ef4444;"><span>Due Amount:</span> <strong>₹${fDue}</strong></div>
                     <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${fProfit}</strong></div>
                 </div>
+                ${paymentListHtml}
                 ${actionButtonsHtml}
             `;
             // z-index 4000 করে দেওয়া হলো যাতে হিস্ট্রি পপ-আপের (3000) ওপরে ওপেন হয়
@@ -2880,6 +2917,7 @@ async function deleteOrder(id) {
             document.getElementById('editSaleId').value = d.id;
             document.getElementById('editSaleBasePrice').value = d.price || 0; 
             document.getElementById('editSaleBuyPrice').value = d.buyPrice || 0;
+            document.getElementById('editSaleOldPaid').value = d.paid || 0; // পুরনো পেমেন্টটা সেভ রাখা হলো
             
             document.getElementById('editSaleBuyerName').value = d.buyerName || "";
             document.getElementById('editSaleBuyerPhone').value = d.buyerPhone || "";
@@ -2915,19 +2953,28 @@ async function deleteOrder(id) {
             // আপডেট: হাতে পাওয়া টাকার ওপর ভিত্তি করে লাভ (Profit) হিসাব হবে
             const profit = paid - buyPrice;
 
+            const oldPaid = Number(document.getElementById('editSaleOldPaid').value) || 0;
+
             try {
                 document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Updating...";
-                await db.collection("SalesHistory").doc(id).update({
-                    buyerName: bName,
-                    buyerPhone: bPhone,
-                    discount: discount,
-                    paid: paid,
-                    due: dueAmount,
-                    profit: profit,
-                    totalAmount: finalTotal,
-                    paymentMethod: payMethod,
-                    txnNote: txnNote
-                });
+                
+                let updateData = {
+                    buyerName: bName, buyerPhone: bPhone, discount: discount,
+                    paid: paid, due: dueAmount, profit: profit, totalAmount: finalTotal,
+                    paymentMethod: payMethod, txnNote: txnNote,
+                    lastPaymentDate: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // যদি আগের চেয়ে বেশি টাকা পেমেন্ট করে (অর্থাৎ নতুন করে ডিউ দেয়), তবেই লিস্টে অ্যাড হবে
+                if (paid > oldPaid) {
+                    const newlyPaidAmount = paid - oldPaid;
+                    updateData.paymentHistory = firebase.firestore.FieldValue.arrayUnion({
+                        amount: newlyPaidAmount,
+                        date: new Date().toISOString()
+                    });
+                }
+
+                await db.collection("SalesHistory").doc(id).update(updateData);
 
                 document.getElementById('editSaleModal').style.display = 'none';
                 showToast("Sale Bill Updated!", "success");
@@ -3016,7 +3063,20 @@ async function deleteOrder(id) {
                     calculateSaleTotal();
 
                     document.getElementById('viewSaleModal').style.display = 'none';
+                    
+                    // নতুন লজিক: কাস্টমার হিস্ট্রি পপ-আপ খোলা থাকলে সেটাও সাথে সাথে বন্ধ করে দেবে
+                    if(document.getElementById('customerHistoryModal')) {
+                        document.getElementById('customerHistoryModal').style.display = 'none';
+                    }
+                    
                     switchTab('tab-record-sale', document.getElementById('btn-tab-record-sale'));
+                    
+                    // একটু দেরি (100ms) করে স্ক্রোল করা হচ্ছে যাতে ট্যাব চেঞ্জ হওয়ার পর ঠিকঠাক ওপরে আসে
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        document.body.scrollTop = 0; // Safari ব্রাউজারের জন্য
+                        document.documentElement.scrollTop = 0; // Chrome, Firefox এর জন্য
+                    }, 100);
                     
                     document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Update Sale`;
                     showToast("Ready to Edit! Search & add new products.", "success");
