@@ -3326,8 +3326,12 @@ async function deleteOrder(id) {
                 return;
             }
 
-            // একই আইটেম অনেকবার বিক্রি হলে তার পরিমাণ, সেল এবং লাভ একসাথে যোগ করা
+            // একই আইটেম অনেকবার বিক্রি হলে তার পরিমাণ, সেল এবং লাভ একসাথে যোগ করা এবং টোটাল হিসাব করা
             let aggregatedItems = {};
+            let grandQty = 0;
+            let grandSale = 0;
+            let grandProfit = 0;
+
             window.currentFilteredSoldItems.forEach(item => {
                 if(item.id) {
                     if(aggregatedItems[item.id]) {
@@ -3337,13 +3341,33 @@ async function deleteOrder(id) {
                     } else {
                         aggregatedItems[item.id] = { id: item.id, name: item.name, qty: item.qty, sale: item.sale, profit: item.profit };
                     }
+                    // সব আইটেমের টোটাল যোগ করা হচ্ছে
+                    grandQty += item.qty;
+                    grandSale += item.sale;
+                    grandProfit += item.profit;
                 }
             });
 
             // সবচেয়ে বেশি বিক্রি হওয়া আইটেমগুলো ওপরে রাখার জন্য সর্টিং
             let sortedItems = Object.values(aggregatedItems).sort((a,b) => b.qty - a.qty);
 
-            let html = "";
+            // নতুন: ওপরে দেখানোর জন্য একটি সুন্দর সামারি বক্স তৈরি করা হলো
+            let html = `
+            <div style="background: #f0fdfa; border: 1px dashed #86efac; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="flex: 1;">
+                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Qty</p>
+                    <strong style="color:#15803d; font-size:16px;">${grandQty}</strong>
+                </div>
+                <div style="flex: 1; border-left: 1px dashed #bbf7d0;">
+                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Sale</p>
+                    <strong style="color:#10b981; font-size:15px;">₹${parseFloat(grandSale.toFixed(2))}</strong>
+                </div>
+                <div style="flex: 1; border-left: 1px dashed #bbf7d0;">
+                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Profit</p>
+                    <strong style="color:#3b82f6; font-size:15px;">₹${parseFloat(grandProfit.toFixed(2))}</strong>
+                </div>
+            </div>`;
+
             sortedItems.forEach(item => {
                 let fSale = parseFloat(item.sale.toFixed(2));
                 let fProf = parseFloat(item.profit.toFixed(2));
