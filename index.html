@@ -1327,7 +1327,7 @@ let currentFsImages = [];
             }
             
             // Sale Details পপ-আপের উপরে দেখানোর জন্য z-index বাড়ানো হলো
-            document.getElementById('viewProductModal').style.zIndex = '2000';
+            document.getElementById('viewProductModal').style.zIndex = '5000';
             document.getElementById('viewProductModal').style.display = 'flex';
         }
 
@@ -2045,8 +2045,8 @@ function addToCart() {
                 return; 
             }
 
-            // ৩. স্মার্ট সামারি হিসাব (Discount বাদ দিয়ে এবং Cash-flow Profit অনুযায়ী)
-            let tQty = 0, tAmt = 0, tProf = 0;
+            // ৩. স্মার্ট সামারি হিসাব (Proportional Data সহ)
+            let tQty = 0, tAmt = 0, tProf = 0, tDisc = 0, tBuy = 0, tPaid = 0;
             window.currentFilteredSoldItems = []; 
 
             filteredData.forEach(d => {
@@ -2056,6 +2056,9 @@ function addToCart() {
                     let billTotalQty = 0;
 
                     if (d.isMultiItem && d.items && d.items.length > 0) {
+                        let billBaseTotal = 0;
+                        d.items.forEach(i => { billBaseTotal += (Number(i.price) * Number(i.qty)) || 0; });
+
                         d.items.forEach(item => {
                             let itemMatch = searchQuery ? (item.name && item.name.toLowerCase().includes(searchQuery)) : true;
                             billTotalQty += Number(item.qty) || 0;
@@ -2063,11 +2066,18 @@ function addToCart() {
                             if (!searchQuery || isCustomerMatch || itemMatch) {
                                 hasItemMatch = true;
                                 let iQty = Number(item.qty) || 0;
-                                // Items Sold লিস্টের পপ-আপের জন্য আইটেমের অরিজিনাল ডেটা
                                 let iSale = (Number(item.price) * iQty) || 0;
-                                let iProf = ((Number(item.price) - Number(item.buyPrice)) * iQty) || 0;
+                                let iBuy = (Number(item.buyPrice) * iQty) || 0;
                                 
-                                window.currentFilteredSoldItems.push({id: item.id, name: item.name, qty: iQty, sale: iSale, profit: iProf});
+                                // আইটেমের দাম অনুযায়ী পুরো বিলের পেমেন্ট এবং ডিসকাউন্টকে ভাগ করা হচ্ছে
+                                let proportion = billBaseTotal > 0 ? (iSale / billBaseTotal) : 0;
+                                let iDisc = (Number(d.discount) || 0) * proportion;
+                                let iPaid = (Number(d.paid) || 0) * proportion;
+                                
+                                window.currentFilteredSoldItems.push({
+                                    id: item.id, name: item.name, qty: iQty, 
+                                    sale: iSale, buy: iBuy, disc: iDisc, paid: iPaid
+                                });
                             }
                         });
                     } else if (d.productId) { // পুরনো সিঙ্গেল আইটেমের জন্য
@@ -2078,21 +2088,30 @@ function addToCart() {
                             hasItemMatch = true;
                             let iQty = Number(d.qty) || 0;
                             let iSale = (Number(d.totalAmount) + Number(d.discount || 0)) || 0;
-                            let iProf = Number(d.profit) || 0;
+                            if(iSale === 0) iSale = (Number(d.price) * iQty) || 0; 
                             
-                            window.currentFilteredSoldItems.push({id: d.productId, name: d.productName, qty: iQty, sale: iSale, profit: iProf});
+                            let iBuy = (Number(d.buyPrice) * iQty) || 0;
+                            let iDisc = Number(d.discount) || 0;
+                            let iPaid = Number(d.paid) || 0;
+                            
+                            window.currentFilteredSoldItems.push({
+                                id: d.productId, name: d.productName, qty: iQty, 
+                                sale: iSale, buy: iBuy, disc: iDisc, paid: iPaid
+                            });
                         }
                     }
 
-                    // 👉 History Tab-এর ওপরের বক্সে শুধুমাত্র বিলের ফাইনাল এমাউন্ট যোগ হবে
                     if (!searchQuery || hasItemMatch || isCustomerMatch) {
                         tQty += billTotalQty;
-                        tAmt += Number(d.totalAmount) || 0; // এটি Discount বাদ দিয়ে ফাইনাল সেল এমাউন্ট (যেমন: 180)
-                        tProf += Number(d.profit) || 0;     // এটি Paid - Buy Price লজিকে আসা আপনার প্রফিট (যেমন: -5)
+                        tAmt += Number(d.totalAmount) || 0; 
+                        tProf += Number(d.profit) || 0;     
+                        tDisc += Number(d.discount) || 0;
+                        tBuy += Number(d.buyPrice) || 0;
+                        tPaid += Number(d.paid) || 0;
                     }
                 }
             });
-
+            window.popupSummary = { qty: tQty, buy: tBuy, sale: tAmt, disc: tDisc, profit: tProf, paid: tPaid };
             // ৪. HTML স্ট্রাকচার তৈরি (Items Sold বক্সটি ক্লিকেবল করা হলো এবং দশমিক ২ ঘরে ফিক্স করা হলো)
             let htmlString = `
             <div style="background: #eff6ff; border: 1px solid #bae6fd; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden;">
@@ -2295,7 +2314,8 @@ function preparePDFData(id) {
     }
     
     // Calculation
-    document.getElementById('pdfTotal').innerText = record.totalAmount;
+    // আপডেট: Total Amount এর সাথে Discount যোগ করে অরিজিনাল দাম বের করা হলো
+    document.getElementById('pdfTotal').innerText = Number(record.totalAmount || 0) + Number(record.discount || 0);
     document.getElementById('pdfDiscount').innerText = record.discount || 0;
     document.getElementById('pdfPaid').innerText = record.paid || 0;
     document.getElementById('pdfPaymentMode').innerText = record.paymentMethod || 'Cash';
@@ -3319,58 +3339,91 @@ async function deleteOrder(id) {
                 }
             });
         }
-        // --- Items Sold List Logic ---
-        function showSoldItemsList() {
+function showSoldItemsList() {
             if(!window.currentFilteredSoldItems || window.currentFilteredSoldItems.length === 0) {
                 showToast("No items sold in this period.", "warning");
                 return;
             }
 
-            // একই আইটেম অনেকবার বিক্রি হলে তার পরিমাণ, সেল এবং লাভ একসাথে যোগ করা এবং টোটাল হিসাব করা
+            // একই আইটেম অনেকবার বিক্রি হলে তার ডেটা একসাথে যোগ করা
             let aggregatedItems = {};
-            let grandQty = 0;
-            let grandSale = 0;
-            let grandProfit = 0;
+            let grandQty = 0, grandSale = 0, grandBuy = 0;
 
             window.currentFilteredSoldItems.forEach(item => {
                 if(item.id) {
                     if(aggregatedItems[item.id]) {
                         aggregatedItems[item.id].qty += item.qty;
                         aggregatedItems[item.id].sale += item.sale;
-                        aggregatedItems[item.id].profit += item.profit;
+                        aggregatedItems[item.id].buy += item.buy;
                     } else {
-                        aggregatedItems[item.id] = { id: item.id, name: item.name, qty: item.qty, sale: item.sale, profit: item.profit };
+                        aggregatedItems[item.id] = { 
+                            id: item.id, name: item.name, 
+                            qty: item.qty, sale: item.sale, buy: item.buy
+                        };
                     }
-                    // সব আইটেমের টোটাল যোগ করা হচ্ছে
+                    // শুধুমাত্র লিস্টে থাকা আইটেমগুলোর টোটাল যোগ করা হচ্ছে
                     grandQty += item.qty;
                     grandSale += item.sale;
-                    grandProfit += item.profit;
+                    grandBuy += item.buy;
                 }
             });
 
-            // সবচেয়ে বেশি বিক্রি হওয়া আইটেমগুলো ওপরে রাখার জন্য সর্টিং
             let sortedItems = Object.values(aggregatedItems).sort((a,b) => b.qty - a.qty);
 
-            // নতুন: ওপরে দেখানোর জন্য একটি সুন্দর সামারি বক্স তৈরি করা হলো
+            // গ্লোবাল সামারি থেকে ডিসকাউন্ট এবং পেমেন্ট নেওয়া হচ্ছে
+            let s = window.popupSummary || { disc: 0, paid: 0 };
+            let grandDisc = s.disc || 0;
+            
+            // লজিক: Total Paid হবে (Total Sale - Discount) এর সমান। 
+            let maxPaid = grandSale - grandDisc; 
+            let grandPaid = s.paid || maxPaid;
+            
+            if(grandPaid > maxPaid) {
+                grandPaid = maxPaid; 
+            }
+
+            // Cash-Flow লজিক: Net Profit = Total Paid - Buy Price
+            let netProfit = grandPaid - grandBuy; 
+
+            // ৬টি ডেটা সহ সুন্দর সামারি বক্স
             let html = `
-            <div style="background: #f0fdfa; border: 1px dashed #86efac; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <div style="flex: 1;">
-                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Qty</p>
-                    <strong style="color:#15803d; font-size:16px;">${grandQty}</strong>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:15px; padding:12px; box-shadow:0 2px 5px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; text-align:center; border-bottom:1px dashed #cbd5e1; padding-bottom:10px; margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Total Qty</p>
+                        <strong style="color:#0f172a; font-size:15px;">${grandQty}</strong>
+                    </div>
+                    <div style="flex:1; border-left:1px solid #e2e8f0;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Buy Price</p>
+                        <strong style="color:#ef4444; font-size:15px;">₹${parseFloat(grandBuy.toFixed(2))}</strong>
+                    </div>
+                    <div style="flex:1; border-left:1px solid #e2e8f0;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Total Sale</p>
+                        <strong style="color:#10b981; font-size:15px;">₹${parseFloat(grandSale.toFixed(2))}</strong>
+                    </div>
                 </div>
-                <div style="flex: 1; border-left: 1px dashed #bbf7d0;">
-                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Sale</p>
-                    <strong style="color:#10b981; font-size:15px;">₹${parseFloat(grandSale.toFixed(2))}</strong>
-                </div>
-                <div style="flex: 1; border-left: 1px dashed #bbf7d0;">
-                    <p style="margin:0 0 4px; font-size:10px; color:#166534; font-weight:800; text-transform:uppercase;">Total Profit</p>
-                    <strong style="color:#3b82f6; font-size:15px;">₹${parseFloat(grandProfit.toFixed(2))}</strong>
+                <div style="display:flex; justify-content:space-between; text-align:center;">
+                    <div style="flex:1;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Discount</p>
+                        <strong style="color:#f59e0b; font-size:15px;">₹${parseFloat(grandDisc.toFixed(2))}</strong>
+                    </div>
+                    <div style="flex:1; border-left:1px solid #e2e8f0;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Total Paid</p>
+                        <strong style="color:#10b981; font-size:15px;">₹${parseFloat(grandPaid.toFixed(2))}</strong>
+                    </div>
+                    <div style="flex:1; border-left:1px solid #e2e8f0;">
+                        <p style="margin:0 0 4px; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">Net Profit</p>
+                        <strong style="color:#3b82f6; font-size:15px;">₹${parseFloat(netProfit.toFixed(2))}</strong>
+                    </div>
                 </div>
             </div>`;
 
             sortedItems.forEach(item => {
                 let fSale = parseFloat(item.sale.toFixed(2));
-                let fProf = parseFloat(item.profit.toFixed(2));
+                
+                // আপডেট: আইটেম লিস্টে ডিসকাউন্ট না কেটে আইটেমের অরিজিনাল প্রফিট (Sale - Buy) দেখানো হচ্ছে
+                let exactItemProfit = item.sale - item.buy;
+                let fProf = parseFloat(exactItemProfit.toFixed(2)); 
                 
                 html += `
                 <div onclick="openProductDetailsOnTop('${item.id}')" style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; margin-bottom:8px; border-radius:8px; cursor:pointer;">
@@ -3386,7 +3439,7 @@ async function deleteOrder(id) {
             });
 
             document.getElementById('soldItemsContent').innerHTML = html;
-            document.getElementById('soldItemsModal').style.zIndex = '3500'; // যাতে অন্যান্য পপ-আপের ওপরে থাকে
+            document.getElementById('soldItemsModal').style.zIndex = '3500'; 
             document.getElementById('soldItemsModal').style.display = 'flex';
         }
 
