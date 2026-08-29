@@ -859,63 +859,72 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         </div>
     </div>
 
-<!-- Hidden Template for PDF Receipt -->
-<div id="printTemplate" style="display: none; background: white; padding: 20px; font-family: Arial, sans-serif; color: #000; width: 320px;">
-    
-    <!-- Top Section: Logo & Shop Info -->
-    <div style="text-align: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 15px;">
-        <img id="pdfProfilePic" src="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; display: none;">
-        <h2 id="pdfStoreNameTop" style="margin: 0; font-size: 20px; color: #0f172a;">Store Name</h2>
-        <!-- Shop details (Optional address/tagline) -->
-        <p id="pdfStoreDetails" style="margin: 3px 0 0; font-size: 11px; color: #64748b;"></p> 
-        <p style="margin: 8px 0 0; font-size: 13px; font-weight: bold; background: #f1f5f9; display: inline-block; padding: 3px 10px; border-radius: 5px;">Money Receipt</p>
+<!-- Hidden Template for Exact Cash Memo Format -->
+<div id="printTemplate" style="display: none;">
+    <div style="text-align: center; margin-bottom: 10px;">
+        <img id="pdfProfilePic" src="" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin: 0 auto 5px; display: none;">
+        <h2 id="pdfStoreNameTop" style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace;">PAYEL'S</h2>
+        <p id="pdfStoreDetails" style="margin: 5px 0 0; font-size: 12px; font-family: 'Courier New', monospace;">Thanks for shopping with us!</p> 
+        <p style="margin: 10px 0 5px; font-size: 16px; font-weight: bold; letter-spacing: 1px; font-family: 'Courier New', monospace;">CASH MEMO</p>
     </div>
 
-    <!-- Customer Info -->
-    <p style="font-size: 13px; margin: 5px 0;"><strong>Customer:</strong> <span id="pdfCustomer"></span></p>
-    <p style="font-size: 13px; margin: 5px 0;"><strong>Phone:</strong> <span id="pdfPhone"></span></p>
+    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+
+    <div style="font-size: 13px; font-family: 'Courier New', monospace; line-height: 1.5;">
+        <div style="display: flex; justify-content: space-between;">
+            <span><strong style="font-weight: bold;">Name:</strong> <span id="pdfCustomer"></span></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span><strong style="font-weight: bold;">Mob:</strong> <span id="pdfPhone"></span></span>
+            <span id="pdfDateLeft"></span>
+        </div>
+    </div>
     
-    <!-- Billing Table -->
-    <!-- Billing Table -->
-    <table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px;">
+    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Courier New', monospace;">
         <thead>
-            <tr style="border-bottom: 1px dashed #cbd5e1; text-align: left;">
-                <th style="padding-bottom: 5px;">Item</th>
-                <th style="padding-bottom: 5px; text-align: center;">Qty</th>
-                <th style="padding-bottom: 5px; text-align: right;">Price</th>
+            <tr style="border-bottom: 1px dashed #000;">
+                <th style="padding-bottom: 5px; text-align: left; width: 50%;">Item</th>
+                <th style="padding-bottom: 5px; text-align: center; width: 15%;">Rate</th>
+                <th style="padding-bottom: 5px; text-align: center; width: 15%;">Qty</th>
+                <th style="padding-bottom: 5px; text-align: right; width: 20%;">Total</th>
             </tr>
         </thead>
         <tbody id="pdfTableBody">
-            <!-- Items will be injected here automatically -->
+            <!-- Items injected here -->
         </tbody>
     </table>
 
-    <!-- Calculation Section -->
-    <div style="font-size: 13px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span>Total Amount:</span> <strong>₹<span id="pdfTotal"></span></strong>
+    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+
+    <div style="font-size: 13px; font-family: 'Courier New', monospace; line-height: 1.5;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>Total Amount:</span> <strong style="font-weight: bold;">₹<span id="pdfTotal"></span></strong>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span>Discount:</span> <span>₹<span id="pdfDiscount"></span></span>
+        <div style="display: flex; justify-content: space-between;">
+            <span>Discount:</span> <strong style="font-weight: bold;">₹<span id="pdfDiscount"></span></strong>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span>Paid Amount:</span> <span style="color: #10b981; font-weight: bold;">₹<span id="pdfPaid"></span></span>
+        <div style="display: flex; justify-content: space-between;">
+            <span>Paid Amount:</span> <strong style="font-weight: bold;">₹<span id="pdfPaid"></span></strong>
         </div>
         
-        <!-- Due Amount (Will be hidden if due is 0) -->
-        <div id="pdfDueSection" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ef4444; font-weight: bold; padding: 3px 0; border-top: 1px solid #fee2e2;">
+        <div id="pdfDueSection" style="display: flex; justify-content: space-between; font-weight: bold;">
             <span>Due Amount:</span> <span>₹<span id="pdfDue"></span></span>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; margin-top: 5px; font-size: 11px;">
-            <span>Payment Mode:</span> <strong id="pdfPaymentMode"></strong>
         </div>
     </div>
 
-    <!-- Footer: Date (Left) & Shop Name (Right) -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; margin-top: 40px; border-top: 1px solid #0f172a; padding-top: 10px;">
-        <span id="pdfDateLeft" style="color: #64748b;"></span>
-        <strong id="pdfStoreNameBottom" style="font-size: 13px;"></strong>
+    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+
+    <div style="display: flex; justify-content: space-between; font-size: 13px; font-family: 'Courier New', monospace;">
+        <span>Pay Mode:</span> <strong id="pdfPaymentMode" style="font-weight: bold;"></strong>
+    </div>
+
+    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+
+    <div style="text-align: center; font-size: 12px; font-family: 'Courier New', monospace; margin-top: 10px;">
+        Thank you! Visit Again.<br>
+        <strong id="pdfStoreNameBottom" style="font-weight: bold;"></strong>
     </div>
 </div>
 
@@ -2275,52 +2284,51 @@ function preparePDFData(id) {
     const record = allSalesHistoryData.find(d => d.id === id);
     if(!record) return null;
 
-    const storeName = localStorage.getItem("seller_store") || "Shop Name";
+    const storeName = localStorage.getItem("seller_store") || "PAYEL'S";
     const profilePic = localStorage.getItem("seller_pic");
     
     // Top Section
     if(profilePic) {
         document.getElementById('pdfProfilePic').src = profilePic;
-        document.getElementById('pdfProfilePic').style.display = 'inline-block';
+        document.getElementById('pdfProfilePic').style.display = 'block';
     } else {
         document.getElementById('pdfProfilePic').style.display = 'none';
     }
-    document.getElementById('pdfStoreNameTop').innerText = storeName;
-    document.getElementById('pdfStoreDetails').innerText = "Thanks for shopping with us!"; // You can make this dynamic later
+    document.getElementById('pdfStoreNameTop').innerText = storeName.toUpperCase();
     
     // Customer Info
     document.getElementById('pdfCustomer').innerText = record.buyerName || 'N/A';
     document.getElementById('pdfPhone').innerText = record.buyerPhone || 'N/A';
     
-    // Product Info
+    // Product Info (Table Rows)
     const tbody = document.getElementById('pdfTableBody');
     tbody.innerHTML = ""; 
     
     if (record.isMultiItem && record.items) {
         record.items.forEach(item => {
             tbody.innerHTML += `<tr>
-                <td style="padding-top: 5px;">${item.name}</td>
-                <td style="padding-top: 5px; text-align: center;">${item.qty}</td>
-                <td style="padding-top: 5px; text-align: right;">₹${item.price * item.qty}</td>
+                <td style="padding-top: 8px; vertical-align: top; max-width: 140px; word-wrap: break-word;">${item.name}</td>
+                <td style="padding-top: 8px; vertical-align: top; text-align: center;">₹${item.price}</td>
+                <td style="padding-top: 8px; vertical-align: top; text-align: center;">${item.qty}</td>
+                <td style="padding-top: 8px; vertical-align: top; text-align: right;">₹${item.price * item.qty}</td>
             </tr>`;
         });
     } else {
-        // পুরনো সিঙ্গেল আইটেমের জন্য
+        let itemPrice = record.price || (record.totalAmount / (record.qty || 1));
         tbody.innerHTML = `<tr>
-            <td style="padding-top: 5px;">${record.productName}</td>
-            <td style="padding-top: 5px; text-align: center;">${record.qty}</td>
-            <td style="padding-top: 5px; text-align: right;">₹${record.price || record.totalAmount}</td>
+            <td style="padding-top: 8px; vertical-align: top; max-width: 140px; word-wrap: break-word;">${record.productName}</td>
+            <td style="padding-top: 8px; vertical-align: top; text-align: center;">₹${itemPrice}</td>
+            <td style="padding-top: 8px; vertical-align: top; text-align: center;">${record.qty}</td>
+            <td style="padding-top: 8px; vertical-align: top; text-align: right;">₹${itemPrice * record.qty}</td>
         </tr>`;
     }
     
-    // Calculation
-    // আপডেট: Total Amount এর সাথে Discount যোগ করে অরিজিনাল দাম বের করা হলো
+    // Calculations
     document.getElementById('pdfTotal').innerText = Number(record.totalAmount || 0) + Number(record.discount || 0);
     document.getElementById('pdfDiscount').innerText = record.discount || 0;
     document.getElementById('pdfPaid').innerText = record.paid || 0;
     document.getElementById('pdfPaymentMode').innerText = record.paymentMethod || 'Cash';
     
-    // Due Logic (Hide column if no due)
     const dueAmt = record.due || 0;
     if(dueAmt > 0) {
         document.getElementById('pdfDue').innerText = dueAmt;
@@ -2329,57 +2337,100 @@ function preparePDFData(id) {
         document.getElementById('pdfDueSection').style.display = 'none';
     }
 
-    // Footer
-    document.getElementById('pdfDateLeft').innerText = record.timestamp ? record.timestamp.toDate().toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+    // Dates & Footer
+    document.getElementById('pdfDateLeft').innerText = record.timestamp ? record.timestamp.toDate().toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
     document.getElementById('pdfStoreNameBottom').innerText = storeName;
 
     return record;
 }
-function downloadReceiptPDF(id) {
-    const record = preparePDFData(id); // Using the function we created in Step 2
+async function downloadReceiptPDF(id) {
+    const record = preparePDFData(id); 
     if(!record) return;
 
-    const element = document.getElementById('printTemplate');
-    element.style.display = 'block'; 
+    showToast("Generating Receipt PDF...", "success");
+
+    // ১. পেজ একদম ওপরে নিয়ে যাওয়া হচ্ছে (স্ক্রোল বাগ ফিক্স)
+    window.scrollTo(0, 0);
+
+    // ২. মেইন অ্যাপকে হাইড না করে, তার ওপরে একটি সাদা পর্দা (Overlay) দেওয়া হচ্ছে
+    const overlay = document.createElement('div');
+    overlay.id = 'pdfOverlay';
+    overlay.style.position = 'absolute'; 
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.minHeight = '100vh';
+    overlay.style.backgroundColor = '#ffffff';
+    overlay.style.zIndex = '999999';
+
+    // ৩. রসিদের ডিজাইনটি কপি করে পর্দার ওপর একদম বাম কোণায় বসানো হচ্ছে
+    const printTemplate = document.getElementById('printTemplate');
+    const receiptBox = document.createElement('div');
+    receiptBox.innerHTML = printTemplate.innerHTML;
     
-    const fileName = `Receipt_${record.buyerName || 'Customer'}_${new Date().getTime()}.pdf`;
+    // রসিদের সাইজ এবং চারপাশের গ্যাপ (Padding) ফিক্স করা হচ্ছে যাতে লেখা না কাটে
+    receiptBox.style.width = '300px'; 
+    receiptBox.style.boxSizing = 'border-box'; // প্যাডিং সহ 300px থাকবে
+    receiptBox.style.padding = '15px'; // চারদিকে ১৫ পিক্সেল গ্যাপ রাখা হলো, তাই বাম বা ডান কোনো দিকই কাটবে না
+    receiptBox.style.margin = '0'; 
+    receiptBox.style.backgroundColor = '#ffffff';
+    receiptBox.style.color = '#000000';
+
+    // পর্দায় রসিদটি যুক্ত করে, পুরো পর্দাটি বডিতে বসানো হলো
+    overlay.appendChild(receiptBox);
+    document.body.appendChild(overlay);
+
+    // ৪. ব্রাউজারকে ছবি আঁকার জন্য ১ সেকেন্ড সময় দেওয়া হলো
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // হাইট ক্যালকুলেশন
+    const heightPx = receiptBox.offsetHeight;
+    const heightMm = Math.max((heightPx * 0.264583), 80);
+
     const opt = {
-        margin:       0.5,
-        filename:     fileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'a5', orientation: 'portrait' }
+        margin: 0, // PDF এর কোনো নিজস্ব মার্জিন রাখা হলো না, CSS এর প্যাডিং-ই মার্জিন হিসেবে কাজ করবে
+        filename: `CashMemo_${record.buyerName || 'Customer'}_${new Date().getTime()}.pdf`,
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            scrollY: 0,
+            scrollX: 0
+        },
+        jsPDF: { unit: 'mm', format: [80, heightMm], orientation: 'portrait' }
     };
 
-    // Output as blob for sharing
-    html2pdf().set(opt).from(element).outputPdf('blob').then(function(pdfBlob) {
-        element.style.display = 'none'; // Hide template again
-        
-        // Create a File object from the blob
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+    try {
+        // ৫. এবার PDF তৈরি করা হবে
+        const pdfBlob = await html2pdf().set(opt).from(receiptBox).output('blob');
+        const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
 
-        // Check if Web Share API is supported (mostly works on Android/iOS Chrome, Safari)
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-                title: 'Money Receipt',
-                text: `Here is your payment receipt from ${localStorage.getItem("seller_store")}.`,
-                files: [file]
-            }).then(() => {
-                showToast("Receipt Shared Successfully!", "success");
-            }).catch(err => {
-                console.log('Share failed or cancelled', err);
+        // ৬. WhatsApp-এ শেয়ার করা
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Cash Memo',
+                text: `Hello ${record.buyerName || 'Customer'},\nHere is your Cash Memo from ${localStorage.getItem("seller_store") || "our store"}. Thank you!`
             });
         } else {
-            // Fallback: If sharing is not supported (like on desktop), just download it
-            showToast("Direct sharing not supported. Downloading PDF...", "warning");
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = opt.filename;
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+            showToast("PDF Downloaded successfully!", "success");
         }
-    });
+    } catch (error) {
+        console.error("PDF Error: ", error);
+        showToast("Failed to generate PDF.", "error");
+    } finally {
+        // ৭. কাজ শেষ হলে সাদা পর্দাটি সরিয়ে দেওয়া হবে
+        document.body.removeChild(overlay);
+    }
 }
 let enteredPin = "";
 
