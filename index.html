@@ -885,20 +885,29 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
     <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Courier New', monospace;">
         <thead>
             <tr style="border-bottom: 1px dashed #000;">
-                <th style="padding-bottom: 5px; text-align: left; width: 50%;">Item</th>
+                <th style="padding-bottom: 5px; text-align: left; width: 10%;">Sl.</th>
+                <th style="padding-bottom: 5px; text-align: left; width: 45%;">Item</th>
                 <th style="padding-bottom: 5px; text-align: center; width: 15%;">Rate</th>
-                <th style="padding-bottom: 5px; text-align: center; width: 15%;">Qty</th>
+                <th style="padding-bottom: 5px; text-align: center; width: 10%;">Qty</th>
                 <th style="padding-bottom: 5px; text-align: right; width: 20%;">Total</th>
             </tr>
         </thead>
         <tbody id="pdfTableBody">
             <!-- Items injected here -->
         </tbody>
+        <!-- Total Items & Total Qty moved inside the table footer for perfect alignment -->
+        <tfoot>
+            <tr style="border-top: 1px dashed #000; border-bottom: 1px dashed #000;">
+                <td colspan="2" style="padding: 8px 0; text-align: left;">Total Items: <strong id="pdfTotalItems">0</strong></td>
+                <td style="padding: 8px 0; text-align: right; padding-right: 5px;">Total Qty:</td>
+                <!-- The quantity number is exactly under the Qty column -->
+                <td style="padding: 8px 0; text-align: center;"><strong id="pdfTotalQty">0</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
-    <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
-
-    <div style="font-size: 13px; font-family: 'Courier New', monospace; line-height: 1.5;">
+    <div style="font-size: 13px; font-family: 'Courier New', monospace; line-height: 1.5; margin-top: 8px;">
         <div style="display: flex; justify-content: space-between;">
             <span>Total Amount:</span> <strong style="font-weight: bold;">₹<span id="pdfTotal"></span></strong>
         </div>
@@ -2169,24 +2178,26 @@ function addToCart() {
                 let noteHtml = d.txnNote ? `<br>Note: ${d.txnNote}` : '';
 
                 let contactBtnsHtml = '';
-                if(d.buyerPhone || d.buyerName) {
-                    let rawPhone = d.buyerPhone ? d.buyerPhone.replace(/\D/g, '') : ''; 
-                    let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone; 
-                    
-                    if(rawPhone) {
-                        contactBtnsHtml = `
-                        <div class="buyer-contact-btn" style="display: flex; gap: 8px; margin-top: 12px;">
-                            <a href="https://wa.me/${waPhone}?text=${encRecMsg}" target="_blank" class="btn-wa" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fab fa-whatsapp"></i> WA</a>
-                            <a href="sms:${rawPhone}?body=${encRecMsg}" class="btn-sms" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fas fa-comment-sms"></i> SMS</a>
-                            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="flex:1; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> PDF</button>
-                        </div>`;
-                    } else {
-                        contactBtnsHtml = `
-                        <div class="buyer-contact-btn" style="margin-top: 12px;">
-                            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="width:100%; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> Download PDF Receipt</button>
-                        </div>`;
-                    }
-                }
+if(d.buyerPhone || d.buyerName) {
+    let rawPhone = d.buyerPhone ? d.buyerPhone.replace(/\D/g, '') : ''; 
+    let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone; 
+    
+    if(rawPhone) {
+        contactBtnsHtml = `
+        <div class="buyer-contact-btn" style="display: flex; gap: 8px; margin-top: 12px;">
+            <a href="https://wa.me/${waPhone}?text=${encRecMsg}" target="_blank" class="btn-wa" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fab fa-whatsapp"></i> WA</a>
+            <a href="sms:${rawPhone}?body=${encRecMsg}" class="btn-sms" style="flex:1; text-align:center; padding:10px; border-radius:8px; font-size:13px; text-decoration:none;"><i class="fas fa-comment-sms"></i> SMS</a>
+            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="flex:1; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button onclick="printReceipt('${d.id}')" style="flex:1; background:#0f172a; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-print"></i> Print</button>
+        </div>`;
+    } else {
+        contactBtnsHtml = `
+        <div class="buyer-contact-btn" style="margin-top: 12px; display: flex; gap: 8px;">
+            <button onclick="downloadReceiptPDF('${d.id}')" class="btn-pdf" style="flex:1; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-file-pdf"></i> Download PDF</button>
+            <button onclick="printReceipt('${d.id}')" style="flex:1; background:#0f172a; padding:10px; border-radius:8px; font-size:13px; border:none; color:white; cursor:pointer;"><i class="fas fa-print"></i> Direct Print</button>
+        </div>`;
+    }
+}
 
                 let returnedBadge = d.isReturned ? `<span style="background:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:8px;"><i class="fas fa-undo"></i> Refunded</span>` : '';
                 let amountStyle = d.isReturned ? "text-decoration:line-through; color:#94a3b8;" : "color:#10b981;";
@@ -2304,25 +2315,38 @@ function preparePDFData(id) {
     const tbody = document.getElementById('pdfTableBody');
     tbody.innerHTML = ""; 
     
-    if (record.isMultiItem && record.items) {
-        record.items.forEach(item => {
+    let totalUniqueItems = 0;
+    let totalQuantity = 0;
+    
+    if (record.isMultiItem && record.items && record.items.length > 0) {
+        totalUniqueItems = record.items.length;
+        record.items.forEach((item, index) => {
+            totalQuantity += Number(item.qty) || 0;
             tbody.innerHTML += `<tr>
-                <td style="padding-top: 8px; vertical-align: top; max-width: 140px; word-wrap: break-word;">${item.name}</td>
+                <td style="padding-top: 8px; vertical-align: top;">${index + 1}</td>
+                <td style="padding-top: 8px; vertical-align: top; max-width: 120px; word-wrap: break-word;">${item.name}</td>
                 <td style="padding-top: 8px; vertical-align: top; text-align: center;">₹${item.price}</td>
                 <td style="padding-top: 8px; vertical-align: top; text-align: center;">${item.qty}</td>
                 <td style="padding-top: 8px; vertical-align: top; text-align: right;">₹${item.price * item.qty}</td>
             </tr>`;
         });
     } else {
-        let itemPrice = record.price || (record.totalAmount / (record.qty || 1));
+        totalUniqueItems = 1;
+        totalQuantity = Number(record.qty) || 1;
+        let itemPrice = record.price || (record.totalAmount / totalQuantity);
         tbody.innerHTML = `<tr>
-            <td style="padding-top: 8px; vertical-align: top; max-width: 140px; word-wrap: break-word;">${record.productName}</td>
+            <td style="padding-top: 8px; vertical-align: top;">1</td>
+            <td style="padding-top: 8px; vertical-align: top; max-width: 120px; word-wrap: break-word;">${record.productName}</td>
             <td style="padding-top: 8px; vertical-align: top; text-align: center;">₹${itemPrice}</td>
-            <td style="padding-top: 8px; vertical-align: top; text-align: center;">${record.qty}</td>
-            <td style="padding-top: 8px; vertical-align: top; text-align: right;">₹${itemPrice * record.qty}</td>
+            <td style="padding-top: 8px; vertical-align: top; text-align: center;">${totalQuantity}</td>
+            <td style="padding-top: 8px; vertical-align: top; text-align: right;">₹${itemPrice * totalQuantity}</td>
         </tr>`;
     }
     
+    // Inject Total Items & Total Qty
+    document.getElementById('pdfTotalItems').innerText = totalUniqueItems;
+    document.getElementById('pdfTotalQty').innerText = totalQuantity;
+
     // Calculations
     document.getElementById('pdfTotal').innerText = Number(record.totalAmount || 0) + Number(record.discount || 0);
     document.getElementById('pdfDiscount').innerText = record.discount || 0;
@@ -2431,6 +2455,58 @@ async function downloadReceiptPDF(id) {
         // ৭. কাজ শেষ হলে সাদা পর্দাটি সরিয়ে দেওয়া হবে
         document.body.removeChild(overlay);
     }
+}
+// --- Direct Print Logic (For Bluetooth/Thermal Printers) ---
+function printReceipt(id) {
+    const record = preparePDFData(id);
+    if(!record) return;
+
+    showToast("Preparing to Print...", "success");
+
+    const printTemplate = document.getElementById('printTemplate');
+    const printContent = printTemplate.innerHTML;
+    
+    // প্রিন্ট করার জন্য একটি নতুন উইন্ডো ওপেন করা হচ্ছে
+    const printWindow = window.open('', '_blank');
+    if(!printWindow) {
+        showToast("Please allow pop-ups to print", "error");
+        return;
+    }
+
+    // থার্মাল প্রিন্টারের (80mm) পেপার সাইজ অনুযায়ী স্টাইল সেট করা হচ্ছে
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print Cash Memo</title>
+            <style>
+                @page { margin: 0; size: 80mm auto; }
+                body { 
+                    font-family: 'Courier New', Courier, monospace; 
+                    width: 72mm; /* থার্মাল পেপারের পারফেক্ট সাইজ */
+                    margin: 0 auto; 
+                    padding: 10px 5px; 
+                    color: #000; 
+                    background: #fff;
+                }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 4px 0; }
+            </style>
+        </head>
+        <body>
+            ${printContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+
+    // মেইন উইন্ডো থেকেই সরাসরি প্রিন্ট কমান্ড দেওয়া হচ্ছে (যাতে অ্যাপ ক্র্যাশ না করে)
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        // প্রিন্ট হয়ে গেলে উইন্ডো অটোমেটিক বন্ধ হয়ে যাবে
+        setTimeout(() => printWindow.close(), 500);
+    }, 500);
 }
 let enteredPin = "";
 
@@ -3589,6 +3665,7 @@ function showSoldItemsList() {
             modal.style.zIndex = "3000"; 
             modal.style.display = 'flex';
         }
+        
     </script>
     <!-- Restore Progress Overlay -->
     <div class="modal-overlay" id="restoreProgressOverlay" style="z-index: 3000;">
