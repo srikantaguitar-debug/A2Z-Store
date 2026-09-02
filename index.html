@@ -2170,10 +2170,28 @@ function addToCart() {
                 }
 
                 let nameDisp = d.buyerName || 'Customer';
-                let storeN = localStorage.getItem("seller_store") || "Store";
-                let recMsgText = `Hello ${nameDisp},\nThank you for your purchase from ${storeN}!\n\n*Order Details:*\n${itemListText}\nTotal Bill: ₹${d.totalAmount}\nPaid: ₹${d.paid}`;
-                if(d.due > 0) recMsgText += `\n*Due Amount: ₹${d.due}*`;
-                let encRecMsg = encodeURIComponent(recMsgText);
+let storeN = localStorage.getItem("seller_store") || "Store";
+
+// অরিজিনাল টোটাল (ডিসকাউন্টের আগের দাম) বের করা হচ্ছে
+let originalTotal = Number(d.price) || (Number(d.totalAmount) + Number(d.discount || 0));
+
+// মেসেজের মূল কাঠামো তৈরি করা হচ্ছে
+let recMsgText = `Hello ${nameDisp},\nThank you for your purchase from ${storeN}!\n\n*Order Details:*\n${itemListText}Total Bill: ₹${originalTotal}`;
+
+// যদি ডিসকাউন্ট থাকে, তবেই ডিসকাউন্ট লেখাটা মেসেজে যোগ হবে
+if (Number(d.discount) > 0) {
+    recMsgText += `\nDiscount: ₹${d.discount}`;
+}
+
+// Paid Amount এবং একটু ফাঁকা জায়গা (Gap) দেওয়া হলো
+recMsgText += `\n\nPaid: ₹${d.paid}`;
+
+// যদি বাকি (Due) থাকে, তবে সেটা মেসেজের শেষে যোগ হবে
+if(d.due > 0) {
+    recMsgText += `\n*Due Amount: ₹${d.due}*`;
+}
+
+let encRecMsg = encodeURIComponent(recMsgText);
 
                 let noteHtml = d.txnNote ? `<br>Note: ${d.txnNote}` : '';
 
