@@ -352,14 +352,16 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
                     <p style="font-size: 10px; color: #475569; margin: 0 0 8px; font-weight: 700; text-transform: uppercase;">Customer Details (Auto-Saved)</p>
                     <div class="row">
                         <div class="input-group" style="margin-bottom: 0; position: relative;">
-                            <input type="tel" id="buyerPhone" placeholder="Phone Number" onkeyup="suggestCustomer('phone')" autocomplete="off" style="padding:8px 10px; font-size:12px;">
+                            <input type="tel" id="buyerPhone" placeholder="Phone Number" onkeyup="suggestCustomer('phone'); checkCustomerBalanceDebounced()" autocomplete="off" style="padding:8px 10px; font-size:12px;">
                             <div id="suggestPhoneDropdown" class="suggest-dropdown"></div>
                         </div>
                         <div class="input-group" style="margin-bottom: 0; position: relative;">
-                            <input type="text" id="buyerName" placeholder="Customer Name" onkeyup="suggestCustomer('name')" autocomplete="off" style="padding:8px 10px; font-size:12px;">
+                            <input type="text" id="buyerName" placeholder="Customer Name" onkeyup="suggestCustomer('name'); checkCustomerBalanceDebounced()" autocomplete="off" style="padding:8px 10px; font-size:12px;">
                             <div id="suggestNameDropdown" class="suggest-dropdown"></div>
                         </div>
                     </div>
+                    <!-- কাস্টমারের পুরনো ব্যালেন্স দেখানোর জায়গা -->
+                    <div id="saleCustomerBalanceDisplay" style="font-size: 11px; margin-top: 8px; font-weight: bold; display: none; padding: 6px; border-radius: 4px;"></div>
                 </div>
 
                 <div style="background: #fffbeb; padding: 10px; border-radius: 8px; border: 1px dashed #fde68a;">
@@ -393,8 +395,20 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
                             <input type="number" id="saleDiscount" value="0" oninput="calculateSaleTotal()" style="padding:8px; font-size:13px; font-weight:bold;">
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
-                            <label style="font-size:11px; margin-bottom:4px;">Paid (₹)</label>
+                            <label style="font-size:11px; margin-bottom:4px;">Total Paid (₹)</label>
                             <input type="number" id="salePaid" value="0" oninput="calculateSaleTotal()" style="padding:8px; font-size:13px; font-weight:bold; color:#10b981;">
+                        </div>
+                    </div>
+                    
+                    <!-- New Section: Add Payment during Full Edit -->
+                    <div class="row" id="saleEditPaymentSection" style="display:none; margin-top: 8px; background: #ecfdf5; padding: 10px; border-radius: 8px; border: 1px dashed #10b981;">
+                        <input type="hidden" id="saleOldPaidValue" value="0">
+                        <div style="flex:1;">
+                            <p style="font-size:11px; color:#065f46; margin:0 0 6px; font-weight:bold;">Already Paid: ₹<span id="saleOldPaidTxt">0</span></p>
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label style="font-size:11px; margin-bottom:4px; color:#10b981;">+ Add New Payment (₹)</label>
+                                <input type="number" id="saleNewPayment" value="0" oninput="handleSaleNewPayment()" style="padding:8px; font-size:13px; font-weight:bold; border: 1px solid #10b981; border-radius: 6px;">
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex; justify-content: space-between; font-weight: bold; margin-top:8px; border-top: 1px solid #fde68a; padding-top: 6px; font-size:12px;">
@@ -770,11 +784,21 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         <div class="row">
             <div class="input-group" style="margin-bottom: 10px;">
                 <label style="font-size: 11px;">Discount (₹)</label>
-                <input type="number" id="editSaleDiscount" style="padding: 10px; font-size: 13px; font-weight:bold;">
+                <input type="number" id="editSaleDiscount" oninput="calculateEditSaleDue()" style="padding: 10px; font-size: 13px; font-weight:bold;">
             </div>
             <div class="input-group" style="margin-bottom: 10px;">
-                <label style="font-size: 11px;">Paid Amount (₹)</label>
-                <input type="number" id="editSalePaid" style="padding: 10px; font-size: 13px; font-weight:bold; color:#10b981;">
+                <label style="font-size: 11px; color: #10b981;">Add New Payment (₹)</label>
+                <input type="number" id="editSaleNewPayment" placeholder="e.g. 50" oninput="calculateEditSaleDue()" style="padding: 10px; font-size: 13px; font-weight:bold; border: 1px solid #10b981; color:#10b981;">
+            </div>
+        </div>
+
+        <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; font-size:11px; color:#475569; margin-bottom:12px; border:1px dashed #cbd5e1;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Total Bill: <strong id="editSaleBaseTxt" style="color:#0f172a;">₹0</strong></span>
+                <span>Already Paid: <strong id="editSaleOldPaidTxt" style="color:#10b981;">₹0</strong></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-top:4px; border-top:1px dashed #e2e8f0;">
+                <span>Remaining Due: <strong id="editSaleDueTxt" style="color:#ef4444; font-size:13px;">₹0</strong></span>
             </div>
         </div>
         
@@ -1636,7 +1660,69 @@ function filterItemsTab() {
             let matches = currentSellerCustomers.filter(c => { if(type === 'phone') return c.phone && c.phone.toLowerCase().includes(query); return c.name && c.name.toLowerCase().includes(query); });
             if(matches.length > 0) { matches.forEach(m => { dropdown.innerHTML += `<div class="suggest-item" onclick="selectCustomer('${m.name}', '${m.phone}')"><span class="suggest-name">${m.name}</span><span class="suggest-phone">${m.phone}</span></div>`; }); dropdown.style.display = 'block'; } else { dropdown.style.display = 'none'; }
         }
-        function selectCustomer(name, phone) { document.getElementById('buyerName').value = name; document.getElementById('buyerPhone').value = phone; document.getElementById('suggestPhoneDropdown').style.display = 'none'; document.getElementById('suggestNameDropdown').style.display = 'none'; }
+        function selectCustomer(name, phone) { 
+            document.getElementById('buyerName').value = name; 
+            document.getElementById('buyerPhone').value = phone; 
+            document.getElementById('suggestPhoneDropdown').style.display = 'none'; 
+            document.getElementById('suggestNameDropdown').style.display = 'none'; 
+            checkCustomerBalance(); // নাম সিলেক্ট করলেই ব্যালেন্স চেক করবে
+        }
+
+        let balanceTimeout;
+        function checkCustomerBalanceDebounced() {
+            clearTimeout(balanceTimeout);
+            balanceTimeout = setTimeout(checkCustomerBalance, 500);
+        }
+
+        function checkCustomerBalance() {
+    const phone = document.getElementById('buyerPhone').value.trim();
+    const name = document.getElementById('buyerName').value.trim();
+    const balDiv = document.getElementById('saleCustomerBalanceDisplay');
+    
+    if(!phone && !name) {
+        if(balDiv) balDiv.style.display = 'none';
+        return;
+    }
+
+    let totalDue = 0;
+    allSalesHistoryData.forEach(sale => {
+        if(!sale.isReturned) {
+            let isPhoneMatch = phone && sale.buyerPhone === phone;
+            let isNameMatch = !phone && name && sale.buyerName === name;
+            if (isPhoneMatch || isNameMatch) {
+                totalDue += Number(sale.due) || 0;
+            }
+        }
+    });
+
+    if(balDiv) {
+        balDiv.onclick = null; // আগের ইভেন্ট রিমুভ করা হচ্ছে
+        
+        if(totalDue > 0) {
+            balDiv.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Previous Due: <span style="color:#ef4444;">₹${totalDue.toFixed(2)}</span></span>
+                <span style="font-size:10px; background:#ef4444; color:white; padding:3px 8px; border-radius:4px;"><i class="fas fa-list"></i> View Bills</span>
+            </div>`;
+            balDiv.style.background = "#fef2f2";
+            balDiv.style.border = "1px dashed #fca5a5";
+            balDiv.style.cursor = "pointer"; // বক্সটি ক্লিকেবল করা হলো
+            balDiv.onclick = () => viewCustomerHistory(phone, name, true); // true মানে শুধু due বিল দেখাবে
+            balDiv.style.display = 'block';
+        } else if(totalDue < 0) {
+            balDiv.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Store Credit (Advance): <span style="color:#10b981;">₹${Math.abs(totalDue).toFixed(2)}</span></span>
+                <span style="font-size:10px; background:#10b981; color:white; padding:3px 8px; border-radius:4px;"><i class="fas fa-list"></i> View Bills</span>
+            </div>`;
+            balDiv.style.background = "#ecfdf5";
+            balDiv.style.border = "1px dashed #6ee7b7";
+            balDiv.style.cursor = "pointer"; // বক্সটি ক্লিকেবল করা হলো
+            balDiv.onclick = () => viewCustomerHistory(phone, name, true); // true মানে শুধু due বিল দেখাবে
+            balDiv.style.display = 'block';
+        } else {
+            balDiv.style.display = 'none';
+        }
+    }
+}
 
         function setupRecordSaleTab() { 
             clearSaleForm();
@@ -1652,35 +1738,83 @@ function filterItemsTab() {
         }
        let saleCart = []; // কার্ট স্টোর করার জন্য গ্লোবাল ভেরিয়েবল
 
-        function clearSaleForm() {
-            saleCart = [];
-            renderCart();
-            document.getElementById('saleQty').value = 1; document.getElementById('saleDiscount').value = 0; document.getElementById('salePaid').value = 0;
-            document.getElementById('saleTotalAmount').innerText = "Total: ₹0"; 
-            
-            // Due Amount টেক্সট এবং কালার রিসেট করা
-            const dueTextEl = document.getElementById('saleDueText');
-            const dueAmtEl = document.getElementById('saleDueAmount');
-            if(dueTextEl) { dueTextEl.innerText = "Due Amount:"; dueTextEl.style.color = "#ef4444"; }
-            if(dueAmtEl) { dueAmtEl.innerText = "₹0"; dueAmtEl.style.color = "#ef4444"; }
-            
-            document.getElementById('buyerName').value = ""; document.getElementById('buyerPhone').value = "";
-            document.getElementById('saleProductSearch').value = ""; document.getElementById('saleProductId').value = ""; document.getElementById('saleProductBuyPrice').value = 0;
-            document.getElementById('salePaymentMethod').value = "Cash"; document.getElementById('saleTxnNote').value = "";
-            
-            // ডিফল্ট ডেট এবং টাইম (Current Date & Time) সেট করা হচ্ছে
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const hh = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            
-            if(document.getElementById('saleCustomDate')) {
-                document.getElementById('saleCustomDate').value = `${yyyy}-${mm}-${dd}`;
-                document.getElementById('saleCustomTime').value = `${hh}:${min}`;
-            }
-        }
+        function handleSaleNewPayment() {
+    const oldP = Number(document.getElementById('saleOldPaidValue').value) || 0;
+    const newP = Number(document.getElementById('saleNewPayment').value) || 0;
+    document.getElementById('salePaid').value = oldP + newP;
+    calculateSaleTotal();
+}
+
+function calculateSaleTotal() {
+    let baseTotal = 0;
+    saleCart.forEach(item => { baseTotal += (item.price * item.qty); });
+
+    const discount = Number(document.getElementById('saleDiscount').value) || 0;
+    let paid = Number(document.getElementById('salePaid').value) || 0;
+    
+    // সিঙ্ক্রোনাইজেশন: যদি ইউজার সরাসরি Total Paid বক্সে হাত দেয়
+    if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
+        const oldP = Number(document.getElementById('saleOldPaidValue').value) || 0;
+        const extra = paid - oldP;
+        document.getElementById('saleNewPayment').value = extra > 0 ? extra : 0;
+    }
+
+    const finalTotal = baseTotal - discount;
+    document.getElementById('saleTotalAmount').innerText = "Total: ₹" + finalTotal;
+    let dueAmount = finalTotal - paid;
+    
+    const dueTextEl = document.getElementById('saleDueText');
+    const dueAmtEl = document.getElementById('saleDueAmount');
+    
+    if (dueAmount < 0) {
+        dueTextEl.innerText = "Return Change:";
+        dueTextEl.style.color = "#10b981";
+        dueAmtEl.innerText = "₹" + Math.abs(dueAmount);
+        dueAmtEl.style.color = "#10b981";
+    } else {
+        dueTextEl.innerText = "Due Amount:";
+        dueTextEl.style.color = "#ef4444";
+        dueAmtEl.innerText = "₹" + dueAmount;
+        dueAmtEl.style.color = "#ef4444";
+    }
+}
+
+function clearSaleForm() {
+    saleCart = [];
+    renderCart();
+    document.getElementById('saleQty').value = 1; 
+    document.getElementById('saleDiscount').value = 0; 
+    document.getElementById('salePaid').value = 0;
+    document.getElementById('saleTotalAmount').innerText = "Total: ₹0"; 
+    if(document.getElementById('saleCustomerBalanceDisplay')) document.getElementById('saleCustomerBalanceDisplay').style.display = 'none';
+    
+    // নতুন পেমেন্ট ফিল্ড হাইড ও ক্লিয়ার করা
+    const editSec = document.getElementById('saleEditPaymentSection');
+    if(editSec) editSec.style.display = 'none';
+    if(document.getElementById('saleOldPaidValue')) document.getElementById('saleOldPaidValue').value = 0;
+    if(document.getElementById('saleNewPayment')) document.getElementById('saleNewPayment').value = 0;
+    
+    const dueTextEl = document.getElementById('saleDueText');
+    const dueAmtEl = document.getElementById('saleDueAmount');
+    if(dueTextEl) { dueTextEl.innerText = "Due Amount:"; dueTextEl.style.color = "#ef4444"; }
+    if(dueAmtEl) { dueAmtEl.innerText = "₹0"; dueAmtEl.style.color = "#ef4444"; }
+    
+    document.getElementById('buyerName').value = ""; document.getElementById('buyerPhone').value = "";
+    document.getElementById('saleProductSearch').value = ""; document.getElementById('saleProductId').value = ""; document.getElementById('saleProductBuyPrice').value = 0;
+    document.getElementById('salePaymentMethod').value = "Cash"; document.getElementById('saleTxnNote').value = "";
+    
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    
+    if(document.getElementById('saleCustomDate')) {
+        document.getElementById('saleCustomDate').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('saleCustomTime').value = `${hh}:${min}`;
+    }
+}
 function addToCart() {
             const id = document.getElementById('saleProductId').value;
             const name = document.getElementById('saleProductSearch').value;
@@ -1709,19 +1843,52 @@ function addToCart() {
         }
 
         function renderCart() {
-            const container = document.getElementById('cartItemsContainer');
-            const list = document.getElementById('cartList');
-            if(saleCart.length === 0) { container.style.display = 'none'; list.innerHTML = ""; return; }
-            container.style.display = 'block';
-            let html = "";
-            saleCart.forEach((item, index) => {
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
-                    <div><strong style="color:#0f172a;">${item.name}</strong> <br><span style="color:#10b981; font-weight:bold;">₹${item.price} x ${item.qty}</span> = ₹${item.price * item.qty}</div>
-                    <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; width:28px; height:28px; border-radius:4px; cursor:pointer;"><i class="fas fa-times"></i></button>
-                </div>`;
-            });
-            list.innerHTML = html;
-        }
+    const container = document.getElementById('cartItemsContainer');
+    const list = document.getElementById('cartList');
+    if(saleCart.length === 0) { container.style.display = 'none'; list.innerHTML = ""; return; }
+    container.style.display = 'block';
+    let html = "";
+    saleCart.forEach((item, index) => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
+            <div style="flex:1;">
+                <strong style="color:#0f172a;">${item.name}</strong> <br>
+                <span style="color:#10b981; font-weight:bold;">₹${item.price} x ${item.qty}</span> = <strong style="color:#0f172a;">₹${item.price * item.qty}</strong>
+            </div>
+            
+            <!-- + and - Qty Buttons -->
+            <div style="display:flex; align-items:center; gap:8px; margin: 0 10px;">
+                <button onclick="updateCartQty(${index}, -1)" style="background:#f1f5f9; border:1px solid #cbd5e1; width:26px; height:26px; border-radius:4px; font-weight:bold; color:#475569; cursor:pointer;">-</button>
+                <strong style="font-size:13px; min-width:14px; text-align:center;">${item.qty}</strong>
+                <button onclick="updateCartQty(${index}, 1)" style="background:#e0f2fe; border:1px solid #bae6fd; width:26px; height:26px; border-radius:4px; font-weight:bold; color:#0ea5e9; cursor:pointer;">+</button>
+            </div>
+
+            <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; width:28px; height:28px; border-radius:4px; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>`;
+    });
+    list.innerHTML = html;
+}
+
+// নতুন কোয়ান্টিটি চেঞ্জ করার ফাংশন
+function updateCartQty(index, change) {
+    const item = saleCart[index];
+    const newQty = item.qty + change;
+    
+    // যদি কোয়ান্টিটি ০ হয়ে যায়, তাহলে কার্ট থেকে ডিলিট হয়ে যাবে
+    if (newQty <= 0) {
+        removeFromCart(index);
+        return;
+    }
+    
+    // স্টক চেক করা (যাতে স্টকের চেয়ে বেশি + না করতে পারে)
+    if (change > 0 && item.stock > 0 && newQty > item.stock) {
+        showToast("Not enough stock available!", "error");
+        return;
+    }
+    
+    saleCart[index].qty = newQty;
+    renderCart();
+    calculateSaleTotal();
+}
 
         function removeFromCart(index) {
             saleCart.splice(index, 1);
@@ -1739,139 +1906,140 @@ function addToCart() {
             document.getElementById('saleProductDropdown').style.display = 'none'; calculateSaleTotal(); 
         }
 
-        function calculateSaleTotal() {
-            let baseTotal = 0;
-            saleCart.forEach(item => { baseTotal += (item.price * item.qty); });
-
-            const discount = Number(document.getElementById('saleDiscount').value) || 0;
-            let paid = Number(document.getElementById('salePaid').value) || 0;
-            const finalTotal = baseTotal - discount;
-            
-            document.getElementById('saleTotalAmount').innerText = "Total: ₹" + finalTotal;
-            let dueAmount = finalTotal - paid;
-            
-            const dueTextEl = document.getElementById('saleDueText');
-            const dueAmtEl = document.getElementById('saleDueAmount');
-            
-            if (dueAmount < 0) {
-                // কাস্টমার বেশি টাকা দিয়েছে (ফেরত দিতে হবে)
-                dueTextEl.innerText = "Return Change:";
-                dueTextEl.style.color = "#10b981"; // সবুজ
-                dueAmtEl.innerText = "₹" + Math.abs(dueAmount);
-                dueAmtEl.style.color = "#10b981";
-            } else {
-                // বাকি আছে বা সমান সমান
-                dueTextEl.innerText = "Due Amount:";
-                dueTextEl.style.color = "#ef4444"; // লাল
-                dueAmtEl.innerText = "₹" + dueAmount;
-                dueAmtEl.style.color = "#ef4444";
-            }
-        }
-
+      
         async function saveRecordSale() { 
-            if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
-            
-            let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
-            saleCart.forEach(item => { 
-                baseTotal += (item.price * item.qty); 
-                totalBuyPrice += (item.buyPrice * item.qty);
-                totalQty += item.qty;
-            });
+    if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
+    
+    let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
+    saleCart.forEach(item => { 
+        baseTotal += (item.price * item.qty); 
+        totalBuyPrice += (item.buyPrice * item.qty);
+        totalQty += item.qty;
+    });
 
-            const discount = Number(document.getElementById('saleDiscount').value) || 0; 
-            const enteredPaid = Number(document.getElementById('salePaid').value) || 0;
-            const bName = document.getElementById('buyerName').value.trim(); 
-            const bPhone = document.getElementById('buyerPhone').value.trim();
-            const payMethod = document.getElementById('salePaymentMethod').value; 
-            const txnNote = document.getElementById('saleTxnNote').value.trim();
-            const sid = localStorage.getItem("seller_id");
+    const discount = Number(document.getElementById('saleDiscount').value) || 0; 
+    const enteredPaid = Number(document.getElementById('salePaid').value) || 0;
+    const bName = document.getElementById('buyerName').value.trim(); 
+    const bPhone = document.getElementById('buyerPhone').value.trim();
+    const payMethod = document.getElementById('salePaymentMethod').value; 
+    const txnNote = document.getElementById('saleTxnNote').value.trim();
+    const sid = localStorage.getItem("seller_id");
 
-            const finalTotal = baseTotal - discount; 
-            const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
-            const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
-            
-            // আপডেট: হাতে পাওয়া টাকার ওপর ভিত্তি করে লাভ (Profit) হিসাব হবে
-            const profit = paid - totalBuyPrice;
+    const finalTotal = baseTotal - discount; 
+    const paid = enteredPaid; // Clamping রিমুভ করা হলো
+    const dueAmount = finalTotal - paid; // Negative মানে কাস্টমার টাকা ফেরত পাবে
+    const profit = (paid > finalTotal ? finalTotal : paid) - totalBuyPrice;
 
-            const sDate = document.getElementById('saleCustomDate').value;
-            const sTime = document.getElementById('saleCustomTime').value;
-            let dateObj = new Date();
-            if(sDate && sTime) {
-                dateObj = new Date(`${sDate}T${sTime}`);
+    const sDate = document.getElementById('saleCustomDate').value;
+    const sTime = document.getElementById('saleCustomTime').value;
+    let dateObj = new Date();
+    if(sDate && sTime) {
+        dateObj = new Date(`${sDate}T${sTime}`);
+    }
+
+    const yearStr = dateObj.getFullYear().toString();
+    const monthStr = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const customTimestamp = firebase.firestore.Timestamp.fromDate(dateObj);
+
+    try { 
+        document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Saving...";
+        
+        if(bPhone || bName) {
+            const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
+            if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
+        }
+
+        let finalPaymentHistory = [];
+        let exchangeLogText = null; // নতুন: এক্সচেঞ্জ লগ রাখার ভেরিয়েবল
+
+        // এডিট করার সময় ইনভেন্টরি ও হিস্ট্রি অ্যাডজাস্টমেন্ট
+        if (typeof editingHistoryId !== 'undefined' && editingHistoryId && originalSaleData) {
+            // ১. পুরনো স্টক ফেরত পাঠানো
+            let oldItems = originalSaleData.isMultiItem && originalSaleData.items ? originalSaleData.items : [];
+            if(oldItems.length === 0 && originalSaleData.productId) {
+                oldItems = [{id: originalSaleData.productId, qty: originalSaleData.qty, name: originalSaleData.productName}];
+            }
+            for (let item of oldItems) {
+                try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
             }
 
-            const yearStr = dateObj.getFullYear().toString();
-            const monthStr = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-            const customTimestamp = firebase.firestore.Timestamp.fromDate(dateObj);
+            // ২. পুরনো পেমেন্ট হিস্ট্রি কপি করা
+            if (originalSaleData.paymentHistory && originalSaleData.paymentHistory.length > 0) {
+                finalPaymentHistory = [...originalSaleData.paymentHistory];
+            } else if (originalSaleData.paid > 0) {
+                finalPaymentHistory.push({ amount: originalSaleData.paid, date: originalSaleData.timestamp ? originalSaleData.timestamp.toDate().toISOString() : new Date().toISOString(), method: "Cash" });
+            }
+            
+            // ৩. নতুন পেমেন্ট যোগ করা
+            const oldPaid = Number(document.getElementById('saleOldPaidValue').value) || 0;
+            const newlyPaidAmount = paid - oldPaid;
+            if (newlyPaidAmount !== 0) { // মাইনাস পেমেন্ট (টাকা ফেরত দেওয়া) সাপোর্ট করার জন্য
+                finalPaymentHistory.push({ amount: newlyPaidAmount, date: new Date().toISOString(), method: payMethod });
+            }
 
-            try { 
-                document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Saving...";
-                
-                if(bPhone || bName) {
-                    const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
-                    if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
-                }
+            // ৪. এক্সচেঞ্জ হয়েছে কি না তা চেক করা (Product Change Check)
+            let oldItemsStr = oldItems.map(i => `${i.name} (x${i.qty})`).join(", ");
+            let newItemsStr = saleCart.map(i => `${i.name} (x${i.qty})`).join(", ");
+            
+            // যদি আইটেম পাল্টানো হয়, তবে হিস্ট্রির জন্য একটি লগ তৈরি করা হবে
+            if (oldItemsStr !== newItemsStr) {
+                let dt = new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
+                exchangeLogText = `🔄 <strong>${dt}</strong><br><span style="color:#ef4444; text-decoration:line-through;">Returned: ${oldItemsStr}</span><br><span style="color:#10b981;">Taken: ${newItemsStr}</span>`;
+            }
 
-                // যদি এডিট করা হয়, তবে আগে পুরনো বিলের স্টকগুলো ইনভেন্টরিতে ফেরত পাঠানো হচ্ছে
-                if (typeof editingHistoryId !== 'undefined' && editingHistoryId && originalSaleData) {
-                    let oldItems = originalSaleData.isMultiItem && originalSaleData.items ? originalSaleData.items : [];
-                    if(oldItems.length === 0 && originalSaleData.productId) {
-                        oldItems = [{id: originalSaleData.productId, qty: originalSaleData.qty}];
-                    }
-                    for (let item of oldItems) {
-                        try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
-                    }
-                }
-                
-                // নতুন বা এডিট করা বিল অনুযায়ী নতুন করে স্টক কমানো হচ্ছে
-                for (let item of saleCart) {
-                    await db.collection("Products").doc(item.id).update({ 
-                        stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
-                        soldCount: firebase.firestore.FieldValue.increment(item.qty) 
-                    });
-                }
-
-                const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
-                
-                // নতুন: প্রথমবার যত টাকা দিচ্ছে, সেটা লিস্টে যোগ করা হলো
-                let initialPaymentHistory = [];
-                if (paid > 0) {
-                    initialPaymentHistory.push({ amount: paid, date: new Date().toISOString() });
-                }
-                
-                const saleDataToSave = { 
-                    paymentHistory: initialPaymentHistory, // লিস্ট সেভ হচ্ছে 
-                    sellerId: sid, isMultiItem: true, items: saleCart,
-                    productName: mainProductName, productPic: saleCart[0].pic,
-                    qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
-                    totalAmount: finalTotal, discount: discount, paid: paid, 
-                    due: dueAmount, profit: profit, paymentMethod: payMethod, 
-                    txnNote: txnNote, year: yearStr, month: monthStr, 
-                    buyerName: bName, buyerPhone: bPhone, 
-                    timestamp: customTimestamp 
-                };
-
-                // এডিট নাকি নতুন সেল, সেই অনুযায়ী ডাটাবেস আপডেট করা হচ্ছে
-                if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
-                    saleDataToSave.lastPaymentDate = firebase.firestore.FieldValue.serverTimestamp(); // নতুন: ফুল এডিট করার তারিখ
-                    await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
-                    showToast("Sale Updated Successfully!", "success");
-                    editingHistoryId = null;
-                    originalSaleData = null;
-                } else {
-                    await db.collection("SalesHistory").add(saleDataToSave); 
-                    showToast("Sale Recorded Successfully!", "success"); 
-                }
-                
-                clearSaleForm(); 
-                switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
-                document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
-            } catch(e) { 
-                showToast("Error recording sale", "error"); 
-                const btnText = (typeof editingHistoryId !== 'undefined' && editingHistoryId) ? `<i class="fas fa-check-circle"></i> Update Sale` : `<i class="fas fa-check-circle"></i> Confirm`;
-                document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = btnText;
-            } 
+        } else {
+            // নতুন বিলের জন্য পেমেন্ট যোগ
+            if (paid > 0) {
+                finalPaymentHistory.push({ amount: paid, date: new Date().toISOString(), method: payMethod });
+            }
         }
+        
+        // নতুন স্টক মাইনাস করা
+        for (let item of saleCart) {
+            await db.collection("Products").doc(item.id).update({ 
+                stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
+                soldCount: firebase.firestore.FieldValue.increment(item.qty) 
+            });
+        }
+
+        const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
+
+        const saleDataToSave = { 
+            paymentHistory: finalPaymentHistory,
+            sellerId: sid, isMultiItem: true, items: saleCart,
+            productName: mainProductName, productPic: saleCart[0].pic,
+            qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
+            totalAmount: finalTotal, discount: discount, paid: paid, 
+            due: dueAmount, profit: profit, paymentMethod: payMethod, 
+            txnNote: txnNote, year: yearStr, month: monthStr, 
+            buyerName: bName, buyerPhone: bPhone, 
+            timestamp: customTimestamp 
+        };
+
+        if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
+            saleDataToSave.lastPaymentDate = firebase.firestore.FieldValue.serverTimestamp(); 
+            // যদি এক্সচেঞ্জ হয়ে থাকে তবে ডাটাবেসে সেভ করা হবে
+            if (exchangeLogText) {
+                saleDataToSave.exchangeHistory = firebase.firestore.FieldValue.arrayUnion(exchangeLogText);
+            }
+            await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
+            showToast("Sale Updated Successfully!", "success");
+            editingHistoryId = null;
+            originalSaleData = null;
+        } else {
+            await db.collection("SalesHistory").add(saleDataToSave); 
+            showToast("Sale Recorded Successfully!", "success"); 
+        }
+        
+        clearSaleForm(); 
+        switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
+        document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
+    } catch(e) { 
+        showToast("Error recording sale", "error"); 
+        const btnText = (typeof editingHistoryId !== 'undefined' && editingHistoryId) ? `<i class="fas fa-check-circle"></i> Update Sale` : `<i class="fas fa-check-circle"></i> Confirm`;
+        document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = btnText;
+    } 
+}
         
         // Single Source History Fetch
         function listenToSalesHistory(sellerId) {
@@ -2158,7 +2326,14 @@ function addToCart() {
                 const fDue = parseFloat(Number(d.due || 0).toFixed(2));
                 const fProfit = parseFloat(Number(d.profit || 0).toFixed(2));
 
-                let dueLabel = fDue > 0 ? `<span style="color:#ef4444; font-weight:bold;">Due: ₹${fDue}</span>` : `<span style="color:#10b981; font-weight:bold;">Paid</span>`;
+                let dueLabel = "";
+                if (fDue > 0) {
+                    dueLabel = `<span style="color:#ef4444; font-weight:bold;">Due: ₹${fDue}</span>`;
+                } else if (fDue < 0) {
+                    dueLabel = `<span style="color:#10b981; font-weight:bold;">Return Change: ₹${Math.abs(fDue)}</span>`;
+                } else {
+                    dueLabel = `<span style="color:#10b981; font-weight:bold;">Paid</span>`;
+                }
                 
                 let itemListText = "";
                 if (d.isMultiItem && d.items && d.items.length > 0) {
@@ -2921,96 +3096,108 @@ async function deleteOrder(id) {
             }
         }
         function viewSaleDetails(id) {
-            const d = allSalesHistoryData.find(item => item.id === id);
-            if(!d) return;
+    const d = allSalesHistoryData.find(item => item.id === id);
+    if(!d) return;
 
-            // দশমিকের পর ২ ঘর ফিক্স করা হচ্ছে
-            const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
-            const fDiscount = parseFloat(Number(d.discount || 0).toFixed(2));
-            const fPaid = parseFloat(Number(d.paid || 0).toFixed(2));
-            const fDue = parseFloat(Number(d.due || 0).toFixed(2));
-            const fProfit = parseFloat(Number(d.profit || 0).toFixed(2));
-            const fSubtotal = parseFloat((fTotal + fDiscount).toFixed(2));
+    const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
+    const fDiscount = parseFloat(Number(d.discount || 0).toFixed(2));
+    const fPaid = parseFloat(Number(d.paid || 0).toFixed(2));
+    const fDue = parseFloat(Number(d.due || 0).toFixed(2));
+    const fProfit = parseFloat(Number(d.profit || 0).toFixed(2));
+    const fSubtotal = parseFloat((fTotal + fDiscount).toFixed(2));
 
-            let itemListHtml = "";
-            if (d.isMultiItem && d.items && d.items.length > 0) {
-                d.items.forEach(item => {
-                    let iTotal = parseFloat((Number(item.price) * Number(item.qty)).toFixed(2));
-                    itemListHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
-                        <span onclick="viewProductDetails('${item.id}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${item.name} (x${item.qty})</span>
-                        <strong style="color:#0f172a;">₹${iTotal}</strong>
-                    </div>`;
-                });
-            } else {
-                let singlePrice = parseFloat(Number(d.price || d.totalAmount).toFixed(2));
-                itemListHtml = `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
-                    <span onclick="viewProductDetails('${d.productId}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${d.productName} (x${d.qty})</span>
-                    <strong style="color:#0f172a;">₹${singlePrice}</strong>
-                </div>`;
-            }
+    let itemListHtml = "";
+    if (d.isMultiItem && d.items && d.items.length > 0) {
+        d.items.forEach(item => {
+            let iTotal = parseFloat((Number(item.price) * Number(item.qty)).toFixed(2));
+            itemListHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
+                <span onclick="viewProductDetails('${item.id}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${item.name} (x${item.qty})</span>
+                <strong style="color:#0f172a;">₹${iTotal}</strong>
+            </div>`;
+        });
+    } else {
+        let singlePrice = parseFloat(Number(d.price || d.totalAmount).toFixed(2));
+        itemListHtml = `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
+            <span onclick="viewProductDetails('${d.productId}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${d.productName} (x${d.qty})</span>
+            <strong style="color:#0f172a;">₹${singlePrice}</strong>
+        </div>`;
+    }
 
-            const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
-            
-            // নতুন: Last Payment Date
-            let lastPayHtml = d.lastPaymentDate ? `<p style="margin:4px 0 0; font-size:12px; color:#10b981; font-weight:bold;"><i class="fas fa-check-circle"></i> Last Paid: ${d.lastPaymentDate.toDate().toLocaleDateString('en-IN')} ${d.lastPaymentDate.toDate().toLocaleTimeString('en-IN')}</p>` : "";
-            // নতুন: কবে কবে কত পেমেন্ট করেছে তার পুরো লিস্ট (Payment Ledger)
-            let paymentListHtml = "";
-            if (d.paymentHistory && d.paymentHistory.length > 0) {
-                paymentListHtml = `<div style="margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px;">
-                    <p style="margin:0 0 6px; font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;"><i class="fas fa-list-ol"></i> Payment History</p>`;
-                d.paymentHistory.forEach((ph, index) => {
-                    let phDate = new Date(ph.date).toLocaleDateString('en-IN') + ' ' + new Date(ph.date).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
-                    paymentListHtml += `<div style="display:flex; justify-content:space-between; font-size:11px; color:#15803d; border-bottom:1px dashed #bbf7d0; padding:4px 0;">
-                        <span>${index + 1}. ${phDate}</span> <strong>+ ₹${ph.amount}</strong>
-                    </div>`;
-                });
-                paymentListHtml += `</div>`;
-            }
+    const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') + ' ' + d.timestamp.toDate().toLocaleTimeString('en-IN') : "";
+    
+    let lastPayHtml = d.lastPaymentDate ? `<p style="margin:4px 0 0; font-size:12px; color:#10b981; font-weight:bold;"><i class="fas fa-check-circle"></i> Last Paid: ${d.lastPaymentDate.toDate().toLocaleDateString('en-IN')} ${d.lastPaymentDate.toDate().toLocaleTimeString('en-IN')}</p>` : "";
+    
+    // Payment History List
+    let paymentListHtml = "";
+    if (d.paymentHistory && d.paymentHistory.length > 0) {
+        paymentListHtml = `<div style="margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px;">
+            <p style="margin:0 0 6px; font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;"><i class="fas fa-list-ol"></i> Payment History</p>`;
+        d.paymentHistory.forEach((ph, index) => {
+            let phDate = new Date(ph.date).toLocaleDateString('en-IN') + ' ' + new Date(ph.date).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
+            let amountTxt = ph.amount < 0 ? `<strong style="color:#ef4444;">- ₹${Math.abs(ph.amount)} (Returned)</strong>` : `<strong>+ ₹${ph.amount}</strong>`;
+            paymentListHtml += `<div style="display:flex; justify-content:space-between; font-size:11px; color:#15803d; border-bottom:1px dashed #bbf7d0; padding:4px 0;">
+                <span>${index + 1}. ${phDate}</span> ${amountTxt}
+            </div>`;
+        });
+        paymentListHtml += `</div>`;
+    }
 
-            // ফুল এডিট এবং রিফান্ড বাটন লজিক
+    // Exchange History List (নতুন অ্যাড করা হলো)
+    let exchangeListHtml = "";
+    if (d.exchangeHistory && d.exchangeHistory.length > 0) {
+        exchangeListHtml = `<div style="margin-top:12px; background:#fffbeb; border:1px solid #fde68a; padding:10px; border-radius:8px;">
+            <p style="margin:0 0 6px; font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase;"><i class="fas fa-exchange-alt"></i> Exchange History</p>`;
+        d.exchangeHistory.forEach((ex) => {
+            exchangeListHtml += `<div style="font-size:11px; color:#92400e; border-bottom:1px dashed #fde68a; padding:6px 0; line-height: 1.5;">
+                ${ex}
+            </div>`;
+        });
+        exchangeListHtml += `</div>`;
+    }
 
-            // ফুল এডিট এবং রিফান্ড বাটন লজিক
-            let actionButtonsHtml = "";
-            if(d.isReturned) {
-                actionButtonsHtml = `<div style="text-align:center; color:#ef4444; font-weight:bold; margin-top:15px; padding:10px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;"><i class="fas fa-check-circle"></i> Item Returned & Refunded</div>`;
-            } else {
-                actionButtonsHtml = `
-                <div style="display: flex; gap: 8px; margin-top: 15px;">
-                    <button onclick="fullEditSale('${d.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #0ea5e9; color: white; font-weight: bold; cursor: pointer;"><i class="fas fa-edit"></i> Full Edit</button>
-                    <button onclick="processRefund('${d.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer;"><i class="fas fa-undo"></i> Refund</button>
-                </div>`;
-            }
+    // Action Buttons
+    let actionButtonsHtml = "";
+    if(d.isReturned) {
+        actionButtonsHtml = `<div style="text-align:center; color:#ef4444; font-weight:bold; margin-top:15px; padding:10px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;"><i class="fas fa-check-circle"></i> Item Returned & Refunded</div>`;
+    } else {
+        actionButtonsHtml = `
+        <div style="display: flex; gap: 6px; margin-top: 15px;">
+            <button onclick="openEditSaleModal('${d.id}')" style="flex: 1.2; padding: 10px 5px; border: none; border-radius: 8px; background: #10b981; color: white; font-weight: bold; cursor: pointer; font-size:12px;"><i class="fas fa-hand-holding-usd"></i> Payment</button>
+            <button onclick="fullEditSale('${d.id}')" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: #0ea5e9; color: white; font-weight: bold; cursor: pointer; font-size:12px;"><i class="fas fa-edit"></i> Edit Bill</button>
+            <button onclick="processRefund('${d.id}')" style="flex: 1; padding: 10px 5px; border: none; border-radius: 8px; background: #ef4444; color: white; font-weight: bold; cursor: pointer; font-size:12px;"><i class="fas fa-undo"></i> Refund</button>
+        </div>`;
+    }
 
-            // Error Fix: নোট দেখানোর লজিকটি ঠিক করা হলো
-            let txnNoteDisplay = d.txnNote ? ' (' + d.txnNote + ')' : '';
+    let txnNoteDisplay = d.txnNote ? ' (' + d.txnNote + ')' : '';
 
-            document.getElementById('saleDetailsContent').innerHTML = `
-                <div style="text-align:center; margin-bottom:15px;">
-                    <h2 style="margin:0; color:${d.isReturned ? '#94a3b8' : '#10b981'}; text-decoration:${d.isReturned ? 'line-through' : 'none'};">₹${fTotal}</h2>
-                    <p style="margin:0; font-size:11px; color:#64748b;">Bought: ${date}</p>
-                    ${lastPayHtml}
-                </div>
-                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
-                    <p style="margin:0 0 5px;"><strong>Customer:</strong> <span style="color:#0f172a;">${d.buyerName || 'N/A'}</span></p>
-                    <p style="margin:0 0 5px;"><strong>Phone:</strong> <span style="color:#0f172a;">${d.buyerPhone || 'N/A'}</span></p>
-                    <p style="margin:0;"><strong>Pay Mode:</strong> <span style="color:#0f172a;">${d.paymentMethod || 'Cash'}</span><span style="color:#64748b;">${txnNoteDisplay}</span></p>
-                </div>
-                <h4 style="margin:0 0 8px; border-bottom:2px solid #cbd5e1; padding-bottom:5px; color:#0f172a;">Purchased Items</h4>
-                ${itemListHtml}
-                <div style="margin-top:10px; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal:</span> <strong>₹${fSubtotal}</strong></div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#f59e0b;"><span>Discount:</span> <strong>- ₹${fDiscount}</strong></div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#10b981;"><span>Paid Amount:</span> <strong>₹${fPaid}</strong></div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#ef4444;"><span>Due Amount:</span> <strong>₹${fDue}</strong></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${fProfit}</strong></div>
-                </div>
-                ${paymentListHtml}
-                ${actionButtonsHtml}
-            `;
-            // z-index 4000 করে দেওয়া হলো যাতে হিস্ট্রি পপ-আপের (3000) ওপরে ওপেন হয়
-            document.getElementById('viewSaleModal').style.zIndex = '4000';
-            document.getElementById('viewSaleModal').style.display = 'flex';
-        }
+    document.getElementById('saleDetailsContent').innerHTML = `
+        <div style="text-align:center; margin-bottom:15px;">
+            <h2 style="margin:0; color:${d.isReturned ? '#94a3b8' : '#10b981'}; text-decoration:${d.isReturned ? 'line-through' : 'none'};">₹${fTotal}</h2>
+            <p style="margin:0; font-size:11px; color:#64748b;">Bought: ${date}</p>
+            ${lastPayHtml}
+        </div>
+        <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px;">
+            <p style="margin:0 0 5px;"><strong>Customer:</strong> <span style="color:#0f172a;">${d.buyerName || 'N/A'}</span></p>
+            <p style="margin:0 0 5px;"><strong>Phone:</strong> <span style="color:#0f172a;">${d.buyerPhone || 'N/A'}</span></p>
+            <p style="margin:0;"><strong>Pay Mode:</strong> <span style="color:#0f172a;">${d.paymentMethod || 'Cash'}</span><span style="color:#64748b;">${txnNoteDisplay}</span></p>
+        </div>
+        <h4 style="margin:0 0 8px; border-bottom:2px solid #cbd5e1; padding-bottom:5px; color:#0f172a;">Purchased Items</h4>
+        ${itemListHtml}
+        <div style="margin-top:10px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal:</span> <strong>₹${fSubtotal}</strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#f59e0b;"><span>Discount:</span> <strong>- ₹${fDiscount}</strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#10b981;"><span>Paid Amount:</span> <strong>₹${fPaid}</strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:${fDue < 0 ? '#10b981' : '#ef4444'};"><span>${fDue < 0 ? 'Return Change:' : 'Due Amount:'}</span> <strong>₹${Math.abs(fDue)}</strong></div>
+            <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; color:#0ea5e9; font-size:13px;"><span>Net Profit:</span> <strong>₹${fProfit}</strong></div>
+        </div>
+        ${paymentListHtml}
+        ${exchangeListHtml}
+        ${actionButtonsHtml}
+    `;
+    
+    document.getElementById('viewSaleModal').style.zIndex = '4000';
+    document.getElementById('viewSaleModal').style.display = 'flex';
+}
 
         // --- নতুন processRefund ফাংশন ---
         function processRefund(historyId) {
@@ -3076,79 +3263,111 @@ async function deleteOrder(id) {
             showToast("Warning: This product already exists!", "warning");
         }
         function openEditSaleModal(id) {
-            const d = allSalesHistoryData.find(item => item.id === id);
-            if(!d) return;
+    const d = allSalesHistoryData.find(item => item.id === id);
+    if(!d) return;
 
-            document.getElementById('editSaleId').value = d.id;
-            document.getElementById('editSaleBasePrice').value = d.price || 0; 
-            document.getElementById('editSaleBuyPrice').value = d.buyPrice || 0;
-            document.getElementById('editSaleOldPaid').value = d.paid || 0; // পুরনো পেমেন্টটা সেভ রাখা হলো
-            
-            document.getElementById('editSaleBuyerName').value = d.buyerName || "";
-            document.getElementById('editSaleBuyerPhone').value = d.buyerPhone || "";
-            document.getElementById('editSaleDiscount').value = d.discount || 0;
-            document.getElementById('editSalePaid').value = d.paid || 0;
-            document.getElementById('editSalePayMethod').value = d.paymentMethod || "Cash";
-            document.getElementById('editSaleTxnNote').value = d.txnNote || "";
+    document.getElementById('editSaleId').value = d.id;
+    document.getElementById('editSaleBasePrice').value = d.price || d.totalAmount || 0; 
+    document.getElementById('editSaleBuyPrice').value = d.buyPrice || 0;
+    document.getElementById('editSaleOldPaid').value = d.paid || 0; 
+    
+    document.getElementById('editSaleBuyerName').value = d.buyerName || "";
+    document.getElementById('editSaleBuyerPhone').value = d.buyerPhone || "";
+    document.getElementById('editSaleDiscount').value = d.discount || 0;
+    
+    document.getElementById('editSaleNewPayment').value = "";
+    
+    document.getElementById('editSalePayMethod').value = d.paymentMethod || "Cash";
+    document.getElementById('editSaleTxnNote').value = d.txnNote || "";
 
-            // রসিদ বন্ধ করে এডিট পপ-আপ খোলা হবে
-            document.getElementById('viewSaleModal').style.display = 'none';
-            // z-index 6000 করে দেওয়া হলো যাতে এটি সবকিছুর ওপরে ওপেন হয়
-            document.getElementById('editSaleModal').style.zIndex = '6000';
-            document.getElementById('editSaleModal').style.display = 'flex';
+    const baseP = Number(d.price || d.totalAmount || 0);
+    const disc = Number(d.discount || 0);
+    const actualBill = baseP - disc;
+    document.getElementById('editSaleBaseTxt').innerText = "₹" + actualBill;
+    document.getElementById('editSaleOldPaidTxt').innerText = "₹" + (d.paid || 0);
+    document.getElementById('editSaleDueTxt').innerText = "₹" + (d.due || 0);
+
+    document.getElementById('viewSaleModal').style.display = 'none';
+    document.getElementById('editSaleModal').style.zIndex = '6000';
+    document.getElementById('editSaleModal').style.display = 'flex';
+}
+// রিয়েল-টাইমে Remaining Due আপডেট করার ফাংশন
+function calculateEditSaleDue() {
+    const basePrice = Number(document.getElementById('editSaleBasePrice').value) || 0;
+    const discount = Number(document.getElementById('editSaleDiscount').value) || 0;
+    const oldPaid = Number(document.getElementById('editSaleOldPaid').value) || 0;
+    const newPayment = Number(document.getElementById('editSaleNewPayment').value) || 0;
+
+    const finalTotal = basePrice - discount;
+    const totalPaid = oldPaid + newPayment;
+    const remainingDue = finalTotal - totalPaid;
+
+    // টোটাল বিল আপডেট
+    document.getElementById('editSaleBaseTxt').innerText = "₹" + finalTotal;
+    
+    // Remaining Due আপডেট (যদি বেশি পেমেন্ট করে তবে রিটার্ন দেখাবে)
+    const dueTxtEl = document.getElementById('editSaleDueTxt');
+    if (remainingDue < 0) {
+        dueTxtEl.innerText = "Return: ₹" + Math.abs(remainingDue);
+        dueTxtEl.style.color = "#10b981"; // সবুজ রঙ
+    } else {
+        dueTxtEl.innerText = "₹" + remainingDue;
+        dueTxtEl.style.color = "#ef4444"; // লাল রঙ
     }
+}
 
-        async function saveSaleEdits() {
-            const id = document.getElementById('editSaleId').value;
-            const basePrice = Number(document.getElementById('editSaleBasePrice').value) || 0;
-            const buyPrice = Number(document.getElementById('editSaleBuyPrice').value) || 0;
-            
-            const bName = document.getElementById('editSaleBuyerName').value.trim();
-            const bPhone = document.getElementById('editSaleBuyerPhone').value.trim();
-            const discount = Number(document.getElementById('editSaleDiscount').value) || 0;
-            const enteredPaid = Number(document.getElementById('editSalePaid').value) || 0;
-            const payMethod = document.getElementById('editSalePayMethod').value;
-            const txnNote = document.getElementById('editSaleTxnNote').value.trim();
+async function saveSaleEdits() {
+    const id = document.getElementById('editSaleId').value;
+    const basePrice = Number(document.getElementById('editSaleBasePrice').value) || 0;
+    const buyPrice = Number(document.getElementById('editSaleBuyPrice').value) || 0;
+    
+    const bName = document.getElementById('editSaleBuyerName').value.trim();
+    const bPhone = document.getElementById('editSaleBuyerPhone').value.trim();
+    const discount = Number(document.getElementById('editSaleDiscount').value) || 0;
+    
+    const oldPaid = Number(document.getElementById('editSaleOldPaid').value) || 0;
+    const newPayment = Number(document.getElementById('editSaleNewPayment').value) || 0; 
+    const payMethod = document.getElementById('editSalePayMethod').value;
+    const txnNote = document.getElementById('editSaleTxnNote').value.trim();
 
-            // নতুন করে বিল, বাকি এবং লাভ হিসাব করা হচ্ছে
-            const finalTotal = basePrice - discount;
-            const paid = enteredPaid > finalTotal ? finalTotal : enteredPaid;
-            const dueAmount = finalTotal - paid > 0 ? finalTotal - paid : 0;
-            
-            // আপডেট: হাতে পাওয়া টাকার ওপর ভিত্তি করে লাভ (Profit) হিসাব হবে
-            const profit = paid - buyPrice;
+    const finalTotal = basePrice - discount;
+    let totalPaid = oldPaid + newPayment;
+    
+    const paid = totalPaid; // Clamping রিমুভ করা হলো
+    const dueAmount = finalTotal - paid;
+    const profit = (paid > finalTotal ? finalTotal : paid) - buyPrice;
 
-            const oldPaid = Number(document.getElementById('editSaleOldPaid').value) || 0;
+    try {
+        document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Updating...";
+        
+        let updateData = {
+            buyerName: bName, buyerPhone: bPhone, discount: discount,
+            paid: paid, due: dueAmount, profit: profit, totalAmount: finalTotal,
+            paymentMethod: payMethod, txnNote: txnNote,
+            lastPaymentDate: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-            try {
-                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Updating...";
-                
-                let updateData = {
-                    buyerName: bName, buyerPhone: bPhone, discount: discount,
-                    paid: paid, due: dueAmount, profit: profit, totalAmount: finalTotal,
-                    paymentMethod: payMethod, txnNote: txnNote,
-                    lastPaymentDate: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                // যদি আগের চেয়ে বেশি টাকা পেমেন্ট করে (অর্থাৎ নতুন করে ডিউ দেয়), তবেই লিস্টে অ্যাড হবে
-                if (paid > oldPaid) {
-                    const newlyPaidAmount = paid - oldPaid;
-                    updateData.paymentHistory = firebase.firestore.FieldValue.arrayUnion({
-                        amount: newlyPaidAmount,
-                        date: new Date().toISOString()
-                    });
-                }
-
-                await db.collection("SalesHistory").doc(id).update(updateData);
-
-                document.getElementById('editSaleModal').style.display = 'none';
-                showToast("Sale Bill Updated!", "success");
-                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
-            } catch(e) {
-                showToast("Error updating bill", "error");
-                document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
+        if (newPayment !== 0) { // মাইনাস পেমেন্ট সাপোর্ট করার জন্য
+            const actualNewPaymentAdded = paid - oldPaid; 
+            if (actualNewPaymentAdded !== 0) {
+                updateData.paymentHistory = firebase.firestore.FieldValue.arrayUnion({
+                    amount: actualNewPaymentAdded,
+                    date: new Date().toISOString(),
+                    method: payMethod
+                });
             }
         }
+
+        await db.collection("SalesHistory").doc(id).update(updateData);
+
+        document.getElementById('editSaleModal').style.display = 'none';
+        showToast("Payment Added & Bill Updated!", "success");
+        document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
+    } catch(e) {
+        showToast("Error updating bill", "error");
+        document.querySelector('button[onclick="saveSaleEdits()"]').innerText = "Update Bill";
+    }
+}
         // --- Full Sale Edit Logic ---
         var editingHistoryId = null; // var ব্যবহার করা হলো যাতে ক্র্যাশ না করে
         var originalSaleData = null;
@@ -3206,6 +3425,11 @@ async function deleteOrder(id) {
                     document.getElementById('buyerName').value = data.buyerName || "";
                     document.getElementById('buyerPhone').value = data.buyerPhone || "";
                     document.getElementById('saleDiscount').value = data.discount || 0;
+                    // Enable the payment section for edit mode
+document.getElementById('saleEditPaymentSection').style.display = 'flex';
+document.getElementById('saleOldPaidValue').value = data.paid || 0;
+document.getElementById('saleOldPaidTxt').innerText = data.paid || 0;
+document.getElementById('saleNewPayment').value = 0;
                     document.getElementById('salePaid').value = data.paid || 0;
                     document.getElementById('salePaymentMethod').value = data.paymentMethod || "Cash";
                     document.getElementById('saleTxnNote').value = data.txnNote || "";
@@ -3619,70 +3843,87 @@ function showSoldItemsList() {
             // Analytics-এর ইনপুট বক্সে ডিফল্টভাবে বর্তমান সাল বসিয়ে দেওয়া হচ্ছে
             if(document.getElementById('chartYear')) document.getElementById('chartYear').value = currentYear;
         }
-// কাস্টমারের কেনাকাটার হিস্ট্রি বের করার লজিক
-        function viewCustomerHistory(phone, name) {
-            const modal = document.getElementById('customerHistoryModal');
-            const content = document.getElementById('customerHistoryContent');
-            
-            document.getElementById('chModalTitle').innerText = name + "'s History";
-            content.innerHTML = "";
+function viewCustomerHistory(phone, name, showOnlyDue = false) {
+    const modal = document.getElementById('customerHistoryModal');
+    const content = document.getElementById('customerHistoryContent');
+    
+    // টাইটেল ডায়নামিক করা হলো
+    document.getElementById('chModalTitle').innerText = showOnlyDue ? name + " (Due/Return Bills)" : name + "'s History";
+    content.innerHTML = "";
 
-            // Fix: ফোন থাকলে ফোন দিয়ে, না থাকলে নাম দিয়ে ফিল্টার
-            let customerSales = allSalesHistoryData.filter(sale => {
-                if (phone) return sale.buyerPhone === phone;
-                return sale.buyerName === name;
-            });
-            
-            customerSales.sort((a, b) => { 
-                const timeA = a.timestamp ? a.timestamp.toMillis() : 0; 
-                const timeB = b.timestamp ? b.timestamp.toMillis() : 0; 
-                return timeB - timeA; 
-            });
-
-            if(customerSales.length === 0) {
-                content.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No purchase history found for this customer.</p>`;
-            } else {
-                let historyHtml = "";
-                customerSales.forEach(d => {
-                    const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "";
-                    const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
-                    const fDue = parseFloat(Number(d.due || 0).toFixed(2));
-                    
-                    let statusBadge = d.isReturned 
-                        ? `<span style="background:#fee2e2; color:#ef4444; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;"><i class="fas fa-undo"></i> Refunded</span>`
-                        : (fDue > 0 ? `<span style="background:#fef3c7; color:#d97706; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Due: ₹${fDue}</span>` 
-                                    : `<span style="background:#dcfce7; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Fully Paid</span>`);
-
-                    let itemListText = "";
-                    if (d.isMultiItem && d.items && d.items.length > 0) {
-                        d.items.forEach(item => {
-                            itemListText += `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${item.name} (x${item.qty})</div>`;
-                        });
-                    } else {
-                        itemListText = `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${d.productName} (x${d.qty})</div>`;
-                    }
-
-                    historyHtml += `
-                    <div style="border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px; background:${d.isReturned ? '#f8fafc' : 'white'};">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <strong style="color:#0f172a; font-size:13px;"><i class="far fa-calendar-alt"></i> ${date}</strong>
-                            ${statusBadge}
-                        </div>
-                        <div style="margin-bottom:8px; background:#f1f5f9; padding:5px; border-radius:6px;">
-                            ${itemListText}
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                            <span>Total Bill: <strong style="font-size:14px;">₹${fTotal}</strong></span>
-                            <button onclick="viewSaleDetails('${d.id}')" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:5px 10px; font-weight:bold; cursor:pointer;"><i class="fas fa-eye"></i> View Bill</button>
-                        </div>
-                    </div>`;
-                });
-                content.innerHTML = historyHtml;
-            }
-            
-            modal.style.zIndex = "3000"; 
-            modal.style.display = 'flex';
+    // ফোন বা নাম দিয়ে ফিল্টার করা হচ্ছে
+    let customerSales = allSalesHistoryData.filter(sale => {
+        let isMatch = false;
+        if (phone) {
+            isMatch = (sale.buyerPhone === phone);
+        } else {
+            isMatch = (sale.buyerName === name);
         }
+        
+        // যদি Sell ট্যাব থেকে ক্লিক করা হয়, তবে শুধু বাকি বা ফেরত দেওয়া বিলগুলোই আসবে
+        if (showOnlyDue) {
+            return isMatch && (sale.due !== 0) && !sale.isReturned;
+        }
+        return isMatch;
+    });
+    
+    customerSales.sort((a, b) => { 
+        const timeA = a.timestamp ? a.timestamp.toMillis() : 0; 
+        const timeB = b.timestamp ? b.timestamp.toMillis() : 0; 
+        return timeB - timeA; 
+    });
+
+    if(customerSales.length === 0) {
+        content.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No ${showOnlyDue ? 'pending due or return' : 'purchase'} history found.</p>`;
+    } else {
+        let historyHtml = "";
+        customerSales.forEach(d => {
+            const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "";
+            const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
+            const fDue = parseFloat(Number(d.due || 0).toFixed(2));
+            
+            // নেগেটিভ ডিউ মানে Return Change
+            let statusBadge = "";
+            if (d.isReturned) {
+                statusBadge = `<span style="background:#fee2e2; color:#ef4444; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;"><i class="fas fa-undo"></i> Refunded</span>`;
+            } else if (fDue > 0) {
+                statusBadge = `<span style="background:#fef3c7; color:#d97706; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Due: ₹${fDue}</span>`;
+            } else if (fDue < 0) {
+                statusBadge = `<span style="background:#ecfdf5; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Return: ₹${Math.abs(fDue)}</span>`;
+            } else {
+                statusBadge = `<span style="background:#dcfce7; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Fully Paid</span>`;
+            }
+
+            let itemListText = "";
+            if (d.isMultiItem && d.items && d.items.length > 0) {
+                d.items.forEach(item => {
+                    itemListText += `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${item.name} (x${item.qty})</div>`;
+                });
+            } else {
+                itemListText = `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${d.productName} (x${d.qty})</div>`;
+            }
+
+            historyHtml += `
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px; background:${d.isReturned ? '#f8fafc' : 'white'};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:#0f172a; font-size:13px;"><i class="far fa-calendar-alt"></i> ${date}</strong>
+                    ${statusBadge}
+                </div>
+                <div style="margin-bottom:8px; background:#f1f5f9; padding:5px; border-radius:6px;">
+                    ${itemListText}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <span>Total Bill: <strong style="font-size:14px;">₹${fTotal}</strong></span>
+                    <button onclick="viewSaleDetails('${d.id}')" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:5px 10px; font-weight:bold; cursor:pointer;"><i class="fas fa-eye"></i> View Bill</button>
+                </div>
+            </div>`;
+        });
+        content.innerHTML = historyHtml;
+    }
+    
+    modal.style.zIndex = "3000"; 
+    modal.style.display = 'flex';
+}
         
     </script>
     <!-- Restore Progress Overlay -->
@@ -3722,4 +3963,4 @@ function showSoldItemsList() {
     <div id="fsImageIndicator" style="color:white; margin-top:20px; font-size:16px; font-weight:bold; background:rgba(255,255,255,0.2); padding:5px 15px; border-radius:20px;">1 / 1</div>
 </div>
 </body>
-</html>
+</html> 
