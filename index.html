@@ -822,6 +822,24 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         </div>
     </div>
 </div>
+<!-- Sale Preview Modal -->
+<div class="modal-overlay" id="previewSaleModal" style="z-index: 8000;">
+    <div class="edit-card" style="max-width: 350px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-search" style="color: #0ea5e9;"></i> Preview Bill</h3>
+            <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('previewSaleModal').style.display='none'"></i>
+        </div>
+        
+        <!-- প্রিভিউ কন্টেন্ট এখানে লোড হবে -->
+        <div id="previewSaleContent" style="font-size: 13px; color: #475569; max-height: 60vh; overflow-y: auto;">
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+            <button onclick="document.getElementById('previewSaleModal').style.display='none'" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:600; color:#475569;"><i class="fas fa-edit"></i> Go Back</button>
+            <button onclick="executeFinalSale()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:600;"><i class="fas fa-check-double"></i> Save Bill</button>
+        </div>
+    </div>
+</div>
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
         <div class="edit-card" style="max-width: 320px; text-align: center;">
@@ -1907,7 +1925,8 @@ function updateCartQty(index, change) {
         }
 
       
-        async function saveRecordSale() { 
+        async function executeFinalSale() { 
+    document.getElementById('previewSaleModal').style.display = 'none'; // প্রিভিউ পপ-আপ বন্ধ করবে
     if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
     
     let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
@@ -2039,6 +2058,68 @@ function updateCartQty(index, change) {
         const btnText = (typeof editingHistoryId !== 'undefined' && editingHistoryId) ? `<i class="fas fa-check-circle"></i> Update Sale` : `<i class="fas fa-check-circle"></i> Confirm`;
         document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = btnText;
     } 
+}
+// --- New Preview Function (Intercepts the Confirm button) ---
+function saveRecordSale() {
+    if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
+    
+    let baseTotal = 0; 
+    let itemListHtml = "";
+    
+    // কার্টের আইটেমগুলো গোছানো হচ্ছে (সিরিয়াল নম্বর সহ)
+    saleCart.forEach((item, index) => { 
+        baseTotal += (item.price * item.qty); 
+        itemListHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-bottom:4px; border-bottom:1px dashed #e2e8f0;">
+            <span style="color:#0ea5e9; font-weight:600; flex:1; display:flex; align-items:flex-start;">
+                <span style="color:#475569; margin-right:4px; min-width: 15px; text-align: left;">${index + 1}.</span>
+                <span>${item.name} <span style="color:#64748b; font-size:11px;">(x${item.qty})</span></span>
+            </span>
+            <strong style="color:#0f172a; margin-left:10px;">₹${item.price * item.qty}</strong>
+        </div>`;
+    });
+
+    const discount = Number(document.getElementById('saleDiscount').value) || 0; 
+    const paid = Number(document.getElementById('salePaid').value) || 0;
+    const bName = document.getElementById('buyerName').value.trim() || 'Customer'; 
+    const bPhone = document.getElementById('buyerPhone').value.trim() || 'No Phone';
+    const payMethod = document.getElementById('salePaymentMethod').value; 
+
+    let isEditing = (typeof editingHistoryId !== 'undefined' && editingHistoryId);
+
+    const finalTotal = baseTotal - discount; 
+    const dueAmount = finalTotal - paid;
+    
+    let dueLabel = "";
+    if(dueAmount > 0) dueLabel = `<span style="color:#ef4444; font-weight:bold;">Remaining Due: ₹${dueAmount}</span>`;
+    else if (dueAmount < 0) dueLabel = `<span style="color:#10b981; font-weight:bold;">Return Change: ₹${Math.abs(dueAmount)}</span>`;
+    else dueLabel = `<span style="color:#10b981; font-weight:bold;">Status: Fully Paid</span>`;
+
+    const sDate = document.getElementById('saleCustomDate').value;
+    const sTime = document.getElementById('saleCustomTime').value;
+
+    let editBadge = isEditing ? `<div style="background:#fef3c7; color:#d97706; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold; margin-bottom:10px; text-align:center;"><i class="fas fa-edit"></i> You are updating an existing bill</div>` : '';
+
+    // প্রিভিউ বক্সে ডেটা পাঠানো হচ্ছে
+    document.getElementById('previewSaleContent').innerHTML = `
+        ${editBadge}
+        <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px; line-height: 1.5;">
+            <p style="margin:0 0 3px;"><strong>Customer:</strong> <span style="color:#0ea5e9;">${bName}</span></p>
+            <p style="margin:0 0 3px;"><strong>Phone:</strong> ${bPhone}</p>
+            <p style="margin:0;"><strong>Date:</strong> ${sDate} | ${sTime}</p>
+        </div>
+        <h4 style="margin:0 0 8px; border-bottom:2px solid #cbd5e1; padding-bottom:5px; color:#0f172a;">Cart Items</h4>
+        ${itemListHtml}
+        <div style="margin-top:10px; font-size:13px; background:#fffbeb; padding:10px; border-radius:8px; border:1px dashed #fde68a; line-height:1.6;">
+            <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span> <strong>₹${baseTotal}</strong></div>
+            <div style="display:flex; justify-content:space-between; color:#f59e0b;"><span>Discount:</span> <strong>- ₹${discount}</strong></div>
+            <div style="display:flex; justify-content:space-between; color:#0f172a; border-top:1px solid #fde68a; margin-top:4px; padding-top:4px;"><span>Final Bill:</span> <strong>₹${finalTotal}</strong></div>
+            <div style="display:flex; justify-content:space-between; color:#10b981; margin-top:4px;"><span>Total Paid:</span> <strong>₹${paid} <span style="font-size:10px;">(${payMethod})</span></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px dashed #fde68a;">${dueLabel}</div>
+        </div>
+    `;
+    
+    // প্রিভিউ পপ-আপ শো করা হচ্ছে
+    document.getElementById('previewSaleModal').style.display = 'flex';
 }
         
         // Single Source History Fetch
@@ -3108,18 +3189,24 @@ async function deleteOrder(id) {
 
     let itemListHtml = "";
     if (d.isMultiItem && d.items && d.items.length > 0) {
-        d.items.forEach(item => {
+        d.items.forEach((item, index) => {
             let iTotal = parseFloat((Number(item.price) * Number(item.qty)).toFixed(2));
             itemListHtml += `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
-                <span onclick="viewProductDetails('${item.id}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${item.name} (x${item.qty})</span>
-                <strong style="color:#0f172a;">₹${iTotal}</strong>
+                <span style="flex:1; display:flex; align-items:flex-start;">
+                    <span style="color:#475569; font-weight:bold; margin-right:4px; min-width: 15px; text-align: left;">${index + 1}.</span>
+                    <span onclick="viewProductDetails('${item.id}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${item.name} (x${item.qty})</span>
+                </span>
+                <strong style="color:#0f172a; margin-left:10px;">₹${iTotal}</strong>
             </div>`;
         });
     } else {
         let singlePrice = parseFloat(Number(d.price || d.totalAmount).toFixed(2));
         itemListHtml = `<div style="display:flex; justify-content:space-between; border-bottom:1px dashed #e2e8f0; padding:5px 0;">
-            <span onclick="viewProductDetails('${d.productId}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${d.productName} (x${d.qty})</span>
-            <strong style="color:#0f172a;">₹${singlePrice}</strong>
+            <span style="flex:1; display:flex; align-items:flex-start;">
+                <span style="color:#475569; font-weight:bold; margin-right:4px; min-width: 15px; text-align: left;">1.</span>
+                <span onclick="viewProductDetails('${d.productId}')" style="cursor:pointer; color:#0ea5e9; font-weight:600; text-decoration:underline;" title="Click to view product">${d.productName} (x${d.qty})</span>
+            </span>
+            <strong style="color:#0f172a; margin-left:10px;">₹${singlePrice}</strong>
         </div>`;
     }
 
