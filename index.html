@@ -836,7 +836,7 @@ button[onclick="cancelSale()"], button[onclick="saveRecordSale()"] { padding: 8p
         
         <div style="display: flex; gap: 8px; margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
             <button onclick="document.getElementById('previewSaleModal').style.display='none'" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:600; color:#475569;"><i class="fas fa-edit"></i> Go Back</button>
-            <button onclick="executeFinalSale()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:600;"><i class="fas fa-check-double"></i> Save Bill</button>
+            <button id="confirmSaveBillBtn" onclick="executeFinalSale()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:600;"><i class="fas fa-check-double"></i> Save Bill</button>
         </div>
     </div>
 </div>
@@ -1547,129 +1547,7 @@ function filterItemsTab() {
             }); 
         }
 
-        function renderCustomersTab(query = "") {
-            const container = document.getElementById('customers-container');
-            if(!container) return;
-            
-            let filtered = currentSellerCustomers;
-            if(query) {
-                const q = query.toLowerCase();
-                filtered = filtered.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q)));
-            }
-            
-            // Fix 1: ফোন নম্বর না থাকলেও নাম দিয়ে আলাদা কাস্টমার তৈরি করবে
-            const uniqueCustomers = [];
-            const seen = new Set();
-            filtered.forEach(c => {
-                let identifier = c.phone ? c.phone.trim() : (c.name ? c.name.trim().toLowerCase() : Math.random().toString());
-                if (!seen.has(identifier)) {
-                    seen.add(identifier);
-                    uniqueCustomers.push(c);
-                }
-            });
-
-            uniqueCustomers.sort((a, b) => {
-                const nameA = a.name || "";
-                const nameB = b.name || "";
-                return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
-            });
-
-            if(uniqueCustomers.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No customers found.</div>`;
-                return;
-            }
-            
-            const shopDetails = "Payel's Cosmetic, Jwellery and Gifts.\n📍 Moyna Shivtala, Nabagram, Purba Bardhaman.";
-            let htmlString = ""; 
-
-            uniqueCustomers.forEach(c => {
-                let rawPhone = c.phone ? c.phone.replace(/\D/g, '') : ''; 
-                let waPhone = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
-                let cName = c.name || "Customer";
-
-                // Fix 2: শুধুমাত্র এই নির্দিষ্ট কাস্টমারের হিসাব বের করা হবে
-                let totalPurchase = 0;
-                let totalPaid = 0;
-                let totalDue = 0;
-                let totalProfit = 0;
-
-                allSalesHistoryData.forEach(sale => {
-                    if(!sale.isReturned) {
-                        let isPhoneMatch = c.phone && sale.buyerPhone === c.phone;
-                        let isNameMatch = !c.phone && c.name && sale.buyerName === c.name;
-
-                        if (isPhoneMatch || isNameMatch) {
-                            totalPurchase += Number(sale.totalAmount) || 0;
-                            totalPaid += Number(sale.paid) || 0;
-                            totalDue += Number(sale.due) || 0;
-                            totalProfit += Number(sale.profit) || 0;
-                        }
-                    }
-                });
-
-                totalPurchase = parseFloat(totalPurchase.toFixed(2));
-                totalPaid = parseFloat(totalPaid.toFixed(2));
-                totalDue = parseFloat(totalDue.toFixed(2));
-                totalProfit = parseFloat(totalProfit.toFixed(2));
-
-                let msgNewProd = encodeURIComponent(`Hello ${cName},\nWe have received exciting new products!\n\nVisit our shop to check them out:\n${shopDetails}`);
-                let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due of ₹${totalDue} at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
-                let msgInvite = encodeURIComponent(`Hello ${cName},\nYou are warmly invited to visit our store! Discover our latest collections today.\n\n${shopDetails}`);
-
-                let dueAlertBtnHtml = totalDue > 0 
-                    ? `<a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>`
-                    : '';
-
-                // এখানে viewCustomerHistory তে ফোন নম্বর না থাকলে নাম পাস করা হচ্ছে
-                htmlString += `
-                <div style="background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                        
-                        <div onclick="viewCustomerHistory('${c.phone || ''}', '${cName}')" style="cursor:pointer; flex:1;">
-                            <h4 style="margin:0 0 4px; font-size:16px; color:#0ea5e9; text-decoration:underline;"><i class="fas fa-user-circle"></i> ${cName}</h4>
-                            <p style="margin:0 0 8px; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone || 'No Phone'}</p>
-                            
-                            <div style="display:flex; gap:5px; font-size:10px; margin-top:5px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
-                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
-                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Buy</span>
-                                    <strong style="color:#0f172a; font-size:12px;">₹${totalPurchase}</strong>
-                                </div>
-                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
-                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Paid</span>
-                                    <strong style="color:#10b981; font-size:12px;">₹${totalPaid}</strong>
-                                </div>
-                                <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
-                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Profit</span>
-                                    <strong style="color:#3b82f6; font-size:12px;">₹${totalProfit}</strong>
-                                </div>
-                                <div style="flex:1; text-align:center;">
-                                    <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Due</span>
-                                    <strong style="color:#ef4444; font-size:12px;">₹${totalDue}</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; gap:8px; flex-direction:column; align-items:flex-end; margin-left:10px;">
-                            <div style="display:flex; gap:8px;">
-                                <a href="tel:${rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
-                                <a href="sms:${rawPhone}" style="background:#fef3c7; color:#d97706; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-comment-sms"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-top:10px;">
-                        <p style="font-size:10px; color:#64748b; margin:0 0 6px; font-weight:bold; text-transform:uppercase;">Quick WhatsApp Messages:</p>
-                        <div style="display:flex; gap:6px;">
-                            <a href="https://wa.me/${waPhone}?text=${msgNewProd}" target="_blank" style="flex:1; background:#10b981; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> New Item</a>
-                            ${dueAlertBtnHtml}
-                            <a href="https://wa.me/${waPhone}?text=${msgInvite}" target="_blank" style="flex:1; background:#3b82f6; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Invite</a>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            
-            container.innerHTML = htmlString;
-        }
+        
         function suggestCustomer(type) {
             const query = type === 'phone' ? document.getElementById('buyerPhone').value.toLowerCase() : document.getElementById('buyerName').value.toLowerCase();
             const dropdown = type === 'phone' ? document.getElementById('suggestPhoneDropdown') : document.getElementById('suggestNameDropdown');
@@ -1692,7 +1570,8 @@ function filterItemsTab() {
             balanceTimeout = setTimeout(checkCustomerBalance, 500);
         }
 
-        function checkCustomerBalance() {
+        // ১. কাস্টমার ব্যালেন্স চেক ফাংশন
+function checkCustomerBalance() {
     const phone = document.getElementById('buyerPhone').value.trim();
     const name = document.getElementById('buyerName').value.trim();
     const balDiv = document.getElementById('saleCustomerBalanceDisplay');
@@ -1702,20 +1581,31 @@ function filterItemsTab() {
         return;
     }
 
+    // স্মার্ট আইডি মেকার (নাম এবং ফোন একসাথে মিলিয়ে চেক করবে)
+    const getCustomerId = (n, p) => {
+        let digits = (p || "").replace(/\D/g, ""); // সব অক্ষর মুছে শুধু সংখ্যা নেবে
+        let nm = (n || "Customer").trim().toLowerCase();
+        return digits ? digits : nm; // সংখ্যা না থাকলে নাম ব্যবহার করবে
+    };
+
+    const targetId = getCustomerId(name, phone);
     let totalDue = 0;
+    
     allSalesHistoryData.forEach(sale => {
         if(!sale.isReturned) {
-            let isPhoneMatch = phone && sale.buyerPhone === phone;
-            let isNameMatch = !phone && name && sale.buyerName === name;
-            if (isPhoneMatch || isNameMatch) {
+            let saleId = getCustomerId(sale.buyerName, sale.buyerPhone);
+            if (saleId === targetId) {
                 totalDue += Number(sale.due) || 0;
             }
         }
     });
 
     if(balDiv) {
-        balDiv.onclick = null; // আগের ইভেন্ট রিমুভ করা হচ্ছে
+        balDiv.onclick = null; 
         
+        let passPhone = phone.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        let passName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
         if(totalDue > 0) {
             balDiv.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Previous Due: <span style="color:#ef4444;">₹${totalDue.toFixed(2)}</span></span>
@@ -1723,8 +1613,8 @@ function filterItemsTab() {
             </div>`;
             balDiv.style.background = "#fef2f2";
             balDiv.style.border = "1px dashed #fca5a5";
-            balDiv.style.cursor = "pointer"; // বক্সটি ক্লিকেবল করা হলো
-            balDiv.onclick = () => viewCustomerHistory(phone, name, true); // true মানে শুধু due বিল দেখাবে
+            balDiv.style.cursor = "pointer"; 
+            balDiv.onclick = () => viewCustomerHistory(passPhone, passName, true); 
             balDiv.style.display = 'block';
         } else if(totalDue < 0) {
             balDiv.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1733,13 +1623,261 @@ function filterItemsTab() {
             </div>`;
             balDiv.style.background = "#ecfdf5";
             balDiv.style.border = "1px dashed #6ee7b7";
-            balDiv.style.cursor = "pointer"; // বক্সটি ক্লিকেবল করা হলো
-            balDiv.onclick = () => viewCustomerHistory(phone, name, true); // true মানে শুধু due বিল দেখাবে
+            balDiv.style.cursor = "pointer"; 
+            balDiv.onclick = () => viewCustomerHistory(passPhone, passName, true); 
             balDiv.style.display = 'block';
         } else {
             balDiv.style.display = 'none';
         }
     }
+}
+
+// ২. কাস্টমারের হিস্ট্রি ওপেন করার ফাংশন
+function viewCustomerHistory(phone, name, showOnlyDue = false) {
+    const modal = document.getElementById('customerHistoryModal');
+    const content = document.getElementById('customerHistoryContent');
+    
+    let displayName = (name && name !== "undefined" && name.trim() !== "") ? name.trim() : "Customer";
+    document.getElementById('chModalTitle').innerText = showOnlyDue ? displayName + " (Due/Return Bills)" : displayName + "'s History";
+    content.innerHTML = "";
+
+    const getCustomerId = (n, p) => {
+        let digits = (p || "").replace(/\D/g, "");
+        let nm = (n || "Customer").trim().toLowerCase();
+        return digits ? digits : nm;
+    };
+
+    const targetId = getCustomerId(name, phone);
+
+    let customerSales = allSalesHistoryData.filter(sale => {
+        let saleId = getCustomerId(sale.buyerName, sale.buyerPhone);
+        let isMatch = (saleId === targetId);
+        
+        if (showOnlyDue) {
+            return isMatch && (sale.due !== 0) && !sale.isReturned;
+        }
+        return isMatch;
+    });
+    
+    customerSales.sort((a, b) => { 
+        const timeA = a.timestamp ? a.timestamp.toMillis() : 0; 
+        const timeB = b.timestamp ? b.timestamp.toMillis() : 0; 
+        return timeB - timeA; 
+    });
+
+    if(customerSales.length === 0) {
+        content.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No ${showOnlyDue ? 'pending due or return' : 'purchase'} history found.</p>`;
+    } else {
+        let historyHtml = "";
+        customerSales.forEach(d => {
+            const date = d.timestamp ? d.timestamp.toDate().toLocaleDateString('en-IN') : "";
+            const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
+            const fDue = parseFloat(Number(d.due || 0).toFixed(2));
+            
+            let statusBadge = "";
+            if (d.isReturned) {
+                statusBadge = `<span style="background:#fee2e2; color:#ef4444; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;"><i class="fas fa-undo"></i> Refunded</span>`;
+            } else if (fDue > 0) {
+                statusBadge = `<span style="background:#fef3c7; color:#d97706; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Due: ₹${fDue}</span>`;
+            } else if (fDue < 0) {
+                statusBadge = `<span style="background:#ecfdf5; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Return: ₹${Math.abs(fDue)}</span>`;
+            } else {
+                statusBadge = `<span style="background:#dcfce7; color:#10b981; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Fully Paid</span>`;
+            }
+
+            let itemListText = "";
+            if (d.isMultiItem && d.items && d.items.length > 0) {
+                d.items.forEach(item => {
+                    itemListText += `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${item.name} (x${item.qty})</div>`;
+                });
+            } else {
+                itemListText = `<div style="font-size:11px; color:#475569; margin-left:5px;">▪ ${d.productName} (x${d.qty})</div>`;
+            }
+
+            historyHtml += `
+            <div style="border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:10px; background:${d.isReturned ? '#f8fafc' : 'white'};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:#0f172a; font-size:13px;"><i class="far fa-calendar-alt"></i> ${date}</strong>
+                    ${statusBadge}
+                </div>
+                <div style="margin-bottom:8px; background:#f1f5f9; padding:5px; border-radius:6px;">
+                    ${itemListText}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <span>Total Bill: <strong style="font-size:14px;">₹${fTotal}</strong></span>
+                    <button onclick="viewSaleDetails('${d.id}')" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:5px 10px; font-weight:bold; cursor:pointer;"><i class="fas fa-eye"></i> View Bill</button>
+                </div>
+            </div>`;
+        });
+        content.innerHTML = historyHtml;
+    }
+    
+    modal.style.zIndex = "3000"; 
+    modal.style.display = 'flex';
+}
+
+// ৩. কাস্টমার ডিরেক্টরি (Contacts) ট্যাবের ফাংশন
+function renderCustomersTab(query = "") {
+    const container = document.getElementById('customers-container');
+    if(!container) return;
+
+    const customerStats = new Map();
+
+    const getCustomerId = (name, phone) => {
+        let p = (phone || "").replace(/\D/g, "");
+        let n = (name || "").trim();
+        if(n.toLowerCase() === "customer" || n === "") n = "Walk-in Customer";
+        return p ? p : n.toLowerCase();
+    };
+
+    allSalesHistoryData.forEach(sale => {
+        if(!sale.isReturned) {
+            let rawName = (sale.buyerName || "").trim();
+            if(rawName.toLowerCase() === "customer" || rawName === "") rawName = "Walk-in Customer";
+            
+            let id = getCustomerId(rawName, sale.buyerPhone);
+            
+            if (!customerStats.has(id)) {
+                customerStats.set(id, {
+                    name: rawName,
+                    phone: sale.buyerPhone || "",
+                    rawPhone: (sale.buyerPhone || "").replace(/\D/g, ""),
+                    totalPurchase: 0, totalPaid: 0, totalDue: 0, totalProfit: 0,
+                    searchNames: new Set([rawName.toLowerCase()])
+                });
+            }
+
+            let stats = customerStats.get(id);
+            stats.totalPurchase += Number(sale.totalAmount) || 0;
+            stats.totalPaid += Number(sale.paid) || 0;
+            stats.totalDue += Number(sale.due) || 0;
+            stats.totalProfit += Number(sale.profit) || 0;
+            stats.searchNames.add(rawName.toLowerCase());
+            
+            let cRaw = (sale.buyerPhone || "").replace(/\D/g, "");
+            if (!stats.rawPhone && cRaw) {
+                stats.phone = sale.buyerPhone.trim();
+                stats.rawPhone = cRaw;
+            }
+        }
+    });
+
+    currentSellerCustomers.forEach(c => {
+        let rawName = (c.name || "").trim();
+        if(rawName.toLowerCase() === "customer" || rawName === "") rawName = "Walk-in Customer";
+        
+        let id = getCustomerId(rawName, c.phone);
+        if (!customerStats.has(id)) {
+            customerStats.set(id, {
+                name: rawName,
+                phone: c.phone || "",
+                rawPhone: (c.phone || "").replace(/\D/g, ""),
+                totalPurchase: 0, totalPaid: 0, totalDue: 0, totalProfit: 0,
+                searchNames: new Set([rawName.toLowerCase()])
+            });
+        }
+    });
+
+    let uniqueCustomers = Array.from(customerStats.values());
+
+    if(query) {
+        const q = query.toLowerCase().trim();
+        uniqueCustomers = uniqueCustomers.filter(c => {
+            let matchName = Array.from(c.searchNames).some(n => n.includes(q));
+            let matchPhone = c.phone.includes(q);
+            return matchName || matchPhone;
+        });
+    }
+
+    uniqueCustomers.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if(uniqueCustomers.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">No customers found.</div>`;
+        return;
+    }
+
+    const shopDetails = "Payel's Cosmetic, Jwellery and Gifts.\n📍 Moyna Shivtala, Nabagram, Purba Bardhaman.";
+    let htmlString = ""; 
+
+    uniqueCustomers.forEach(c => {
+        let waPhone = c.rawPhone.length === 10 ? '91' + c.rawPhone : c.rawPhone;
+        let cName = c.name;
+
+        let tPurch = parseFloat(c.totalPurchase.toFixed(2));
+        let tPaid = parseFloat(c.totalPaid.toFixed(2));
+        let tDue = parseFloat(c.totalDue.toFixed(2));
+        let tProf = parseFloat(c.totalProfit.toFixed(2));
+
+        let msgNewProd = encodeURIComponent(`Hello ${cName},\nWe have received exciting new products!\n\nVisit our shop to check them out:\n${shopDetails}`);
+        let msgDue = encodeURIComponent(`Hello ${cName},\nThis is a gentle reminder regarding your pending due of ₹${tDue} at our shop.\nPlease clear it at your earliest convenience.\n\nThank you!\n${shopDetails}`);
+        let msgInvite = encodeURIComponent(`Hello ${cName},\nYou are warmly invited to visit our store! Discover our latest collections today.\n\n${shopDetails}`);
+
+        let dueAlertBtnHtml = tDue > 0 
+            ? `<a href="https://wa.me/${waPhone}?text=${msgDue}" target="_blank" style="flex:1; background:#ef4444; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Due Alert</a>`
+            : '';
+
+        // ১০০% সুরক্ষিত এনকোডিং (নামে স্পেস বা স্পেশাল ক্যারেক্টার থাকলে যেন বাটন ব্রেক না করে)
+        let safePhoneArg = encodeURIComponent(c.phone || "").replace(/'/g, "%27");
+        let safeNameArg = encodeURIComponent(cName).replace(/'/g, "%27");
+        
+        let isWalkIn = (cName.toLowerCase() === "walk-in customer");
+        
+        let actionButtonsHtml = isWalkIn ? '' : `
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
+                <button onclick="openEditCustomerModal('${safePhoneArg}', '${safeNameArg}')" style="background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;"><i class="fas fa-edit"></i> Edit Info</button>
+                <button onclick="confirmDeleteCustomer('${safePhoneArg}', '${safeNameArg}')" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        `;
+
+        htmlString += `
+        <div style="background: white; margin: 0 15px 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                
+                <div onclick="viewCustomerHistory(decodeURIComponent('${safePhoneArg}'), decodeURIComponent('${safeNameArg}'))" style="cursor:pointer; flex:1;">
+                    <h4 style="margin:0 0 4px; font-size:16px; color:#0ea5e9; text-decoration:underline;"><i class="fas fa-user-circle"></i> ${cName}</h4>
+                    <p style="margin:0 0 8px; font-size:12px; color:#64748b;"><i class="fas fa-phone"></i> ${c.phone || 'No Phone'}</p>
+                    
+                    <div style="display:flex; gap:5px; font-size:10px; margin-top:5px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+                        <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                            <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Buy</span>
+                            <strong style="color:#0f172a; font-size:12px;">₹${tPurch}</strong>
+                        </div>
+                        <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                            <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Total Paid</span>
+                            <strong style="color:#10b981; font-size:12px;">₹${tPaid}</strong>
+                        </div>
+                        <div style="flex:1; text-align:center; border-right:1px dashed #cbd5e1;">
+                            <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Profit</span>
+                            <strong style="color:#3b82f6; font-size:12px;">₹${tProf}</strong>
+                        </div>
+                        <div style="flex:1; text-align:center;">
+                            <span style="color:#64748b; display:block; font-size:8px; text-transform:uppercase; font-weight:800;">Due</span>
+                            <strong style="color:#ef4444; font-size:12px;">₹${tDue}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; flex-direction:column; align-items:flex-end; margin-left:10px;">
+                    <div style="display:flex; gap:8px;">
+                        <a href="tel:${c.rawPhone}" style="background:#e0f2fe; color:#0ea5e9; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-phone-alt"></i></a>
+                        <a href="sms:${c.rawPhone}" style="background:#fef3c7; color:#d97706; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; text-decoration:none;"><i class="fas fa-comment-sms"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1;">
+                <p style="font-size:10px; color:#64748b; margin:0 0 6px; font-weight:bold; text-transform:uppercase;">Quick WhatsApp Messages:</p>
+                <div style="display:flex; gap:6px;">
+                    <a href="https://wa.me/${waPhone}?text=${msgNewProd}" target="_blank" style="flex:1; background:#10b981; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> New Item</a>
+                    ${dueAlertBtnHtml}
+                    <a href="https://wa.me/${waPhone}?text=${msgInvite}" target="_blank" style="flex:1; background:#3b82f6; color:white; font-size:11px; font-weight:600; text-align:center; padding:6px; border-radius:6px; text-decoration:none;"><i class="fab fa-whatsapp"></i> Invite</a>
+                </div>
+            </div>
+            ${actionButtonsHtml}
+        </div>`;
+    });
+    
+    container.innerHTML = htmlString;
 }
 
         function setupRecordSaleTab() { 
@@ -1799,6 +1937,8 @@ function calculateSaleTotal() {
 
 function clearSaleForm() {
     saleCart = [];
+    if(typeof editingHistoryId !== 'undefined') editingHistoryId = null;
+    if(typeof originalSaleData !== 'undefined') originalSaleData = null;
     renderCart();
     document.getElementById('saleQty').value = 1; 
     document.getElementById('saleDiscount').value = 0; 
@@ -1925,141 +2065,7 @@ function updateCartQty(index, change) {
         }
 
       
-        async function executeFinalSale() { 
-    document.getElementById('previewSaleModal').style.display = 'none'; // প্রিভিউ পপ-আপ বন্ধ করবে
-    if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
-    
-    let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
-    saleCart.forEach(item => { 
-        baseTotal += (item.price * item.qty); 
-        totalBuyPrice += (item.buyPrice * item.qty);
-        totalQty += item.qty;
-    });
-
-    const discount = Number(document.getElementById('saleDiscount').value) || 0; 
-    const enteredPaid = Number(document.getElementById('salePaid').value) || 0;
-    const bName = document.getElementById('buyerName').value.trim(); 
-    const bPhone = document.getElementById('buyerPhone').value.trim();
-    const payMethod = document.getElementById('salePaymentMethod').value; 
-    const txnNote = document.getElementById('saleTxnNote').value.trim();
-    const sid = localStorage.getItem("seller_id");
-
-    const finalTotal = baseTotal - discount; 
-    const paid = enteredPaid; // Clamping রিমুভ করা হলো
-    const dueAmount = finalTotal - paid; // Negative মানে কাস্টমার টাকা ফেরত পাবে
-    const profit = (paid > finalTotal ? finalTotal : paid) - totalBuyPrice;
-
-    const sDate = document.getElementById('saleCustomDate').value;
-    const sTime = document.getElementById('saleCustomTime').value;
-    let dateObj = new Date();
-    if(sDate && sTime) {
-        dateObj = new Date(`${sDate}T${sTime}`);
-    }
-
-    const yearStr = dateObj.getFullYear().toString();
-    const monthStr = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const customTimestamp = firebase.firestore.Timestamp.fromDate(dateObj);
-
-    try { 
-        document.querySelector('button[onclick="saveRecordSale()"]').innerText = "Saving...";
-        
-        if(bPhone || bName) {
-            const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
-            if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
-        }
-
-        let finalPaymentHistory = [];
-        let exchangeLogText = null; // নতুন: এক্সচেঞ্জ লগ রাখার ভেরিয়েবল
-
-        // এডিট করার সময় ইনভেন্টরি ও হিস্ট্রি অ্যাডজাস্টমেন্ট
-        if (typeof editingHistoryId !== 'undefined' && editingHistoryId && originalSaleData) {
-            // ১. পুরনো স্টক ফেরত পাঠানো
-            let oldItems = originalSaleData.isMultiItem && originalSaleData.items ? originalSaleData.items : [];
-            if(oldItems.length === 0 && originalSaleData.productId) {
-                oldItems = [{id: originalSaleData.productId, qty: originalSaleData.qty, name: originalSaleData.productName}];
-            }
-            for (let item of oldItems) {
-                try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
-            }
-
-            // ২. পুরনো পেমেন্ট হিস্ট্রি কপি করা
-            if (originalSaleData.paymentHistory && originalSaleData.paymentHistory.length > 0) {
-                finalPaymentHistory = [...originalSaleData.paymentHistory];
-            } else if (originalSaleData.paid > 0) {
-                finalPaymentHistory.push({ amount: originalSaleData.paid, date: originalSaleData.timestamp ? originalSaleData.timestamp.toDate().toISOString() : new Date().toISOString(), method: "Cash" });
-            }
-            
-            // ৩. নতুন পেমেন্ট যোগ করা
-            const oldPaid = Number(document.getElementById('saleOldPaidValue').value) || 0;
-            const newlyPaidAmount = paid - oldPaid;
-            if (newlyPaidAmount !== 0) { // মাইনাস পেমেন্ট (টাকা ফেরত দেওয়া) সাপোর্ট করার জন্য
-                finalPaymentHistory.push({ amount: newlyPaidAmount, date: new Date().toISOString(), method: payMethod });
-            }
-
-            // ৪. এক্সচেঞ্জ হয়েছে কি না তা চেক করা (Product Change Check)
-            let oldItemsStr = oldItems.map(i => `${i.name} (x${i.qty})`).join(", ");
-            let newItemsStr = saleCart.map(i => `${i.name} (x${i.qty})`).join(", ");
-            
-            // যদি আইটেম পাল্টানো হয়, তবে হিস্ট্রির জন্য একটি লগ তৈরি করা হবে
-            if (oldItemsStr !== newItemsStr) {
-                let dt = new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
-                exchangeLogText = `🔄 <strong>${dt}</strong><br><span style="color:#ef4444; text-decoration:line-through;">Returned: ${oldItemsStr}</span><br><span style="color:#10b981;">Taken: ${newItemsStr}</span>`;
-            }
-
-        } else {
-            // নতুন বিলের জন্য পেমেন্ট যোগ
-            if (paid > 0) {
-                finalPaymentHistory.push({ amount: paid, date: new Date().toISOString(), method: payMethod });
-            }
-        }
-        
-        // নতুন স্টক মাইনাস করা
-        for (let item of saleCart) {
-            await db.collection("Products").doc(item.id).update({ 
-                stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
-                soldCount: firebase.firestore.FieldValue.increment(item.qty) 
-            });
-        }
-
-        const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
-
-        const saleDataToSave = { 
-            paymentHistory: finalPaymentHistory,
-            sellerId: sid, isMultiItem: true, items: saleCart,
-            productName: mainProductName, productPic: saleCart[0].pic,
-            qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
-            totalAmount: finalTotal, discount: discount, paid: paid, 
-            due: dueAmount, profit: profit, paymentMethod: payMethod, 
-            txnNote: txnNote, year: yearStr, month: monthStr, 
-            buyerName: bName, buyerPhone: bPhone, 
-            timestamp: customTimestamp 
-        };
-
-        if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
-            saleDataToSave.lastPaymentDate = firebase.firestore.FieldValue.serverTimestamp(); 
-            // যদি এক্সচেঞ্জ হয়ে থাকে তবে ডাটাবেসে সেভ করা হবে
-            if (exchangeLogText) {
-                saleDataToSave.exchangeHistory = firebase.firestore.FieldValue.arrayUnion(exchangeLogText);
-            }
-            await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
-            showToast("Sale Updated Successfully!", "success");
-            editingHistoryId = null;
-            originalSaleData = null;
-        } else {
-            await db.collection("SalesHistory").add(saleDataToSave); 
-            showToast("Sale Recorded Successfully!", "success"); 
-        }
-        
-        clearSaleForm(); 
-        switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
-        document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = `<i class="fas fa-check-circle"></i> Confirm`;
-    } catch(e) { 
-        showToast("Error recording sale", "error"); 
-        const btnText = (typeof editingHistoryId !== 'undefined' && editingHistoryId) ? `<i class="fas fa-check-circle"></i> Update Sale` : `<i class="fas fa-check-circle"></i> Confirm`;
-        document.querySelector('button[onclick="saveRecordSale()"]').innerHTML = btnText;
-    } 
-}
-// --- New Preview Function (Intercepts the Confirm button) ---
+        // --- New Preview Function (Intercepts the Confirm button) ---
 function saveRecordSale() {
     if(saleCart.length === 0) return showToast("Cart is empty! Please add items.", "error");
     
@@ -2080,7 +2086,7 @@ function saveRecordSale() {
 
     const discount = Number(document.getElementById('saleDiscount').value) || 0; 
     const paid = Number(document.getElementById('salePaid').value) || 0;
-    const bName = document.getElementById('buyerName').value.trim() || 'Customer'; 
+    const bName = document.getElementById('buyerName').value.trim() || 'Walk-in Customer'; 
     const bPhone = document.getElementById('buyerPhone').value.trim() || 'No Phone';
     const payMethod = document.getElementById('salePaymentMethod').value; 
 
@@ -2120,6 +2126,158 @@ function saveRecordSale() {
     
     // প্রিভিউ পপ-আপ শো করা হচ্ছে
     document.getElementById('previewSaleModal').style.display = 'flex';
+}
+
+async function executeFinalSale() { 
+    const btn = document.getElementById('confirmSaveBillBtn');
+    if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; btn.disabled = true; }
+    
+    document.getElementById('previewSaleModal').style.display = 'none'; // প্রিভিউ পপ-আপ বন্ধ করবে
+    
+    if(saleCart.length === 0) {
+        if(btn) { btn.innerHTML = '<i class="fas fa-check-double"></i> Save Bill'; btn.disabled = false; }
+        return showToast("Cart is empty! Please add items.", "error");
+    }
+    
+    let baseTotal = 0; let totalBuyPrice = 0; let totalQty = 0;
+    saleCart.forEach(item => { 
+        baseTotal += (item.price * item.qty); 
+        totalBuyPrice += (item.buyPrice * item.qty);
+        totalQty += item.qty;
+    });
+
+    const discount = Number(document.getElementById('saleDiscount').value) || 0; 
+    const enteredPaid = Number(document.getElementById('salePaid').value) || 0;
+    const bName = document.getElementById('buyerName').value.trim() || 'Walk-in Customer'; 
+    const bPhone = document.getElementById('buyerPhone').value.trim() || '';
+    const payMethod = document.getElementById('salePaymentMethod').value; 
+    const txnNote = document.getElementById('saleTxnNote').value.trim();
+    const sid = localStorage.getItem("seller_id");
+
+    const finalTotal = baseTotal - discount; 
+    const paid = enteredPaid; 
+    const dueAmount = finalTotal - paid; 
+    const profit = (paid > finalTotal ? finalTotal : paid) - totalBuyPrice;
+
+    const sDate = document.getElementById('saleCustomDate').value;
+    const sTime = document.getElementById('saleCustomTime').value;
+    let dateObj = new Date();
+    if(sDate && sTime) {
+        dateObj = new Date(`${sDate}T${sTime}`);
+    }
+
+    const yearStr = dateObj.getFullYear().toString();
+    const monthStr = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const customTimestamp = firebase.firestore.Timestamp.fromDate(dateObj);
+
+    try { 
+        if(bPhone || bName !== 'Customer') {
+            const exists = currentSellerCustomers.find(c => c.phone === bPhone && c.name === bName);
+            if(!exists) { await db.collection("Customers").add({ sellerId: sid, name: bName, phone: bPhone }); }
+        }
+
+        let finalPaymentHistory = [];
+        let exchangeLogText = null; 
+
+        if (typeof editingHistoryId !== 'undefined' && editingHistoryId && typeof originalSaleData !== 'undefined' && originalSaleData) {
+            let oldItems = originalSaleData.isMultiItem && originalSaleData.items ? originalSaleData.items : [];
+            if(oldItems.length === 0 && originalSaleData.productId) {
+                oldItems = [{id: originalSaleData.productId, qty: originalSaleData.qty, name: originalSaleData.productName}];
+            }
+            for (let item of oldItems) {
+                try { await db.collection("Products").doc(item.id).update({ stockCount: firebase.firestore.FieldValue.increment(item.qty), soldCount: firebase.firestore.FieldValue.increment(-item.qty) }); } catch(err) {}
+            }
+
+            if (originalSaleData.paymentHistory && originalSaleData.paymentHistory.length > 0) {
+                finalPaymentHistory = [...originalSaleData.paymentHistory];
+            } else if (originalSaleData.paid > 0) {
+                finalPaymentHistory.push({ amount: originalSaleData.paid, date: originalSaleData.timestamp ? originalSaleData.timestamp.toDate().toISOString() : new Date().toISOString(), method: "Cash" });
+            }
+            
+            const oldPaid = Number(document.getElementById('saleOldPaidValue').value) || 0;
+            const newlyPaidAmount = paid - oldPaid;
+            if (newlyPaidAmount !== 0) { 
+                finalPaymentHistory.push({ amount: newlyPaidAmount, date: new Date().toISOString(), method: payMethod });
+            }
+
+            let returnedItems = [];
+            let takenItems = [];
+
+            oldItems.forEach(oldItem => {
+                let newItem = saleCart.find(i => i.id === oldItem.id);
+                if (!newItem) {
+                    returnedItems.push(`${oldItem.name} (x${oldItem.qty})`);
+                } else if (oldItem.qty > newItem.qty) {
+                    returnedItems.push(`${oldItem.name} (x${oldItem.qty - newItem.qty})`);
+                }
+            });
+
+            saleCart.forEach(newItem => {
+                let oldItem = oldItems.find(i => i.id === newItem.id);
+                if (!oldItem) {
+                    takenItems.push(`${newItem.name} (x${newItem.qty})`);
+                } else if (newItem.qty > oldItem.qty) {
+                    takenItems.push(`${newItem.name} (x${newItem.qty - oldItem.qty})`);
+                }
+            });
+
+            if (returnedItems.length > 0 || takenItems.length > 0) {
+                let dt = new Date().toLocaleDateString('en-IN') + ' ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
+                let retStr = returnedItems.length > 0 ? `<br><span style="color:#ef4444; text-decoration:line-through;">Returned: ${returnedItems.join(", ")}</span>` : '';
+                let takStr = takenItems.length > 0 ? `<br><span style="color:#10b981;">Taken: ${takenItems.join(", ")}</span>` : '';
+                exchangeLogText = `🔄 <strong>${dt}</strong>${retStr}${takStr}`;
+            }
+
+        } else {
+            if (paid !== 0) {
+                finalPaymentHistory.push({ amount: paid, date: new Date().toISOString(), method: payMethod });
+            }
+        }
+        
+        for (let item of saleCart) {
+            await db.collection("Products").doc(item.id).update({ 
+                stockCount: firebase.firestore.FieldValue.increment(-item.qty), 
+                soldCount: firebase.firestore.FieldValue.increment(item.qty) 
+            });
+        }
+
+        const mainProductName = saleCart.length === 1 ? saleCart[0].name : `${saleCart[0].name} & ${saleCart.length - 1} more items`;
+
+        const saleDataToSave = { 
+            paymentHistory: finalPaymentHistory,
+            sellerId: sid, isMultiItem: true, items: saleCart,
+            productName: mainProductName, productPic: saleCart[0].pic || 'https://via.placeholder.com/50',
+            qty: totalQty, price: baseTotal, buyPrice: totalBuyPrice, 
+            totalAmount: finalTotal, discount: discount, paid: paid, 
+            due: dueAmount, profit: profit, paymentMethod: payMethod, 
+            txnNote: txnNote, year: yearStr, month: monthStr, 
+            buyerName: bName, buyerPhone: bPhone, 
+            timestamp: customTimestamp 
+        };
+
+        if (typeof editingHistoryId !== 'undefined' && editingHistoryId) {
+            saleDataToSave.lastPaymentDate = firebase.firestore.FieldValue.serverTimestamp(); 
+            if (exchangeLogText) {
+                saleDataToSave.exchangeHistory = firebase.firestore.FieldValue.arrayUnion(exchangeLogText);
+            }
+            await db.collection("SalesHistory").doc(editingHistoryId).update(saleDataToSave);
+            showToast("Sale Updated Successfully!", "success");
+            editingHistoryId = null;
+            if(typeof originalSaleData !== 'undefined') originalSaleData = null;
+        } else {
+            await db.collection("SalesHistory").add(saleDataToSave); 
+            showToast("Sale Recorded Successfully!", "success"); 
+        }
+        
+        clearSaleForm(); 
+        switchTab('tab-dashboard', document.getElementById('btn-tab-dashboard'));
+        
+    } catch(e) { 
+        console.error(e);
+        showToast("Error recording sale", "error"); 
+    } finally {
+        if(btn) { btn.innerHTML = '<i class="fas fa-check-double"></i> Save Bill'; btn.disabled = false; }
+    }
 }
         
         // Single Source History Fetch
@@ -3478,9 +3636,9 @@ async function saveSaleEdits() {
                     editingHistoryId = historyId;
                     originalSaleData = JSON.parse(JSON.stringify(data)); 
 
-                    // ১. কার্টে আইটেম লোড করা
+                    // ১. কার্টে আইটেম লোড করা (Deep Copy করা হলো যাতে মেমোরি ক্র্যাশ না করে)
                     if (data.isMultiItem && data.items) {
-                        saleCart = [...data.items]; 
+                        saleCart = JSON.parse(JSON.stringify(data.items)); 
                     } else if (data.productId) {
                         saleCart = [{
                             id: data.productId,
@@ -3930,24 +4088,38 @@ function showSoldItemsList() {
             // Analytics-এর ইনপুট বক্সে ডিফল্টভাবে বর্তমান সাল বসিয়ে দেওয়া হচ্ছে
             if(document.getElementById('chartYear')) document.getElementById('chartYear').value = currentYear;
         }
+// ২. কাস্টমারের হিস্ট্রি ওপেন করার ফাংশন
 function viewCustomerHistory(phone, name, showOnlyDue = false) {
     const modal = document.getElementById('customerHistoryModal');
     const content = document.getElementById('customerHistoryContent');
     
-    // টাইটেল ডায়নামিক করা হলো
-    document.getElementById('chModalTitle').innerText = showOnlyDue ? name + " (Due/Return Bills)" : name + "'s History";
+    let safePhone = (phone && phone !== "undefined") ? phone.replace(/\D/g, "") : "";
+    let rawName = (name && name !== "undefined") ? name.trim() : "";
+    if(rawName.toLowerCase() === "customer" || rawName === "") rawName = "Walk-in Customer";
+    
+    let safeName = rawName.toLowerCase();
+    let displayName = rawName;
+
+    document.getElementById('chModalTitle').innerText = showOnlyDue ? displayName + " (Due/Return Bills)" : displayName + "'s History";
     content.innerHTML = "";
 
-    // ফোন বা নাম দিয়ে ফিল্টার করা হচ্ছে
     let customerSales = allSalesHistoryData.filter(sale => {
+        let sPhone = (sale.buyerPhone || "").replace(/\D/g, "");
+        let sName = (sale.buyerName || "").trim();
+        if(sName.toLowerCase() === "customer" || sName === "") sName = "Walk-in Customer";
+        sName = sName.toLowerCase();
+        
         let isMatch = false;
-        if (phone) {
-            isMatch = (sale.buyerPhone === phone);
-        } else {
-            isMatch = (sale.buyerName === name);
+        
+        if (safePhone) {
+            isMatch = (sPhone === safePhone);
+        } 
+        else if (safeName && !safePhone) {
+            if(!sPhone) {
+                 isMatch = (sName === safeName);
+            }
         }
         
-        // যদি Sell ট্যাব থেকে ক্লিক করা হয়, তবে শুধু বাকি বা ফেরত দেওয়া বিলগুলোই আসবে
         if (showOnlyDue) {
             return isMatch && (sale.due !== 0) && !sale.isReturned;
         }
@@ -3969,7 +4141,6 @@ function viewCustomerHistory(phone, name, showOnlyDue = false) {
             const fTotal = parseFloat(Number(d.totalAmount || 0).toFixed(2));
             const fDue = parseFloat(Number(d.due || 0).toFixed(2));
             
-            // নেগেটিভ ডিউ মানে Return Change
             let statusBadge = "";
             if (d.isReturned) {
                 statusBadge = `<span style="background:#fee2e2; color:#ef4444; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;"><i class="fas fa-undo"></i> Refunded</span>`;
@@ -4010,6 +4181,166 @@ function viewCustomerHistory(phone, name, showOnlyDue = false) {
     
     modal.style.zIndex = "3000"; 
     modal.style.display = 'flex';
+}
+// --- Customer Edit & Delete Functions ---
+
+function openEditCustomerModal(encPhone, encName) {
+    const oldPhone = decodeURIComponent(encPhone);
+    const oldName = decodeURIComponent(encName);
+    
+    // ১. যদি HTML Modal আগে থেকে না থাকে, তবে এটি অটোমেটিক তৈরি করে নেবে (আপনাকে আর HTML কপি করতে হবে না)
+    let modal = document.getElementById('editCustomerModal');
+    if (!modal) {
+        const modalHtml = `
+        <div class="modal-overlay" id="editCustomerModal" style="z-index: 9999;">
+            <div class="edit-card" style="max-width: 350px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #0f172a;"><i class="fas fa-user-edit" style="color: #0ea5e9;"></i> Edit Customer</h3>
+                    <i class="fas fa-times" style="cursor: pointer; color: #64748b; font-size: 18px;" onclick="document.getElementById('editCustomerModal').style.display='none'"></i>
+                </div>
+                
+                <input type="hidden" id="editCustOldPhone">
+                <input type="hidden" id="editCustOldName">
+                
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 11px;">Customer Name</label>
+                    <input type="text" id="editCustNewName" style="padding: 10px; font-size: 13px;">
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 11px;">Phone Number</label>
+                    <input type="tel" id="editCustNewPhone" style="padding: 10px; font-size: 13px;">
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="document.getElementById('editCustomerModal').style.display='none'" style="flex:1; padding:12px; border:none; border-radius:8px; background:#f1f5f9; cursor:pointer; font-weight:600; color:#475569;">Cancel</button>
+                    <button onclick="executeCustomerEdit()" style="flex:1; padding:12px; border:none; border-radius:8px; background:#0ea5e9; color:white; cursor:pointer; font-weight:600;">Save Updates</button>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('editCustomerModal');
+    }
+
+    // ২. বক্সে পুরনো নাম ও নম্বর বসানো হচ্ছে
+    document.getElementById('editCustOldPhone').value = oldPhone;
+    document.getElementById('editCustOldName').value = oldName;
+    document.getElementById('editCustNewName').value = oldName;
+    document.getElementById('editCustNewPhone').value = oldPhone;
+    
+    // ৩. পপ-আপ ওপেন করা
+    modal.style.display = 'flex';
+}
+
+async function executeCustomerEdit() {
+    const oldPhone = document.getElementById('editCustOldPhone').value;
+    const oldName = document.getElementById('editCustOldName').value;
+    const newName = document.getElementById('editCustNewName').value.trim();
+    const newPhone = document.getElementById('editCustNewPhone').value.trim();
+    
+    if(!newName) return showToast("Customer name is required!", "error");
+    
+    document.querySelector('#editCustomerModal button:nth-child(2)').innerText = "Updating...";
+    
+    try {
+        const sid = localStorage.getItem("seller_id");
+        
+        const getCustomerId = (n, p) => {
+            let digits = (p || "").replace(/\D/g, "");
+            let nm = (n || "").trim();
+            if(nm.toLowerCase() === "customer" || nm === "") nm = "Walk-in Customer";
+            return digits ? digits : nm.toLowerCase();
+        };
+
+        const targetId = getCustomerId(oldName, oldPhone);
+
+        let isCustomerFound = false;
+        const custSnap = await db.collection("Customers").where("sellerId", "==", sid).get();
+        custSnap.forEach(doc => {
+            const d = doc.data();
+            if(getCustomerId(d.name, d.phone) === targetId) {
+                db.collection("Customers").doc(doc.id).update({ name: newName, phone: newPhone });
+                isCustomerFound = true;
+            }
+        });
+        
+        if (!isCustomerFound && (newPhone || newName.toLowerCase() !== 'walk-in customer')) {
+            await db.collection("Customers").add({ sellerId: sid, name: newName, phone: newPhone });
+        }
+
+        const salesToUpdate = allSalesHistoryData.filter(sale => {
+            return getCustomerId(sale.buyerName, sale.buyerPhone) === targetId;
+        });
+        
+        for(let sale of salesToUpdate) {
+            await db.collection("SalesHistory").doc(sale.id).update({
+                buyerName: newName,
+                buyerPhone: newPhone
+            });
+        }
+        
+        showToast("Customer Updated Successfully!", "success");
+        document.getElementById('editCustomerModal').style.display = 'none';
+        
+    } catch(e) {
+        console.error(e);
+        showToast("Error updating customer", "error");
+    } finally {
+        document.querySelector('#editCustomerModal button:nth-child(2)').innerText = "Save Updates";
+    }
+}
+
+function confirmDeleteCustomer(encPhone, encName) {
+    const phone = decodeURIComponent(encPhone);
+    const name = decodeURIComponent(encName);
+    
+    Swal.fire({
+        title: 'Delete Customer?',
+        text: "This customer will be deleted and all their previous bills will be moved to 'Walk-in Customer'.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, Delete & Move'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const sid = localStorage.getItem("seller_id");
+                
+                const getCustomerId = (n, p) => {
+                    let digits = (p || "").replace(/\D/g, "");
+                    let nm = (n || "").trim();
+                    if(nm.toLowerCase() === "customer" || nm === "") nm = "Walk-in Customer";
+                    return digits ? digits : nm.toLowerCase();
+                };
+
+                const targetId = getCustomerId(name, phone);
+
+                const custSnap = await db.collection("Customers").where("sellerId", "==", sid).get();
+                custSnap.forEach(doc => {
+                    const d = doc.data();
+                    if(getCustomerId(d.name, d.phone) === targetId) {
+                        db.collection("Customers").doc(doc.id).delete();
+                    }
+                });
+                
+                const salesToUpdate = allSalesHistoryData.filter(sale => {
+                    return getCustomerId(sale.buyerName, sale.buyerPhone) === targetId;
+                });
+                
+                for(let sale of salesToUpdate) {
+                    await db.collection("SalesHistory").doc(sale.id).update({
+                        buyerName: "Walk-in Customer",
+                        buyerPhone: ""
+                    });
+                }
+                
+                showToast("Customer Deleted & Bills Moved!", "success");
+            } catch(e) {
+                console.error(e);
+                showToast("Error deleting customer", "error");
+            }
+        }
+    });
 }
         
     </script>
